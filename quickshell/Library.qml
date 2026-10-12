@@ -457,15 +457,14 @@ Item {
                         clip: true
                         opacity: tap.pressed ? 0.8 : 1
 
-                        Text {
+                        DisplayText {
                             x: 12
                             y: 10
                             text: card.modelData.short
                             color: card.focused ? Theme.accent : "#FFFFFF"
                             opacity: card.focused ? 0.6 : 0.22
-                            font.family: Theme.displayFont
-                            font.weight: Font.Black
-                            font.pixelSize: 52
+                            weight: Font.Black
+                            size: 52
                         }
 
                         Column {
@@ -544,14 +543,13 @@ Item {
                         border.width: 2
                         border.color: Theme.surfaceBorder
 
-                        Text {
+                        DisplayText {
                             x: 10
                             y: 8
                             text: card.modelData.short
                             color: card.focused ? Theme.accent : card.modelData.color
-                            font.family: Theme.displayFont
-                            font.weight: Font.Bold
-                            font.pixelSize: 30
+                            weight: Font.Bold
+                            size: 30
                         }
 
                         Text {
@@ -650,14 +648,13 @@ Item {
                     font.letterSpacing: 1.5
                 }
 
-                Text {
+                DisplayText {
                     width: parent.width
                     elide: Text.ElideRight
                     text: page.currentCollection ? page.currentCollection.name : ""
                     color: Theme.textStrong
-                    font.family: Theme.displayFont
-                    font.weight: Font.Black
-                    font.pixelSize: 30
+                    weight: Font.Black
+                    size: 30
                 }
 
                 Text {
@@ -896,14 +893,13 @@ Item {
             width: parent.width - 420
             spacing: 2
 
-            Text {
+            DisplayText {
                 width: parent.width
                 elide: Text.ElideRight
                 text: page.currentGame ? page.currentGame.title : ""
                 color: Theme.textStrong
-                font.family: Theme.displayFont
-                font.weight: Font.Black
-                font.pixelSize: 22
+                weight: Font.Black
+                size: 22
             }
 
             Text {

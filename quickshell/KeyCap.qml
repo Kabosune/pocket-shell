@@ -16,12 +16,12 @@ Rectangle {
     border.width: filled ? 0 : 1
     border.color: Theme.keyBorder
 
-    Text {
+    DisplayText {
         id: labelText
         anchors.centerIn: parent
         color: cap.filled ? Theme.bg : Theme.text
         font.family: cap.filled ? Theme.displayFont : Theme.bodyFont
-        font.weight: Font.ExtraBold
-        font.pixelSize: cap.label.length > 2 ? 10 : 11
+        weight: Font.ExtraBold
+        size: cap.label.length > 2 ? 10 : 11
     }
 }

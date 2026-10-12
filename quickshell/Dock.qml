@@ -46,14 +46,13 @@ Surface {
             anchors.rightMargin: 14
             spacing: 2
 
-            Text {
+            DisplayText {
                 width: parent.width
                 elide: Text.ElideRight
                 text: dock.shownItem ? dock.shownItem.name : ""
                 color: Theme.mix(Theme.accent, Qt.rgba(0, 0, 0, 1), 0.7)
-                font.family: Theme.displayFont
-                font.weight: Font.Bold
-                font.pixelSize: 26
+                weight: Font.Bold
+                size: 26
             }
 
             Text {

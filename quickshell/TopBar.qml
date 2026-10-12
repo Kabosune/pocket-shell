@@ -58,14 +58,14 @@ Item {
             color: Theme.text
         }
 
-        Text {
+        DisplayText {
             visible: bar.page !== 0 || bar.pixel
             anchors.verticalCenter: parent.verticalCenter
             text: bar.page === 0 ? Qt.formatDate(clock.date, "ddd M/d").toUpperCase() : Qt.formatTime(clock.date, "HH:mm")
             color: Theme.text
             font.family: bar.pixel ? Theme.displayFont : Theme.bodyFont
-            font.weight: Font.Bold
-            font.pixelSize: bar.pixel ? 15 : 12
+            weight: Font.Bold
+            size: bar.pixel ? 15 : 12
         }
     }
 

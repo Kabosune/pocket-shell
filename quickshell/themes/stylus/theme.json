@@ -34,7 +34,7 @@
   ],
   "cardColors": ["#C0603E", "#2E4FB8", "#3E9B48", "#7A4FD0", "#3B3F48", "#B04F7A", "#2E8B8B", "#6B7A8C"],
   "radii": { "card": 6, "art": 4, "pill": 4, "btn": 4, "icon": 10, "dock": 6, "key": 3 },
-  "fonts": { "display": "Pixelify Sans", "body": "Nunito" },
+  "fonts": { "display": "Press Start 2P", "body": "Nunito", "displayGrid": 8, "displayScale": 0.6 },
   "focus": { "gap": 3, "ring": 3 },
   "wallpaper": { "type": "grid", "color": "#EEF0F2", "line": "rgba(60, 80, 110, 0.07)", "size": 16 },
   "style": {

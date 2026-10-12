@@ -14,12 +14,11 @@ Item {
         precision: SystemClock.Minutes
     }
 
-    component BigDigits: Text {
+    component BigDigits: DisplayText {
         property bool tall: false
-        font.family: Theme.displayFont
-        font.weight: Font.Black
-        font.pixelSize: tall ? 196 : 168
-        font.letterSpacing: tall ? -6 : -5
+        weight: Font.Black
+        size: tall ? 196 : 168
+        spacing: tall ? -6 : -5
         lineHeightMode: Text.ProportionalHeight
         lineHeight: 0.84
     }

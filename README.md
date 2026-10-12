@@ -20,7 +20,7 @@ First target: **Retroid Pocket 5** running **pocknix-os**.
 | `hypr/hyprland.lua` | Hyprland config (0.56+ uses Lua, not `hyprland.conf`) | `~/.config/hypr/hyprland.lua` (symlink) |
 | `quickshell/` | The shell itself (`Theme.qml` tokens, `Device.qml` profile, screens) | `~/.config/quickshell` (symlink) |
 | `quickshell/themes/` | Built-in themes: Dusk Tide, Dusk Tide Soft, Stylus | (part of `quickshell/`) |
-| `fonts/` | Archivo, Manrope, Nunito, Pixelify Sans (SIL Open Font License, see each folder) | `~/.local/share/fonts/pocket-shell` (symlink) |
+| `fonts/` | Archivo, Manrope, Nunito, Press Start 2P (SIL Open Font License, see each folder) | `~/.local/share/fonts/pocket-shell` (symlink) |
 | `input/` | `pocket-input`, a small SDL3 gamepad reader the shell runs | `/usr/local/bin/pocket-input` (built) |
 | `bin/pocket-games` | Finds games for the Library and works out their emulator commands | `/usr/local/bin/` (copy) |
 | `session/pocketshell-session` | Session launcher | `/usr/local/bin/` (copy) |
@@ -118,7 +118,7 @@ Built in:
 
 - **Dusk Tide**: teal dusk scene, peach accent, sharp corners
 - **Dusk Tide Soft**: the same with round corners and Nunito
-- **Stylus**: a retro handheld look with graph paper, pixel type, chunky
+- **Stylus**: a retro handheld look with graph paper, true pixel type, chunky
   bevelled buttons and cartridge-shaped Library collections; pick any of
   16 colours
 
@@ -150,7 +150,7 @@ All keys:
 | `accentChoices` | Favourite colours offered in the picker |
 | `cardColors` | Colours for Library collections and game cards (keep them dark enough for white text) |
 | `radii` | Corner radii in px: `card`, `art`, `pill`, `btn`, `icon`, `dock`, `key` |
-| `fonts` | `display`, `body` (font family names) and `files` (font files in the theme folder to load) |
+| `fonts` | `display`, `body` (font family names), `files` (font files in the theme folder to load), and for pixel fonts `displayGrid` (the font's pixel size at 1x, e.g. `8` for an 8×8 font) and `displayScale` (shrinks display text for wide fonts). With `displayGrid` set, display text snaps to whole multiples of the grid and isn't smoothed or fake-bolded, so it stays crisp |
 | `focus` | Focus ring: `gap` and `ring` widths in px |
 | `wallpaper` | `{ "type": "scene" }` (Dusk Tide), `{ "type": "grid", "color", "line", "size" }`, `{ "type": "color", "color" }` or `{ "type": "image", "file": "wallpaper.png" }` |
 | `style.border` | Panel border width |
@@ -231,5 +231,5 @@ the old session's compositor itself.
 - Fonts: [Archivo](https://github.com/Omnibus-Type/Archivo),
   [Manrope](https://github.com/googlefonts/manrope),
   [Nunito](https://github.com/googlefonts/nunito) and
-  [Pixelify Sans](https://github.com/eifetx/Pixelify-Sans), by their project
+  [Press Start 2P](https://github.com/google/fonts/tree/main/ofl/pressstart2p), by their project
   authors, under the SIL Open Font License 1.1

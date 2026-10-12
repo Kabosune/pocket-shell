@@ -83,28 +83,25 @@ Item {
             spacing: 6
 
             Row {
-                Text {
+                DisplayText {
                     text: Qt.formatTime(clock.date, "HH")
                     color: Theme.textStrong
-                    font.family: Theme.displayFont
-                    font.weight: Font.Black
-                    font.pixelSize: 96
-                    font.letterSpacing: -3
+                    weight: Font.Black
+                    size: 96
+                    spacing: -3
                 }
-                Text {
+                DisplayText {
                     text: ":"
                     color: Theme.textMuted
-                    font.family: Theme.displayFont
-                    font.weight: Font.Black
-                    font.pixelSize: 96
+                    weight: Font.Black
+                    size: 96
                 }
-                Text {
+                DisplayText {
                     text: Qt.formatTime(clock.date, "mm")
                     color: Theme.accent
-                    font.family: Theme.displayFont
-                    font.weight: Font.Black
-                    font.pixelSize: 96
-                    font.letterSpacing: -3
+                    weight: Font.Black
+                    size: 96
+                    spacing: -3
                 }
             }
 

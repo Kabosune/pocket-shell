@@ -68,12 +68,11 @@ Item {
             anchors.centerIn: parent
             spacing: 12
 
-            Text {
+            DisplayText {
                 text: "Menu"
                 color: Theme.textStrong
-                font.family: Theme.displayFont
-                font.weight: Font.Black
-                font.pixelSize: 22
+                weight: Font.Black
+                size: 22
             }
 
             PillButton {

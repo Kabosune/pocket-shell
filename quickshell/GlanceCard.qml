@@ -36,14 +36,13 @@ Surface {
             }
         }
 
-        Text {
+        DisplayText {
             width: parent.width
             elide: Text.ElideRight
             text: card.value
             color: Theme.textStrong
-            font.family: Theme.displayFont
-            font.weight: Font.Black
-            font.pixelSize: 30
+            weight: Font.Black
+            size: 30
         }
 
         Rectangle {

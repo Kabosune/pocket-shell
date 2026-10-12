@@ -51,7 +51,7 @@ Singleton {
         accentChoices: ["#F4B78E", "#9FE0C9", "#C9B6F2", "#F2D37A"],
         cardColors: ["#2F5A45", "#463A66", "#3E4650", "#5A4A2E", "#2E4A5A", "#5A2E46", "#3A5A2E", "#4A3A2E"],
         radii: { card: 6, art: 4, pill: 4, btn: 4, icon: 6, dock: 8, key: 2 },
-        fonts: { display: "Archivo", body: "Manrope", files: [] },
+        fonts: { display: "Archivo", body: "Manrope", files: [], displayGrid: 0, displayScale: 1 },
         focus: { gap: 2, ring: 2 },
         wallpaper: { type: "scene", scene: "dusk-tide" },
         style: {
@@ -203,6 +203,20 @@ Singleton {
 
     readonly property string displayFont: get("fonts.display")
     readonly property string bodyFont: get("fonts.body")
+
+    // Pixel display fonts: the font's pixel grid in px at size 1x (8 for an
+    // 8x8 font), and a scale for fonts much wider than the default.
+    readonly property int displayGrid: get("fonts.displayGrid") || 0
+    readonly property real displayScale: get("fonts.displayScale") || 1
+    readonly property bool pixelDisplay: displayGrid > 0
+
+    // Size for display text: scaled, then snapped to whole grid steps.
+    function displaySize(px) {
+        const s = px * displayScale;
+        if (displayGrid <= 0)
+            return Math.max(1, Math.round(s));
+        return Math.max(displayGrid, Math.round(s / displayGrid) * displayGrid);
+    }
 
     readonly property var wallpaper: get("wallpaper")
 

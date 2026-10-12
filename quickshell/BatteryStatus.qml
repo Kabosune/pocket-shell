@@ -65,12 +65,12 @@ Row {
         }
     }
 
-    Text {
+    DisplayText {
         anchors.verticalCenter: parent.verticalCenter
         text: `${Math.round(battery.level * 100)}%`
         color: Theme.text
         font.family: battery.pixel ? Theme.displayFont : Theme.bodyFont
-        font.weight: Font.Bold
-        font.pixelSize: battery.pixel ? 13 : 12
+        weight: Font.Bold
+        size: battery.pixel ? 13 : 12
     }
 }

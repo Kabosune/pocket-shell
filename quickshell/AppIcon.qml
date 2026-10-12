@@ -28,13 +28,12 @@ Item {
         visible: status === Image.Ready
     }
 
-    Text {
+    DisplayText {
         anchors.centerIn: parent
         visible: image.status !== Image.Ready
         text: appIcon.fallbackName.length > 0 ? appIcon.fallbackName.charAt(0).toUpperCase() : "?"
         color: appIcon.letterColor
-        font.family: Theme.displayFont
-        font.weight: Font.Black
-        font.pixelSize: appIcon.size * 0.75
+        weight: Font.Black
+        size: appIcon.size * 0.75
     }
 }

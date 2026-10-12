@@ -2,11 +2,10 @@ import QtQuick
 
 // Theme picker: every theme found in the theme folders, with a small
 // preview drawn from each theme's own colours, fonts and corners.
-// Choosing a theme applies it right away. Themes that list
-// "accentChoices" also get a "Your colour" row.
+// Themes that list "accentChoices" also get a "Your colour" row.
 //
-// Controller: left/right choose, A applies, down moves to the colour row,
-// up goes back, B closes.
+// Controller: left/right move the highlight, A applies it, down moves to
+// the colour row, up goes back, B closes. A tap applies directly.
 Item {
     id: picker
 
@@ -56,11 +55,9 @@ Item {
             switch (button) {
             case "left":
                 themeIndex = Math.max(0, themeIndex - 1);
-                apply(themeIndex);
                 break;
             case "right":
                 themeIndex = Math.min(themes.length - 1, themeIndex + 1);
-                apply(themeIndex);
                 break;
             case "a":
                 apply(themeIndex);
@@ -82,11 +79,9 @@ Item {
         switch (button) {
         case "left":
             colourIndex = Math.max(0, colourIndex - 1);
-            pickColour(colourIndex);
             break;
         case "right":
             colourIndex = Math.min(colours.length - 1, colourIndex + 1);
-            pickColour(colourIndex);
             break;
         case "a":
             pickColour(colourIndex);
@@ -132,14 +127,13 @@ Item {
         }
     }
 
-    Text {
+    DisplayText {
         x: 48
         y: 58
         text: "Themes"
         color: Theme.textStrong
-        font.family: Theme.displayFont
-        font.weight: Font.Black
-        font.pixelSize: 34
+        weight: Font.Black
+        size: 34
     }
 
     Text {
@@ -254,13 +248,16 @@ Item {
                         border.color: picker.c(card.d, "colors.surfaceBorder")
 
                         Text {
+                            readonly property int grid: picker.val(card.d, "fonts.displayGrid") || 0
                             x: 10
                             y: 6
                             text: "12:34"
                             color: picker.c(card.d, "colors.textStrong")
                             font.family: picker.val(card.d, "fonts.display")
-                            font.weight: Font.Black
-                            font.pixelSize: 24
+                            font.weight: grid > 0 ? Font.Normal : Font.Black
+                            font.pixelSize: grid > 0 ? 16 : 24
+                            font.hintingPreference: grid > 0 ? Font.PreferFullHinting : Font.PreferDefaultHinting
+                            renderType: grid > 0 ? Text.NativeRendering : Text.QtRendering
                         }
 
                         Rectangle {
@@ -421,7 +418,7 @@ Item {
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 14
         items: [
-            { key: "A", round: true, text: "Use" },
+            { key: "A", round: true, text: "Apply" },
             { key: "B", round: true, text: "Done" }
         ]
     }

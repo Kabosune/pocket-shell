@@ -72,14 +72,13 @@ Item {
         }
     }
 
-    Text {
+    DisplayText {
         x: 48
         y: 58
         text: "Recents"
         color: Theme.textStrong
-        font.family: Theme.displayFont
-        font.weight: Font.Black
-        font.pixelSize: 34
+        weight: Font.Black
+        size: 34
     }
 
     Text {

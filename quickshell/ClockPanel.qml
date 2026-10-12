@@ -56,26 +56,23 @@ Surface {
             anchors.verticalCenter: parent.verticalCenter
             anchors.verticalCenterOffset: -10
 
-            Text {
+            DisplayText {
                 text: Qt.formatTime(clock.date, "HH")
                 color: Theme.textStrong
-                font.family: Theme.displayFont
-                font.weight: Font.Bold
-                font.pixelSize: 112
+                weight: Font.Bold
+                size: 112
             }
-            Text {
+            DisplayText {
                 text: ":"
                 color: Theme.accent
-                font.family: Theme.displayFont
-                font.weight: Font.Bold
-                font.pixelSize: 112
+                weight: Font.Bold
+                size: 112
             }
-            Text {
+            DisplayText {
                 text: Qt.formatTime(clock.date, "mm")
                 color: Theme.textStrong
-                font.family: Theme.displayFont
-                font.weight: Font.Bold
-                font.pixelSize: 112
+                weight: Font.Bold
+                size: 112
             }
         }
 
@@ -110,13 +107,12 @@ Surface {
                             font.weight: Font.Black
                             font.pixelSize: 11
                         }
-                        Text {
+                        DisplayText {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: day.modelData.day
                             color: day.modelData.today ? Theme.accentInk : Theme.textMuted
-                            font.family: Theme.displayFont
-                            font.weight: Font.Bold
-                            font.pixelSize: 15
+                            weight: Font.Bold
+                            size: 15
                         }
                     }
                 }

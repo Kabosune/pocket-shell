@@ -33,16 +33,15 @@ Rectangle {
         anchors.margins: 12
         spacing: 4
 
-        Text {
+        DisplayText {
             width: parent.width
             wrapMode: Text.Wrap
             maximumLineCount: 4
             elide: Text.ElideRight
             text: cover.title
             color: Theme.textStrong
-            font.family: Theme.displayFont
-            font.weight: Font.Black
-            font.pixelSize: 16
+            weight: Font.Black
+            size: 16
             lineHeight: 0.95
         }
 
