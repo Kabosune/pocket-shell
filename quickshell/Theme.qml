@@ -12,7 +12,7 @@ Singleton {
 
     // Accent (later: picked from the wallpaper)
     property color accent: "#F4B78E"
-    readonly property color onAccent: "#2B1A10"
+    readonly property color accentInk: "#2B1A10"
     readonly property color accentGlow: Qt.rgba(accent.r, accent.g, accent.b, 0.5)
 
     // Surfaces

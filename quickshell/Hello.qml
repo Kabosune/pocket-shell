@@ -15,10 +15,11 @@ Item {
     }
 
     component BigDigits: Text {
+        property bool tall: false
         font.family: Theme.displayFont
         font.weight: Font.Black
-        font.pixelSize: root.portrait ? 196 : 168
-        font.letterSpacing: root.portrait ? -6 : -5
+        font.pixelSize: tall ? 196 : 168
+        font.letterSpacing: tall ? -6 : -5
         lineHeightMode: Text.ProportionalHeight
         lineHeight: 0.84
     }
@@ -38,7 +39,7 @@ Item {
         Text {
             id: labelText
             anchors.centerIn: parent
-            color: button.primary ? Theme.onAccent : Theme.textStrong
+            color: button.primary ? Theme.accentInk : Theme.textStrong
             font.family: Theme.bodyFont
             font.weight: Font.ExtraBold
             font.pixelSize: 16
@@ -57,11 +58,13 @@ Item {
         y: root.portrait ? 96 : 70
 
         BigDigits {
+            tall: root.portrait
             anchors.horizontalCenter: root.portrait ? parent.horizontalCenter : undefined
             text: Qt.formatTime(clock.date, "HH")
             color: Theme.textStrong
         }
         BigDigits {
+            tall: root.portrait
             anchors.horizontalCenter: root.portrait ? parent.horizontalCenter : undefined
             text: Qt.formatTime(clock.date, "mm")
             color: Theme.accent
