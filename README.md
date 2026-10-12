@@ -6,8 +6,9 @@ designed for both touch and controller.
 
 First target: **Retroid Pocket 5** running **pocknix-os**.
 
-> **Status:** early. Pocket Shell boots into Hyprland in landscape with touch
-> working and shows a placeholder Quickshell screen. The real Home screen is next.
+> **Status:** early. The Home screen (landscape) works with touch and controller:
+> clock, media controls, Wi-Fi and Bluetooth toggles, battery, and a dock.
+> Other pages, app launching and portrait layout are still to come.
 
 ## Layout
 
@@ -16,6 +17,7 @@ First target: **Retroid Pocket 5** running **pocknix-os**.
 | `hypr/hyprland.lua` | Hyprland config (0.56+ uses Lua, not `hyprland.conf`) | `~/.config/hypr/hyprland.lua` (symlink) |
 | `quickshell/` | The shell itself (`Theme.qml` tokens, `Device.qml` profile, screens) | `~/.config/quickshell` (symlink) |
 | `fonts/` | Archivo, Manrope, Nunito (SIL Open Font License, see each folder) | `~/.local/share/fonts/pocket-shell` (symlink) |
+| `input/` | `pocket-input`, a small SDL3 gamepad reader the shell runs | `/usr/local/bin/pocket-input` (built) |
 | `session/pocketshell-session` | Session launcher | `/usr/local/bin/` (copy) |
 | `session/pocketshell.desktop` | Wayland session entry | `/usr/share/wayland-sessions/` (copy) |
 | `devices/` | Per-device notes and profiles | — |
@@ -30,6 +32,12 @@ the base to rolling first:
 sudo pocknix-base rolling
 ```
 
+For controller support, install the build tools and SDL3 (once):
+
+```bash
+sudo pacman -S --needed gcc make pkgconf sdl3
+```
+
 Then clone and install:
 
 ```bash
@@ -42,7 +50,7 @@ git clone https://github.com/Kabosune/pocket-shell.git ~/pocket-shell
 
 `install.sh` backs up any existing config with a `.bak-<date>` suffix before
 linking. After that, `git pull` in `~/pocket-shell` updates the configs in place.
-Re-run `install.sh` only when the session files change.
+Re-run `install.sh` when the session files or the controller helper change.
 
 Switch to Pocket Shell, and back:
 
@@ -53,6 +61,23 @@ pocknix-desktop-select pocketshell --now
 ```bash
 pocknix-desktop-select plasma-mobile --now
 ```
+
+## Controls
+
+Touch works everywhere. With a controller, the first D-pad or A press shows
+the focus ring; touching the screen hides it again.
+
+| Button | Home | Session sheet |
+| --- | --- | --- |
+| D-pad / left stick | Move focus (media · toggles · dock) | Move focus |
+| A | Activate | Activate |
+| B | — | Close |
+| Start | Open the session sheet | Close |
+| Home | Jump to the dock | Close |
+
+Buttons are named by the letter printed on the controller, as SDL reports
+it. To see what the shell receives, run `pocket-input` over SSH and press
+buttons; each press prints a line like `down a`.
 
 ## Write-up: getting Hyprland to start from Plasma on pocknix
 

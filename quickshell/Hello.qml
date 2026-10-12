@@ -120,7 +120,7 @@ Item {
             onActivated: toPlasma.running = true
         }
         ShellButton {
-            label: "Steam game mode"
+            label: "Steam mode"
             onActivated: toSteam.running = true
         }
     }

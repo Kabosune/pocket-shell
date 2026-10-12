@@ -30,11 +30,25 @@ if command -v fc-cache >/dev/null; then
   fc-cache -f "$HOME/.local/share/fonts" >/dev/null && echo "fonts    cache refreshed"
 fi
 
-echo "Installing session files (needs sudo)..."
+HELPER_OK=0
+if command -v cc >/dev/null && command -v make >/dev/null && pkg-config --exists sdl3 2>/dev/null; then
+  echo "Building controller helper..."
+  make -s -C "$REPO/input"
+  HELPER_OK=1
+else
+  echo "skipped  controller helper: needs gcc, make, pkgconf and sdl3"
+  echo "         install them with: sudo pacman -S --needed gcc make pkgconf sdl3"
+fi
+
+echo "Installing system files (needs sudo)..."
 sudo install -Dm755 "$REPO/session/pocketshell-session"  /usr/local/bin/pocketshell-session
 sudo install -Dm644 "$REPO/session/pocketshell.desktop"  /usr/share/wayland-sessions/pocketshell.desktop
 echo "installed /usr/local/bin/pocketshell-session"
 echo "installed /usr/share/wayland-sessions/pocketshell.desktop"
+if [ "$HELPER_OK" = 1 ]; then
+  sudo install -Dm755 "$REPO/input/pocket-input" /usr/local/bin/pocket-input
+  echo "installed /usr/local/bin/pocket-input"
+fi
 
 echo
 echo "Done. Switch with: pocknix-desktop-select pocketshell --now"

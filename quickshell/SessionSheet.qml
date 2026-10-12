@@ -6,6 +6,34 @@ Item {
     id: sheet
 
     property bool open: false
+    property int focusedIndex: 0
+    readonly property int count: 3
+
+    function show() {
+        focusedIndex = 0;
+        open = true;
+    }
+
+    function activate(index) {
+        if (index === 0)
+            toPlasma.running = true;
+        else if (index === 1)
+            toSteam.running = true;
+        else
+            open = false;
+    }
+
+    // Controller input while the sheet is open
+    function handle(button) {
+        if (button === "up")
+            focusedIndex = Math.max(0, focusedIndex - 1);
+        else if (button === "down")
+            focusedIndex = Math.min(count - 1, focusedIndex + 1);
+        else if (button === "a")
+            activate(focusedIndex);
+        else if (button === "b" || button === "home" || button === "start")
+            open = false;
+    }
 
     visible: open
 
@@ -45,17 +73,20 @@ Item {
                 width: 260
                 label: "Plasma Mobile"
                 primary: true
-                onActivated: toPlasma.running = true
+                focused: Controller.active && sheet.focusedIndex === 0
+                onActivated: sheet.activate(0)
             }
             PillButton {
                 width: 260
-                label: "Steam game mode"
-                onActivated: toSteam.running = true
+                label: "Steam mode"
+                focused: Controller.active && sheet.focusedIndex === 1
+                onActivated: sheet.activate(1)
             }
             PillButton {
                 width: 260
                 label: "Cancel"
-                onActivated: sheet.open = false
+                focused: Controller.active && sheet.focusedIndex === 2
+                onActivated: sheet.activate(2)
             }
         }
     }

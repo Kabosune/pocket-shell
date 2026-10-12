@@ -1,7 +1,6 @@
 import QtQuick
 
-// App dock. The focused item gets the double focus ring and a name pill.
-// Touch focuses and activates in one tap; the controller will move focus.
+// App dock. The focused item gets the focus ring, a slight zoom and a name pill.
 Surface {
     id: dock
 
@@ -13,7 +12,13 @@ Surface {
         { id: "gallery",  name: "Gallery",  glyph: Icons.gallery },
         { id: "settings", name: "Settings", glyph: Icons.settings }
     ]
+    signal tapped(int index)
     signal activated(string appId)
+
+    function activate(index) {
+        if (index >= 0 && index < apps.length)
+            activated(apps[index].id);
+    }
 
     implicitWidth: row.implicitWidth + 28
     implicitHeight: row.implicitHeight + 20
@@ -42,24 +47,9 @@ Surface {
                     scale: slot.focused ? 1.08 : 1
                     Behavior on scale { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
 
-                    // Focus ring: accent outer ring with a dark gap (sharp), or just the accent ring (soft)
-                    Rectangle {
+                    FocusRing {
                         visible: slot.focused
-                        anchors.fill: parent
-                        anchors.margins: -(Theme.focusGapWidth + Theme.focusRingWidth)
-                        radius: Theme.rIcon + Theme.focusGapWidth + Theme.focusRingWidth
-                        color: "transparent"
-                        border.width: Theme.focusRingWidth
-                        border.color: Theme.accent
-                    }
-                    Rectangle {
-                        visible: slot.focused && Theme.focusGapWidth > 0
-                        anchors.fill: parent
-                        anchors.margins: -Theme.focusGapWidth
-                        radius: Theme.rIcon + Theme.focusGapWidth
-                        color: "transparent"
-                        border.width: Theme.focusGapWidth
-                        border.color: Theme.focusGap
+                        radius: Theme.rIcon
                     }
 
                     Rectangle {
@@ -101,8 +91,8 @@ Surface {
                     id: tap
                     anchors.fill: parent
                     onClicked: {
-                        dock.focusedIndex = slot.index;
-                        dock.activated(slot.modelData.id);
+                        dock.tapped(slot.index);
+                        dock.activate(slot.index);
                     }
                 }
             }

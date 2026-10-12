@@ -15,11 +15,28 @@ Surface {
         return list.length > 0 ? list[0] : null;
     }
 
+    // Controller focus: 0 previous, 1 play/pause, 2 next
+    property int focusedIndex: -1
+    readonly property int count: 3
+
+    function activate(index) {
+        const p = player;
+        if (!p)
+            return;
+        if (index === 0 && p.canGoPrevious)
+            p.previous();
+        else if (index === 1 && p.canTogglePlaying)
+            p.togglePlaying();
+        else if (index === 2 && p.canGoNext)
+            p.next();
+    }
+
     component RoundControl: Rectangle {
         id: control
         property var glyph
         property bool big: false
         property bool available: true
+        property bool focused: false
         signal activated()
 
         width: big ? 52 : 44
@@ -27,6 +44,11 @@ Surface {
         radius: big ? Theme.rBtn : Theme.rPill
         color: big ? Theme.accent : "transparent"
         opacity: !available ? 0.4 : (press.pressed ? 0.75 : 1)
+
+        FocusRing {
+            visible: control.focused
+            radius: control.radius
+        }
 
         Icon {
             anchors.centerIn: parent
@@ -137,21 +159,24 @@ Surface {
                 RoundControl {
                     anchors.verticalCenter: parent.verticalCenter
                     glyph: Icons.previous
+                    focused: card.focusedIndex === 0
                     available: card.player !== null && card.player.canGoPrevious
-                    onActivated: card.player.previous()
+                    onActivated: card.activate(0)
                 }
                 RoundControl {
                     anchors.verticalCenter: parent.verticalCenter
                     big: true
+                    focused: card.focusedIndex === 1
                     glyph: card.player && card.player.isPlaying ? Icons.pause : Icons.play
                     available: card.player !== null && card.player.canTogglePlaying
-                    onActivated: card.player.togglePlaying()
+                    onActivated: card.activate(1)
                 }
                 RoundControl {
                     anchors.verticalCenter: parent.verticalCenter
                     glyph: Icons.next
+                    focused: card.focusedIndex === 2
                     available: card.player !== null && card.player.canGoNext
-                    onActivated: card.player.next()
+                    onActivated: card.activate(2)
                 }
             }
         }

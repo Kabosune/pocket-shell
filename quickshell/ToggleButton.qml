@@ -8,6 +8,7 @@ Item {
     property var glyph
     property bool active: false
     property bool available: true
+    property bool focused: false
     signal activated()
 
     implicitWidth: 76
@@ -20,11 +21,17 @@ Item {
         spacing: 6
 
         Rectangle {
+            id: disc
             anchors.horizontalCenter: parent.horizontalCenter
             width: 52
             height: 52
             radius: toggle.active ? Theme.rBtn : Theme.rPill
             color: toggle.active ? Theme.accent : Theme.chip
+
+            FocusRing {
+                visible: toggle.focused
+                radius: disc.radius
+            }
 
             Icon {
                 anchors.centerIn: parent

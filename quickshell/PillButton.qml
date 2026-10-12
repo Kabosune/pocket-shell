@@ -6,6 +6,7 @@ Rectangle {
 
     property alias label: labelText.text
     property bool primary: false
+    property bool focused: false
     signal activated()
 
     implicitWidth: Math.max(220, labelText.implicitWidth + 40)
@@ -13,6 +14,11 @@ Rectangle {
     radius: Theme.rBtn
     color: primary ? Theme.accent : Theme.chip
     opacity: tap.pressed ? 0.8 : 1
+
+    FocusRing {
+        visible: button.focused
+        radius: button.radius
+    }
 
     Text {
         id: labelText

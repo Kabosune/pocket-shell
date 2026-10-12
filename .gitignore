@@ -1,4 +1,5 @@
 *.bak-*
+input/pocket-input
 *.swp
 *~
 .DS_Store
