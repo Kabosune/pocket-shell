@@ -1,0 +1,9 @@
+{
+  "name": "Dusk Tide Soft",
+  "description": "Dusk Tide with round corners",
+  "author": "KaboWabo",
+  "accentChoices": ["#F4B78E", "#9FE0C9", "#C9B6F2", "#F2D37A", "#F28B8B", "#8FC8F2"],
+  "radii": { "card": 28, "art": 22, "pill": 999, "btn": 18, "icon": 22, "dock": 30, "key": 6 },
+  "fonts": { "display": "Nunito", "body": "Manrope" },
+  "focus": { "gap": 0, "ring": 2.5 }
+}

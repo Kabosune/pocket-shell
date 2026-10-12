@@ -25,7 +25,6 @@ Row {
                 anchors.verticalCenter: parent.verticalCenter
                 label: hint.modelData.key
                 round: hint.modelData.round
-                borderAlpha: 0.45
             }
 
             Text {

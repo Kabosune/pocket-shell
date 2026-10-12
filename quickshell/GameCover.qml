@@ -10,7 +10,7 @@ Rectangle {
     property color tint: "#2F5A45"
 
     radius: Theme.rArt
-    color: image.status === Image.Ready ? Qt.rgba(6 / 255, 16 / 255, 18 / 255, 0.9) : tint
+    color: image.status === Image.Ready ? Theme.surfaceStrong : tint
     clip: true
 
     Image {

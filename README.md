@@ -19,7 +19,8 @@ First target: **Retroid Pocket 5** running **pocknix-os**.
 | --- | --- | --- |
 | `hypr/hyprland.lua` | Hyprland config (0.56+ uses Lua, not `hyprland.conf`) | `~/.config/hypr/hyprland.lua` (symlink) |
 | `quickshell/` | The shell itself (`Theme.qml` tokens, `Device.qml` profile, screens) | `~/.config/quickshell` (symlink) |
-| `fonts/` | Archivo, Manrope, Nunito (SIL Open Font License, see each folder) | `~/.local/share/fonts/pocket-shell` (symlink) |
+| `quickshell/themes/` | Built-in themes: Dusk Tide, Dusk Tide Soft, Stylus | (part of `quickshell/`) |
+| `fonts/` | Archivo, Manrope, Nunito, Pixelify Sans (SIL Open Font License, see each folder) | `~/.local/share/fonts/pocket-shell` (symlink) |
 | `input/` | `pocket-input`, a small SDL3 gamepad reader the shell runs | `/usr/local/bin/pocket-input` (built) |
 | `bin/pocket-games` | Finds games for the Library and works out their emulator commands | `/usr/local/bin/` (copy) |
 | `session/pocketshell-session` | Session launcher | `/usr/local/bin/` (copy) |
@@ -77,7 +78,7 @@ Anywhere in the shell:
 | --- | --- |
 | L1 / R1 | Previous / next page (Home · Library · Apps · Glance) |
 | B | Back; on a page's top level, back to Home |
-| Start | Session menu (Plasma Mobile, Steam mode) |
+| Start | Menu: Themes, Plasma Mobile, Steam mode |
 | Home | Back to the Home page; from an app or game, back to the shell |
 | Hold Home | Recents: switch to (A) or close (X) open apps |
 
@@ -107,6 +108,63 @@ Recents lists the open windows.
 Long-press an app in the Apps page (or press X) to pin it to the Home dock.
 Pins and recently played games are saved in Quickshell's state folder
 (`~/.local/state/quickshell/by-shell/.../state.json`).
+
+## Themes
+
+Press Start → Themes to switch theme. It applies right away; themes that
+offer favourite colours also show a colour row (down to reach it).
+
+Built in:
+
+- **Dusk Tide**: teal dusk scene, peach accent, sharp corners
+- **Dusk Tide Soft**: the same with round corners and Nunito
+- **Stylus**: a retro handheld look with graph paper, pixel type, chunky
+  bevelled buttons and cartridge-shaped Library collections; pick any of
+  16 colours
+
+### Making a theme
+
+A theme is a folder with a `theme.json`. Put it in
+`~/.local/share/pocket-shell/themes/<folder-name>/` and it shows up in the
+picker (a folder with the same name as a built-in theme replaces it).
+Themes are data only: they choose colours, fonts and built-in styles, but
+can't run code.
+
+Every key is optional; anything missing falls back to Dusk Tide. A small
+theme can be just:
+
+```json
+{
+  "name": "Night Shift",
+  "colors": { "accent": "#8FC8F2" },
+  "accentChoices": ["#8FC8F2", "#F28B8B", "#9FE0C9"]
+}
+```
+
+All keys:
+
+| Key | What it sets |
+| --- | --- |
+| `name`, `description`, `author` | Shown in the picker |
+| `colors` | `bg`, `surface`, `surfaceStrong`, `surfaceBorder`, `chip`, `chipFocused`, `focusGap`, `keyBorder`, `line`, `textStrong`, `text`, `textMuted`, `textHint`, `iconOnChip`, `accent`, `inkDark` / `inkLight` (text on the accent; picked by its brightness), `dim` (behind pages other than Home), `scrim` (behind menus), `ledge` (bevel shadow), `bar` / `barBorder` (top bar). Colours can be `#RGB`, `#RRGGBB`, `#AARRGGBB`, `rgb(…)` or `rgba(…)` |
+| `accentChoices` | Favourite colours offered in the picker |
+| `cardColors` | Colours for Library collections and game cards (keep them dark enough for white text) |
+| `radii` | Corner radii in px: `card`, `art`, `pill`, `btn`, `icon`, `dock`, `key` |
+| `fonts` | `display`, `body` (font family names) and `files` (font files in the theme folder to load) |
+| `focus` | Focus ring: `gap` and `ring` widths in px |
+| `wallpaper` | `{ "type": "scene" }` (Dusk Tide), `{ "type": "grid", "color", "line", "size" }`, `{ "type": "color", "color" }` or `{ "type": "image", "file": "wallpaper.png" }` |
+| `style.border` | Panel border width |
+| `style.bevel` | `true` for chunky buttons with a bottom ledge |
+| `style.squareIcons` | `true` for square line ends (pixel look) |
+| `style.keys` | Button hints: `"outline"` or `"filled"` |
+| `style.tabs` | Page tabs: `"segmented"` or `"buttons"` |
+| `style.status` | Wi-Fi and battery: `"icons"` or `"pixel"` |
+| `style.cards` | Library collections: `"card"` or `"cartridge"` |
+| `style.home` | Home layout: `"classic"` or `"panels"` |
+
+The theme folder can hold its own fonts (list them in `fonts.files`) and
+wallpaper image. Pocket Shell reloads a theme when its `theme.json` changes,
+so you can edit it live.
 
 ## Library
 
@@ -171,6 +229,7 @@ the old session's compositor itself.
 - KaboWabo/Kabosune (me :3)
 - AI assistance (Claude Opus 5.5)
 - Fonts: [Archivo](https://github.com/Omnibus-Type/Archivo),
-  [Manrope](https://github.com/googlefonts/manrope) and
-  [Nunito](https://github.com/googlefonts/nunito), by their project authors,
-  under the SIL Open Font License 1.1
+  [Manrope](https://github.com/googlefonts/manrope),
+  [Nunito](https://github.com/googlefonts/nunito) and
+  [Pixelify Sans](https://github.com/eifetx/Pixelify-Sans), by their project
+  authors, under the SIL Open Font License 1.1

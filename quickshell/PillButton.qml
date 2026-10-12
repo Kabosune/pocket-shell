@@ -1,7 +1,7 @@
 import QtQuick
 
 // Wide labelled button for sheets and menus.
-Rectangle {
+Item {
     id: button
 
     property alias label: labelText.text
@@ -11,18 +11,24 @@ Rectangle {
 
     implicitWidth: Math.max(220, labelText.implicitWidth + 40)
     implicitHeight: 52
-    radius: Theme.rBtn
-    color: primary ? Theme.accent : Theme.chip
-    opacity: tap.pressed ? 0.8 : 1
 
     FocusRing {
         visible: button.focused
-        radius: button.radius
+        radius: background.radius
+    }
+
+    Chip {
+        id: background
+        anchors.fill: parent
+        radius: Theme.rBtn
+        active: button.primary
+        pressed: tap.pressed
     }
 
     Text {
         id: labelText
         anchors.centerIn: parent
+        anchors.verticalCenterOffset: Theme.bevel ? -1 : 0
         color: button.primary ? Theme.accentInk : Theme.textStrong
         font.family: Theme.bodyFont
         font.weight: Font.ExtraBold

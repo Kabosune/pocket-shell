@@ -1,7 +1,8 @@
 import QtQuick
 
 // Everything on the main screen: wallpaper, top bar, the four pages and
-// the overlays (session sheet, Recents, toasts). Routes controller input.
+// the overlays (Start menu, theme picker, Recents, toasts). Routes
+// controller input.
 //
 // L1/R1 change page, B goes back to Home, Start opens the session sheet,
 // Home returns to the Home page (or from an app, back to the shell), and
@@ -39,6 +40,10 @@ Item {
                 Wm.goHome();
                 recents.show();
             }
+            return;
+        }
+        if (themes.open) {
+            themes.handle(button);
             return;
         }
         if (recents.open) {
@@ -138,6 +143,12 @@ Item {
 
     SessionSheet {
         id: sheet
+        anchors.fill: parent
+        onThemesRequested: themes.show()
+    }
+
+    ThemePicker {
+        id: themes
         anchors.fill: parent
     }
 

@@ -3,16 +3,19 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 
-// Small saved state: dock pins and recently played games.
+// Small saved state: dock pins, recently played games and theme choice.
 // Stored as JSON in Quickshell's per-shell state directory.
 Singleton {
-    id: state
+    id: store
 
     // Desktop entry ids pinned to the Home dock, in order.
     property var pinned: []
     // Recently played games, newest first:
     // { kind, system, path, title, art, entryId }
     property var recentGames: []
+    // Selected theme (folder name) and the favourite colour picked per theme.
+    property string theme: "dusk-tide"
+    property var accents: ({})
     property bool loaded: false
 
     readonly property int maxPins: 5
@@ -53,8 +56,28 @@ Singleton {
         save();
     }
 
+    function setTheme(id) {
+        theme = id;
+        save();
+    }
+
+    function setAccent(themeId, color) {
+        const map = Object.assign({}, accents);
+        if (color)
+            map[themeId] = color;
+        else
+            delete map[themeId];
+        accents = map;
+        save();
+    }
+
     function save() {
-        file.setText(JSON.stringify({ pinned: pinned, recentGames: recentGames }, null, 2));
+        file.setText(JSON.stringify({
+            pinned: pinned,
+            recentGames: recentGames,
+            theme: theme,
+            accents: accents
+        }, null, 2));
     }
 
     function defaultPins() {
@@ -90,6 +113,8 @@ Singleton {
         }
         pinned = data && Array.isArray(data.pinned) ? data.pinned : defaultPins();
         recentGames = data && Array.isArray(data.recentGames) ? data.recentGames : [];
+        theme = data && typeof data.theme === "string" ? data.theme : "dusk-tide";
+        accents = data && data.accents && typeof data.accents === "object" ? data.accents : {};
         loaded = true;
     }
 }

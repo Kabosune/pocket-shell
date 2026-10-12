@@ -1,7 +1,8 @@
 import QtQuick
 import Quickshell.Services.UPower
 
-// Battery icon + percentage from UPower. Hidden if there's no battery to report.
+// Battery from UPower: an icon + percentage, or (themes with "status":
+// "pixel") four chunky segments. Hidden if there's no battery to report.
 Row {
     id: battery
     spacing: 6
@@ -13,10 +14,12 @@ Row {
         const p = device.percentage;
         return p > 1 ? p / 100 : p;
     }
+    readonly property bool pixel: Theme.statusStyle === "pixel"
 
     visible: device !== null && device.ready && device.isLaptopBattery
 
     Icon {
+        visible: !battery.pixel
         anchors.verticalCenter: parent.verticalCenter
         size: 22
         color: Theme.text
@@ -26,12 +29,48 @@ Row {
         })
     }
 
+    Row {
+        visible: battery.pixel
+        anchors.verticalCenter: parent.verticalCenter
+
+        Rectangle {
+            width: segments.implicitWidth + 8
+            height: 17
+            color: "transparent"
+            border.width: 2
+            border.color: Theme.textStrong
+
+            Row {
+                id: segments
+                anchors.centerIn: parent
+                spacing: 2
+
+                Repeater {
+                    model: 4
+                    Rectangle {
+                        required property int index
+                        width: 5
+                        height: 9
+                        color: battery.level > index * 0.25 + 0.05 ? Theme.textStrong : Theme.line
+                    }
+                }
+            }
+        }
+
+        Rectangle {
+            anchors.verticalCenter: parent.verticalCenter
+            width: 3
+            height: 6
+            color: Theme.textStrong
+        }
+    }
+
     Text {
         anchors.verticalCenter: parent.verticalCenter
         text: `${Math.round(battery.level * 100)}%`
         color: Theme.text
-        font.family: Theme.bodyFont
+        font.family: battery.pixel ? Theme.displayFont : Theme.bodyFont
         font.weight: Font.Bold
-        font.pixelSize: 12
+        font.pixelSize: battery.pixel ? 13 : 12
     }
 }

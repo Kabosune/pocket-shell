@@ -1,8 +1,12 @@
 import QtQuick
 import Quickshell
 
-// Home page, landscape layout from the concept canvas (Main.dc.html).
-// Positions are the mockup's px values; the RP5 screen is 960x540 logical.
+// Home page. Two built-in layouts, chosen by the theme ("style.home"):
+//   classic  from Main.dc.html on the canvas (Dusk Tide)
+//   panels   from Retro-Home.dc.html (Stylus): clock card with a week
+//            strip, media and toggles stacked right, a wide dock with a
+//            name banner
+// Positions are the mockups' px values; the RP5 screen is 960x540 logical.
 //
 // Controller focus moves between three rows:
 //   media controls  (top right)
@@ -21,6 +25,7 @@ Item {
     property int dockIndex: 0
 
     readonly property var zones: ["media", "toggles", "dock"]
+    readonly property bool panels: Theme.homeLayout === "panels"
 
     // Pinned apps, then Settings (which opens the session sheet for now).
     readonly property var dockItems: {
@@ -114,16 +119,25 @@ Item {
     onDockItemsChanged: setZoneIndex("dock", dockIndex)
 
     ClockBlock {
+        visible: !home.panels
         x: 48
         y: 70
     }
 
+    ClockPanel {
+        visible: home.panels
+        x: 32
+        y: 60
+        width: 420
+        height: 272
+    }
+
     Loader {
         id: media
-        x: home.width - 40 - width
-        y: 74
-        width: 400
-        height: 156
+        x: home.panels ? 476 : home.width - 40 - width
+        y: home.panels ? 60 : 74
+        width: home.panels ? home.width - 476 - 32 : 400
+        height: home.panels ? 124 : 156
         source: "NowPlaying.qml"
     }
 
@@ -136,17 +150,22 @@ Item {
 
     QuickToggles {
         id: toggles
-        x: home.width - 40 - width
-        y: 246
-        width: 400
+        x: home.panels ? 476 : home.width - 40 - width
+        y: home.panels ? 200 : 246
+        width: home.panels ? home.width - 476 - 32 : 400
+        height: home.panels ? 132 : implicitHeight
+        toggleSize: home.panels ? 64 : 52
         focusedIndex: Controller.active && home.zone === "toggles" ? home.toggleIndex : -1
     }
 
     Dock {
         id: dock
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 48
+        x: home.panels ? 32 : (home.width - width) / 2
+        y: home.panels ? 352 : home.height - 48 - height
+        width: home.panels ? home.width - 64 : implicitWidth
+        height: home.panels ? 138 : implicitHeight
+        tileSize: home.panels ? 72 : 56
+        banner: home.panels
         items: home.dockItems
         focusedIndex: Controller.active && home.zone === "dock" ? home.dockIndex : -1
         onTapped: index => {

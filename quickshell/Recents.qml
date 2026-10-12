@@ -64,7 +64,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        color: Qt.rgba(6 / 255, 16 / 255, 18 / 255, 0.85)
+        color: Theme.scrim
 
         MouseArea {
             anchors.fill: parent
@@ -127,7 +127,7 @@ Item {
 
             Surface {
                 anchors.fill: parent
-                color: Qt.rgba(14 / 255, 36 / 255, 40 / 255, 0.95)
+                color: Theme.surfaceStrong
 
                 Column {
                     anchors.left: parent.left
@@ -136,11 +136,9 @@ Item {
                     anchors.margins: 18
                     spacing: 4
 
-                    Rectangle {
+                    Chip {
                         width: 56
                         height: 56
-                        radius: Theme.rIcon
-                        color: Theme.chip
 
                         AppIcon {
                             anchors.centerIn: parent
@@ -178,14 +176,13 @@ Item {
                     onClicked: recents.switchTo(card.index)
                 }
 
-                Rectangle {
+                Chip {
                     anchors.top: parent.top
                     anchors.right: parent.right
                     anchors.margins: 10
                     width: 36
                     height: 36
                     radius: Theme.rPill
-                    color: Theme.chip
 
                     Icon {
                         anchors.centerIn: parent

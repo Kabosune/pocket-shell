@@ -1,13 +1,15 @@
 import QtQuick
 import Quickshell.Io
 
-// Temporary way out of Pocket Shell until there's a real power menu.
+// The Start menu: themes, and ways out of Pocket Shell (until there's a
+// real settings app and power menu).
 Item {
     id: sheet
 
     property bool open: false
     property int focusedIndex: 0
-    readonly property int count: 3
+    readonly property var actions: ["themes", "plasma", "steam", "cancel"]
+    signal themesRequested()
 
     function show() {
         focusedIndex = 0;
@@ -15,12 +17,17 @@ Item {
     }
 
     function activate(index) {
-        if (index === 0)
-            toPlasma.running = true;
-        else if (index === 1)
-            toSteam.running = true;
-        else
+        const action = actions[index];
+        if (action === "themes") {
             open = false;
+            themesRequested();
+        } else if (action === "plasma") {
+            toPlasma.running = true;
+        } else if (action === "steam") {
+            toSteam.running = true;
+        } else {
+            open = false;
+        }
     }
 
     // Controller input while the sheet is open
@@ -28,7 +35,7 @@ Item {
         if (button === "up")
             focusedIndex = Math.max(0, focusedIndex - 1);
         else if (button === "down")
-            focusedIndex = Math.min(count - 1, focusedIndex + 1);
+            focusedIndex = Math.min(actions.length - 1, focusedIndex + 1);
         else if (button === "a")
             activate(focusedIndex);
         else if (button === "b" || button === "home" || button === "start")
@@ -39,7 +46,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        color: Qt.rgba(0, 0, 0, 0.5)
+        color: Theme.scrim
 
         MouseArea {
             anchors.fill: parent
@@ -51,7 +58,7 @@ Item {
         anchors.centerIn: parent
         width: content.implicitWidth + 48
         height: content.implicitHeight + 48
-        color: Qt.rgba(14 / 255, 36 / 255, 40 / 255, 0.96)
+        color: Theme.surfaceStrong
 
         // Swallow taps on the card so they don't close the sheet
         MouseArea { anchors.fill: parent }
@@ -62,31 +69,37 @@ Item {
             spacing: 12
 
             Text {
-                text: "Switch session"
+                text: "Menu"
                 color: Theme.textStrong
-                font.family: Theme.bodyFont
-                font.weight: Font.ExtraBold
-                font.pixelSize: 18
+                font.family: Theme.displayFont
+                font.weight: Font.Black
+                font.pixelSize: 22
             }
 
             PillButton {
                 width: 260
-                label: "Plasma Mobile"
+                label: "Themes"
                 primary: true
                 focused: Controller.active && sheet.focusedIndex === 0
                 onActivated: sheet.activate(0)
             }
             PillButton {
                 width: 260
-                label: "Steam mode"
+                label: "Plasma Mobile"
                 focused: Controller.active && sheet.focusedIndex === 1
                 onActivated: sheet.activate(1)
             }
             PillButton {
                 width: 260
-                label: "Cancel"
+                label: "Steam mode"
                 focused: Controller.active && sheet.focusedIndex === 2
                 onActivated: sheet.activate(2)
+            }
+            PillButton {
+                width: 260
+                label: "Cancel"
+                focused: Controller.active && sheet.focusedIndex === 3
+                onActivated: sheet.activate(3)
             }
         }
     }

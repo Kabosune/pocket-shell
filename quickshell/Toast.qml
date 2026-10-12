@@ -18,7 +18,7 @@ Item {
         width: label.implicitWidth + 36
         height: label.implicitHeight + 20
         radius: Theme.rPill
-        color: Qt.rgba(14 / 255, 36 / 255, 40 / 255, 0.95)
+        color: Theme.surfaceStrong
         opacity: 0
         visible: opacity > 0
 

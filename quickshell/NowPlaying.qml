@@ -31,7 +31,9 @@ Surface {
             p.next();
     }
 
-    component RoundControl: Rectangle {
+    // Media button. Bevel themes draw every button as a chunky key;
+    // otherwise only play/pause has a background.
+    component RoundControl: Item {
         id: control
         property var glyph
         property bool big: false
@@ -39,19 +41,27 @@ Surface {
         property bool focused: false
         signal activated()
 
-        width: big ? 52 : 44
-        height: width
-        radius: big ? Theme.rBtn : Theme.rPill
-        color: big ? Theme.accent : "transparent"
-        opacity: !available ? 0.4 : (press.pressed ? 0.75 : 1)
+        width: Theme.bevel ? (big ? 56 : 44) : (big ? 52 : 44)
+        height: Theme.bevel ? 36 : width
+        opacity: !available ? 0.4 : 1
 
         FocusRing {
             visible: control.focused
-            radius: control.radius
+            radius: background.radius
+        }
+
+        Chip {
+            id: background
+            anchors.fill: parent
+            visible: control.big || Theme.bevel
+            radius: Theme.bevel ? Theme.rKey : control.big ? Theme.rBtn : Theme.rPill
+            active: control.big
+            pressed: press.pressed
         }
 
         Icon {
             anchors.centerIn: parent
+            anchors.verticalCenterOffset: Theme.bevel ? -1 : 0
             glyph: control.glyph
             size: control.big ? 22 : 20
             color: control.big ? Theme.accentInk : Theme.text
@@ -73,19 +83,22 @@ Surface {
         Item {
             id: art
             anchors.verticalCenter: parent.verticalCenter
-            width: 120
-            height: 120
+            width: Math.min(120, card.height - 36)
+            height: width
 
-            // Fallback art: a small Dusk Tide scene
+            // Fallback art: a small sunset in the theme's colours
             Rectangle {
                 anchors.fill: parent
                 radius: Theme.rArt
-                color: "#2F4B5A"
+                color: Theme.chipFocused
                 clip: true
                 visible: cover.status !== Image.Ready
 
                 Shape {
-                    anchors.fill: parent
+                    width: 120
+                    height: 120
+                    scale: art.width / 120
+                    transformOrigin: Item.TopLeft
                     preferredRendererType: Shape.CurveRenderer
                     ShapePath {
                         strokeColor: "transparent"
@@ -94,12 +107,12 @@ Surface {
                     }
                     ShapePath {
                         strokeColor: "transparent"
-                        fillColor: "#1D4144"
+                        fillColor: Theme.chip
                         PathSvg { path: "M0 76 C 30 64, 60 68, 120 80 V120 H0 Z" }
                     }
                     ShapePath {
                         strokeColor: "transparent"
-                        fillColor: "#12302F"
+                        fillColor: Theme.surfaceStrong
                         PathSvg { path: "M0 96 C 40 86, 80 92, 120 98 V120 H0 Z" }
                     }
                 }

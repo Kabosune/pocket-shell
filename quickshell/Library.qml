@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Shapes
 import Quickshell
 import Quickshell.Io
 
@@ -36,14 +37,7 @@ Item {
     property bool scanFailed: false
     property double lastScan: 0
 
-    readonly property var tints: ["#2F5A45", "#463A66", "#3E4650", "#5A4A2E", "#2E4A5A", "#5A2E46", "#3A5A2E", "#4A3A2E"]
-
-    function tintFor(key) {
-        let h = 0;
-        for (let i = 0; i < key.length; i++)
-            h = (h * 31 + key.charCodeAt(i)) % 9973;
-        return tints[h % tints.length];
-    }
+    readonly property bool carts: Theme.cardStyle === "cartridge"
 
     readonly property var androidApps: {
         const list = DesktopEntries.applications.values.filter(e => e.id.indexOf("waydroid.") === 0);
@@ -63,7 +57,7 @@ Item {
         if (Store.recentGames.length > 0) {
             out.push({
                 key: "recent", kind: "recent", name: "Recent", short: "RCT",
-                subtitle: "Last played", color: "#3A4A5A",
+                subtitle: "Last played", color: Theme.tintFor("recent"),
                 description: "The games you played last, newest first.",
                 games: Store.recentGames
             });
@@ -71,7 +65,7 @@ Item {
         if (ports.length > 0) {
             out.push({
                 key: "ports", kind: "ports", name: "Ports", short: "PRT",
-                subtitle: "Native builds", color: "#5A3E36",
+                subtitle: "Native builds", color: Theme.tintFor("ports"),
                 description: "Native ports built from decompilation projects. They run directly, with no emulator in between.",
                 games: ports
             });
@@ -79,7 +73,7 @@ Item {
         if (steamAvailable) {
             out.push({
                 key: "steam", kind: "steam", name: "Steam", short: "STM",
-                subtitle: "Opens Steam mode", color: "#2D4A66",
+                subtitle: "Opens Steam mode", color: Theme.tintFor("steam"),
                 description: "Your Steam library lives in Steam mode. Opening it switches the whole device over.",
                 games: []
             });
@@ -87,7 +81,7 @@ Item {
         if (androidApps.length > 0) {
             out.push({
                 key: "android", kind: "android", name: "Android", short: "AND",
-                subtitle: "Waydroid", color: "#3A5A3E",
+                subtitle: "Waydroid", color: Theme.tintFor("android"),
                 description: "Android apps and games running through Waydroid.",
                 games: androidApps
             });
@@ -97,7 +91,7 @@ Item {
             const games = systemGames[s.key] || [];
             out.push({
                 key: s.key, kind: "system", name: s.name, short: s.short,
-                subtitle: s.emulator, color: tintFor(s.key),
+                subtitle: s.emulator, color: Theme.tintFor(s.key),
                 description: `${games.length} ${games.length === 1 ? "game" : "games"} · plays with ${s.emulator}`,
                 games: games
             });
@@ -374,7 +368,6 @@ Item {
             KeyCap {
                 anchors.verticalCenter: parent.verticalCenter
                 label: "LT"
-                borderAlpha: 0.45
             }
 
             Repeater {
@@ -391,7 +384,7 @@ Item {
                     radius: Theme.rPill
                     color: selected ? Theme.accent : "transparent"
                     border.width: selected ? 0 : 1
-                    border.color: Qt.rgba(207 / 255, 230 / 255, 225 / 255, 0.22)
+                    border.color: Theme.line
 
                     Text {
                         id: chipLabel
@@ -413,7 +406,6 @@ Item {
             KeyCap {
                 anchors.verticalCenter: parent.verticalCenter
                 label: "RT"
-                borderAlpha: 0.45
             }
         }
 
@@ -426,7 +418,7 @@ Item {
             leftMargin: 48
             rightMargin: 48
             orientation: ListView.Horizontal
-            spacing: 16
+            spacing: page.carts ? 18 : 16
             model: page.collections
             currentIndex: page.collectionIndex
             highlightFollowsCurrentItem: false
@@ -440,63 +432,161 @@ Item {
                 readonly property bool selected: index === page.collectionIndex
                 readonly property bool focused: Controller.active && selected
 
-                width: 150
-                height: 200
-                y: 10
+                width: page.carts ? 128 : 150
+                height: page.carts ? 176 : 200
+                y: page.carts ? (focused ? 10 : 24) : 10
                 z: focused ? 1 : 0
-                scale: focused ? 1.07 : 1
+                scale: !page.carts && focused ? 1.07 : 1
                 Behavior on scale { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
+                Behavior on y { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
 
-                FocusRing {
-                    visible: card.focused
-                    radius: Theme.rCard
-                }
-
-                Rectangle {
+                // Card style
+                Item {
                     anchors.fill: parent
-                    radius: Theme.rCard
-                    color: card.modelData.color
-                    clip: true
-                    opacity: tap.pressed ? 0.8 : 1
+                    visible: !page.carts
 
-                    Text {
-                        x: 12
-                        y: 10
-                        text: card.modelData.short
-                        color: card.focused ? Theme.accent : Theme.textStrong
-                        opacity: card.focused ? 0.55 : 0.22
-                        font.family: Theme.displayFont
-                        font.weight: Font.Black
-                        font.pixelSize: 52
+                    FocusRing {
+                        visible: card.focused
+                        radius: Theme.rCard
                     }
 
-                    Column {
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: Theme.rCard
+                        color: card.modelData.color
+                        clip: true
+                        opacity: tap.pressed ? 0.8 : 1
+
+                        Text {
+                            x: 12
+                            y: 10
+                            text: card.modelData.short
+                            color: card.focused ? Theme.accent : "#FFFFFF"
+                            opacity: card.focused ? 0.6 : 0.22
+                            font.family: Theme.displayFont
+                            font.weight: Font.Black
+                            font.pixelSize: 52
+                        }
+
+                        Column {
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.bottom: parent.bottom
+                            anchors.margins: 14
+                            spacing: 2
+
+                            Text {
+                                width: parent.width
+                                wrapMode: Text.Wrap
+                                maximumLineCount: 2
+                                elide: Text.ElideRight
+                                text: card.modelData.name
+                                color: Qt.rgba(1, 1, 1, 0.95)
+                                font.family: Theme.bodyFont
+                                font.weight: Font.ExtraBold
+                                font.pixelSize: 15
+                            }
+
+                            Text {
+                                width: parent.width
+                                elide: Text.ElideRight
+                                text: card.modelData.subtitle
+                                color: Qt.rgba(1, 1, 1, 0.7)
+                                font.family: Theme.bodyFont
+                                font.weight: Font.DemiBold
+                                font.pixelSize: 12
+                            }
+                        }
+                    }
+                }
+
+                // Cartridge style: notched corner, label sticker, grip lines
+                Item {
+                    anchors.fill: parent
+                    visible: page.carts
+                    opacity: tap.pressed ? 0.8 : 1
+
+                    Shape {
+                        anchors.fill: parent
+                        preferredRendererType: Shape.CurveRenderer
+
+                        ShapePath {
+                            strokeColor: "transparent"
+                            fillColor: card.focused ? Theme.accent : "transparent"
+                            PathSvg {
+                                path: `M14 -5 H${card.width + 5} V${card.height + 5} H-5 V14 Z`
+                            }
+                        }
+                        ShapePath {
+                            strokeColor: "transparent"
+                            fillColor: card.modelData.color
+                            PathSvg {
+                                path: `M16 0 H${card.width} V${card.height} H0 V16 Z`
+                            }
+                        }
+                    }
+
+                    Rectangle {
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.bottom: parent.bottom
-                        anchors.margins: 14
-                        spacing: 2
+                        height: 6
+                        color: Qt.darker(card.modelData.color, 1.3)
+                    }
+
+                    Rectangle {
+                        x: 12
+                        y: 30
+                        width: parent.width - 24
+                        height: 96
+                        radius: 3
+                        color: Theme.surface
+                        border.width: 2
+                        border.color: Theme.surfaceBorder
 
                         Text {
-                            width: parent.width
+                            x: 10
+                            y: 8
+                            text: card.modelData.short
+                            color: card.focused ? Theme.accent : card.modelData.color
+                            font.family: Theme.displayFont
+                            font.weight: Font.Bold
+                            font.pixelSize: 30
+                        }
+
+                        Text {
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.bottom: parent.bottom
+                            anchors.margins: 10
                             wrapMode: Text.Wrap
                             maximumLineCount: 2
                             elide: Text.ElideRight
                             text: card.modelData.name
                             color: Theme.textStrong
                             font.family: Theme.bodyFont
-                            font.weight: Font.ExtraBold
-                            font.pixelSize: 15
+                            font.weight: Font.Black
+                            font.pixelSize: 13
+                            lineHeight: 0.95
                         }
+                    }
 
-                        Text {
-                            width: parent.width
-                            elide: Text.ElideRight
-                            text: card.modelData.subtitle
-                            color: Theme.textHint
-                            font.family: Theme.bodyFont
-                            font.weight: Font.DemiBold
-                            font.pixelSize: 12
+                    Column {
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+                        anchors.leftMargin: 30
+                        anchors.rightMargin: 30
+                        anchors.bottomMargin: 14
+                        spacing: 4
+
+                        Repeater {
+                            model: 3
+                            Rectangle {
+                                width: parent.width
+                                height: 3
+                                color: Qt.rgba(0, 0, 0, 0.22)
+                            }
                         }
                     }
                 }
@@ -514,6 +604,26 @@ Item {
             }
         }
 
+        // Shelf under the cartridges
+        Rectangle {
+            visible: page.carts
+            x: 24
+            y: row.y + 202
+            width: parent.width - 48
+            height: 10
+            radius: 2
+            color: Theme.chip
+
+            Rectangle {
+                z: -1
+                y: 4
+                width: parent.width
+                height: parent.height
+                radius: parent.radius
+                color: Theme.ledge
+            }
+        }
+
         // Selected collection
         Surface {
             visible: page.currentCollection !== null
@@ -521,7 +631,7 @@ Item {
             y: 350
             width: parent.width - 96
             height: 118
-            color: Qt.rgba(14 / 255, 36 / 255, 40 / 255, 0.82)
+            color: Theme.surfaceStrong
 
             Column {
                 anchors.left: parent.left
@@ -587,7 +697,7 @@ Item {
                         radius: Theme.rPill
                         color: "transparent"
                         border.width: 1.5
-                        border.color: Qt.rgba(43 / 255, 26 / 255, 16 / 255, 0.6)
+                        border.color: Theme.accentInk
 
                         Text {
                             anchors.centerIn: parent
@@ -752,7 +862,7 @@ Item {
                         title: tile.modelData.title
                         caption: page.currentCollection && page.currentCollection.kind === "recent"
                             ? page.systemName(tile.modelData.system) : ""
-                        tint: page.tintFor(tile.modelData.system || "x")
+                        tint: Theme.tintFor(tile.modelData.system || "x")
                         opacity: gameTap.pressed ? 0.8 : 1
                     }
 

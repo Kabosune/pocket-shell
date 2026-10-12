@@ -1,0 +1,50 @@
+{
+  "name": "Stylus",
+  "description": "Retro handheld: graph paper, pixel type, your colour",
+  "author": "KaboWabo",
+  "colors": {
+    "bg": "#EEF0F2",
+    "surface": "#FFFFFF",
+    "surfaceStrong": "#FFFFFF",
+    "surfaceBorder": "#C9CED6",
+    "chip": "#E3E7EC",
+    "chipFocused": "#FFFFFF",
+    "focusGap": "#FFFFFF",
+    "keyBorder": "#8A919C",
+    "line": "#C9CED6",
+    "textStrong": "#2B2F36",
+    "text": "#2B2F36",
+    "textMuted": "#59606B",
+    "textHint": "#7A818C",
+    "iconOnChip": "#2B2F36",
+    "accent": "#3B8FE0",
+    "inkDark": "#2B2F36",
+    "inkLight": "#FFFFFF",
+    "dim": "rgba(0, 0, 0, 0)",
+    "scrim": "rgba(238, 240, 242, 0.94)",
+    "ledge": "#D5DAE1",
+    "bar": "#FFFFFF",
+    "barBorder": "#C9CED6"
+  },
+  "accentChoices": [
+    "#9C5A3C", "#E8442E", "#F07AA0", "#F2A33A",
+    "#F5D13A", "#A5D63E", "#4CB84A", "#2E8B57",
+    "#3BC4C4", "#3B8FE0", "#2E4FB8", "#7A4FD0",
+    "#B04FC0", "#E85FB0", "#6B6F78", "#2B2F36"
+  ],
+  "cardColors": ["#C0603E", "#2E4FB8", "#3E9B48", "#7A4FD0", "#3B3F48", "#B04F7A", "#2E8B8B", "#6B7A8C"],
+  "radii": { "card": 6, "art": 4, "pill": 4, "btn": 4, "icon": 10, "dock": 6, "key": 3 },
+  "fonts": { "display": "Pixelify Sans", "body": "Nunito" },
+  "focus": { "gap": 3, "ring": 3 },
+  "wallpaper": { "type": "grid", "color": "#EEF0F2", "line": "rgba(60, 80, 110, 0.07)", "size": 16 },
+  "style": {
+    "border": 2,
+    "bevel": true,
+    "squareIcons": true,
+    "keys": "filled",
+    "tabs": "buttons",
+    "status": "pixel",
+    "cards": "cartridge",
+    "home": "panels"
+  }
+}

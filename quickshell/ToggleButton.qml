@@ -1,6 +1,6 @@
 import QtQuick
 
-// Round quick-toggle with a label underneath.
+// Quick-toggle tile with a label underneath.
 Item {
     id: toggle
 
@@ -9,46 +9,53 @@ Item {
     property bool active: false
     property bool available: true
     property bool focused: false
+    property real size: 52
     signal activated()
 
-    implicitWidth: 76
+    implicitWidth: Math.max(76, size + 24)
     implicitHeight: column.implicitHeight
-    opacity: available ? (tap.pressed ? 0.8 : 1) : 0.45
+    opacity: available ? 1 : 0.45
 
     Column {
         id: column
         anchors.horizontalCenter: parent.horizontalCenter
         spacing: 6
 
-        Rectangle {
-            id: disc
+        Item {
             anchors.horizontalCenter: parent.horizontalCenter
-            width: 52
-            height: 52
-            radius: toggle.active ? Theme.rBtn : Theme.rPill
-            color: toggle.active ? Theme.accent : Theme.chip
+            width: toggle.size
+            height: toggle.size
 
             FocusRing {
                 visible: toggle.focused
                 radius: disc.radius
             }
 
-            Icon {
-                anchors.centerIn: parent
-                glyph: toggle.glyph
-                size: 22
-                weight: 1.9
-                color: toggle.active ? Theme.accentInk : Theme.iconOnChip
+            Chip {
+                id: disc
+                anchors.fill: parent
+                radius: toggle.active ? Theme.rBtn : Theme.rPill
+                active: toggle.active
+                pressed: tap.pressed
+
+                Icon {
+                    anchors.centerIn: parent
+                    anchors.verticalCenterOffset: Theme.bevel ? -1 : 0
+                    glyph: toggle.glyph
+                    size: toggle.size * 0.42
+                    weight: Theme.squareIcons ? 2 : 1.9
+                    color: toggle.active ? Theme.accentInk : Theme.iconOnChip
+                }
             }
         }
 
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             text: toggle.label
-            color: Theme.text
+            color: toggle.active ? Theme.textStrong : Theme.text
             font.family: Theme.bodyFont
-            font.weight: Font.Bold
-            font.pixelSize: 12
+            font.weight: toggle.active ? Font.Black : Font.Bold
+            font.pixelSize: toggle.size > 56 ? 13 : 12
         }
     }
 

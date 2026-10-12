@@ -129,11 +129,10 @@ Item {
                         radius: Theme.rIcon
                     }
 
-                    Rectangle {
+                    Chip {
                         anchors.fill: parent
-                        radius: Theme.rIcon
-                        color: cell.focused ? Theme.chipFocused : Theme.chip
-                        opacity: tap.pressed ? 0.8 : 1
+                        focused: cell.focused
+                        pressed: tap.pressed
 
                         AppIcon {
                             anchors.centerIn: parent
