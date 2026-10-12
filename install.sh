@@ -24,6 +24,11 @@ link() {
 
 link "$REPO/hypr/hyprland.lua"     "$HOME/.config/hypr/hyprland.lua"
 link "$REPO/quickshell"            "$HOME/.config/quickshell"
+link "$REPO/fonts"                 "$HOME/.local/share/fonts/pocket-shell"
+
+if command -v fc-cache >/dev/null; then
+  fc-cache -f "$HOME/.local/share/fonts" >/dev/null && echo "fonts    cache refreshed"
+fi
 
 echo "Installing session files (needs sudo)..."
 sudo install -Dm755 "$REPO/session/pocketshell-session"  /usr/local/bin/pocketshell-session

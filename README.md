@@ -14,7 +14,8 @@ First target: **Retroid Pocket 5** running **pocknix-os**.
 | Path | What it is | Installed to |
 | --- | --- | --- |
 | `hypr/hyprland.lua` | Hyprland config (0.56+ uses Lua, not `hyprland.conf`) | `~/.config/hypr/hyprland.lua` (symlink) |
-| `quickshell/` | The shell itself | `~/.config/quickshell` (symlink) |
+| `quickshell/` | The shell itself (`Theme.qml` tokens, `Device.qml` profile, screens) | `~/.config/quickshell` (symlink) |
+| `fonts/` | Archivo, Manrope, Nunito (SIL Open Font License, see each folder) | `~/.local/share/fonts/pocket-shell` (symlink) |
 | `session/pocketshell-session` | Session launcher | `/usr/local/bin/` (copy) |
 | `session/pocketshell.desktop` | Wayland session entry | `/usr/share/wayland-sessions/` (copy) |
 | `devices/` | Per-device notes and profiles | — |
@@ -90,3 +91,7 @@ the old session's compositor itself.
 
 - KaboWabo/Kabosune (me :3)
 - AI assistance (Claude Opus 5.5)
+- Fonts: [Archivo](https://github.com/Omnibus-Type/Archivo),
+  [Manrope](https://github.com/googlefonts/manrope) and
+  [Nunito](https://github.com/googlefonts/nunito), by their project authors,
+  under the SIL Open Font License 1.1
