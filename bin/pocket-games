@@ -1,0 +1,237 @@
+#!/bin/bash
+# pocket-games: finds games for the Library and works out how to launch them.
+#
+#   pocket-games scan
+#       Prints one tab-separated line per item:
+#         Y  system  name  short  emulator  count   a system that has games
+#         G  system  path  title  art              a game
+#         P  path    title art                     a port (script in the ports folder)
+#         S                                         Steam mode is available
+#
+#   pocket-games command SYSTEM ROM
+#       Prints the command that launches ROM, one argument per line.
+#       Exits 127 with a message on stderr if no emulator is found.
+#
+# Folders (override with environment variables):
+#   POCKET_ROMS   ROM folder with one subfolder per system
+#                 (default: ~/Emulation/roms if it exists, else ~/Emulation)
+#   POCKET_MEDIA  ES-DE downloaded media (default: ~/ES-DE/downloaded_media)
+#   POCKET_PORTS  ports folder (default: <ROM folder>/ports)
+
+set -u
+shopt -s nullglob nocaseglob
+
+if [ -n "${POCKET_ROMS:-}" ]; then
+  ROMS="$POCKET_ROMS"
+elif [ -d "$HOME/Emulation/roms" ]; then
+  ROMS="$HOME/Emulation/roms"
+else
+  ROMS="$HOME/Emulation"
+fi
+MEDIA="${POCKET_MEDIA:-$HOME/ES-DE/downloaded_media}"
+PORTS="${POCKET_PORTS:-$ROMS/ports}"
+
+# folder | display name | short | emulator label | launcher | extensions
+# Launchers: "ra:core1,core2" tries RetroArch cores in order; anything else
+# is a standalone emulator (see standalone_command below).
+SYSTEMS='
+nes|NES|NES|RetroArch|ra:fceumm,nestopia,mesen|nes fds unf unif zip 7z
+snes|Super Nintendo|SNES|RetroArch|ra:snes9x,bsnes|sfc smc fig swc zip 7z
+n64|Nintendo 64|N64|RetroArch|ra:mupen64plus_next,parallel_n64|n64 z64 v64 zip 7z
+gb|Game Boy|GB|RetroArch|ra:gambatte,sameboy,mgba|gb zip 7z
+gbc|Game Boy Color|GBC|RetroArch|ra:gambatte,sameboy,mgba|gbc zip 7z
+gba|Game Boy Advance|GBA|RetroArch|ra:mgba,gpsp|gba zip 7z
+nds|Nintendo DS|NDS|RetroArch|ra:melonds,melondsds,desmume|nds zip 7z
+n3ds|Nintendo 3DS|3DS|Azahar|azahar|3ds cci cia cxi 3dsx app
+gc|GameCube|GC|Dolphin|dolphin|iso gcm gcz rvz ciso wbfs
+wii|Wii|Wii|Dolphin|dolphin|iso wbfs rvz gcz wad ciso
+mastersystem|Master System|SMS|RetroArch|ra:genesis_plus_gx,picodrive|sms zip 7z
+genesis|Genesis|GEN|RetroArch|ra:genesis_plus_gx,picodrive|md gen smd bin zip 7z
+megadrive|Mega Drive|MD|RetroArch|ra:genesis_plus_gx,picodrive|md gen smd bin zip 7z
+gamegear|Game Gear|GG|RetroArch|ra:genesis_plus_gx,picodrive|gg zip 7z
+segacd|Sega CD|SCD|RetroArch|ra:genesis_plus_gx,picodrive|chd cue m3u iso
+saturn|Saturn|SAT|RetroArch|ra:yabasanshiro,yabause,mednafen_saturn|chd cue m3u iso
+dreamcast|Dreamcast|DC|RetroArch|ra:flycast|chd gdi cdi m3u
+psx|PlayStation|PS1|RetroArch|ra:duckstation,swanstation,pcsx_rearmed|chd cue m3u pbp iso
+ps2|PlayStation 2|PS2|ARMSX2|ps2|iso chd cso
+psp|PSP|PSP|PPSSPP|ppsspp|iso cso pbp chd
+arcade|Arcade|ARC|RetroArch|ra:fbneo,mame2003_plus|zip 7z
+neogeo|Neo Geo|NEO|RetroArch|ra:fbneo|zip 7z
+'
+
+CORE_DIRS=(
+  "$HOME/.config/retroarch/cores"
+  "$HOME/.var/app/org.libretro.RetroArch/config/retroarch/cores"
+  /usr/lib/libretro
+  /usr/lib64/libretro
+  /usr/lib/aarch64-linux-gnu/libretro
+  /usr/local/lib/libretro
+)
+
+system_line() {
+  local line
+  while IFS= read -r line; do
+    [ -z "$line" ] && continue
+    if [ "${line%%|*}" = "$1" ]; then
+      printf '%s\n' "$line"
+      return 0
+    fi
+  done <<< "$SYSTEMS"
+  return 1
+}
+
+# Title from a file name: drop the extension and (tags) / [tags].
+clean_title() {
+  local name="${1%.*}"
+  name="$(printf '%s' "$name" | sed -E 's/[[:space:]]*[\(\[][^])]*[])]//g; s/[[:space:]]+$//')"
+  printf '%s' "${name:-${1%.*}}"
+}
+
+# ES-DE box art for a game, if it was scraped.
+find_art() {
+  local system="$1" rel="$2" base dir kind ext
+  base="${rel%.*}"
+  for kind in covers miximages screenshots; do
+    dir="$MEDIA/$system/$kind"
+    for ext in png jpg jpeg webp; do
+      if [ -f "$dir/$base.$ext" ]; then
+        printf '%s' "$dir/$base.$ext"
+        return 0
+      fi
+    done
+  done
+  return 1
+}
+
+scan_system() {
+  local system="$1" name="$2" short="$3" emulator="$4" exts="$5"
+  local dir="$ROMS/$system" count=0 f rel ext lower skip art
+  [ -d "$dir" ] || return 0
+
+  # Files listed inside .m3u playlists are discs of one game: list the playlist only.
+  local -A in_playlist=()
+  local m3u disc
+  for m3u in "$dir"/*.m3u "$dir"/*/*.m3u; do
+    while IFS= read -r disc; do
+      disc="${disc%$'\r'}"
+      [ -n "$disc" ] && in_playlist["$(dirname "$m3u")/$disc"]=1
+    done < "$m3u"
+  done
+
+  local out=()
+  while IFS= read -r -d '' f; do
+    ext="${f##*.}"
+    lower="${ext,,}"
+    skip=1
+    for e in $exts; do
+      [ "$lower" = "$e" ] && skip=0 && break
+    done
+    [ "$skip" = 1 ] && continue
+    [ -n "${in_playlist[$f]:-}" ] && continue
+    # A .bin next to a .cue of the same name is that disc's data.
+    if [ "$lower" = "bin" ] && [ -f "${f%.*}.cue" ]; then
+      continue
+    fi
+    rel="${f#"$dir"/}"
+    art="$(find_art "$system" "$rel" || true)"
+    out+=("G	$system	$f	$(clean_title "$(basename "$f")")	$art")
+    count=$((count + 1))
+  done < <(find "$dir" -maxdepth 2 -type f ! -name '.*' -print0 2>/dev/null | sort -z)
+
+  if [ "$count" -gt 0 ]; then
+    printf 'Y\t%s\t%s\t%s\t%s\t%s\n' "$system" "$name" "$short" "$emulator" "$count"
+    printf '%s\n' "${out[@]}"
+  fi
+}
+
+scan_ports() {
+  [ -d "$PORTS" ] || return 0
+  local f art
+  for f in "$PORTS"/*.sh; do
+    art="$(find_art ports "$(basename "$f")" || true)"
+    printf 'P\t%s\t%s\t%s\n' "$f" "$(clean_title "$(basename "$f")")" "$art"
+  done
+}
+
+cmd_scan() {
+  local line system name short emulator launcher exts
+  while IFS='|' read -r system name short emulator launcher exts; do
+    [ -z "$system" ] && continue
+    scan_system "$system" "$name" "$short" "$emulator" "$exts"
+  done <<< "$SYSTEMS"
+  scan_ports
+  if command -v steamos-session-select >/dev/null 2>&1; then
+    printf 'S\n'
+  fi
+}
+
+first_command() {
+  local c
+  for c in "$@"; do
+    if command -v "$c" >/dev/null 2>&1; then
+      printf '%s' "$c"
+      return 0
+    fi
+  done
+  return 1
+}
+
+find_core() {
+  local core dir
+  for core in ${1//,/ }; do
+    for dir in "${CORE_DIRS[@]}"; do
+      if [ -f "$dir/${core}_libretro.so" ]; then
+        printf '%s' "$dir/${core}_libretro.so"
+        return 0
+      fi
+    done
+  done
+  return 1
+}
+
+standalone_command() {
+  local launcher="$1" rom="$2" bin
+  case "$launcher" in
+    dolphin)
+      bin="$(first_command dolphin-emu dolphin-emu-nogui)" || return 1
+      printf '%s\n-b\n-e\n%s\n' "$bin" "$rom" ;;
+    ppsspp)
+      bin="$(first_command ppsspp PPSSPPSDL PPSSPPQt PPSSPP)" || return 1
+      printf '%s\n%s\n' "$bin" "$rom" ;;
+    azahar)
+      bin="$(first_command azahar azahar-qt)" || return 1
+      printf '%s\n%s\n' "$bin" "$rom" ;;
+    ps2)
+      bin="$(first_command armsx2 ARMSX2 pcsx2-qt pcsx2)" || return 1
+      printf '%s\n%s\n' "$bin" "$rom" ;;
+    *)
+      return 1 ;;
+  esac
+}
+
+cmd_command() {
+  local system="${1:-}" rom="${2:-}" line launcher core ra
+  if [ -z "$system" ] || [ -z "$rom" ]; then
+    echo "usage: pocket-games command SYSTEM ROM" >&2
+    exit 2
+  fi
+  line="$(system_line "$system")" || { echo "unknown system: $system" >&2; exit 127; }
+  launcher="$(printf '%s' "$line" | cut -d'|' -f5)"
+
+  if [ "${launcher#ra:}" != "$launcher" ]; then
+    ra="$(first_command retroarch)" || { echo "RetroArch isn't installed" >&2; exit 127; }
+    core="$(find_core "${launcher#ra:}")" || { echo "no RetroArch core for $system (tried ${launcher#ra:})" >&2; exit 127; }
+    printf '%s\n-L\n%s\n%s\n' "$ra" "$core" "$rom"
+    return 0
+  fi
+
+  standalone_command "$launcher" "$rom" || { echo "no emulator found for $system" >&2; exit 127; }
+}
+
+case "${1:-}" in
+  scan) cmd_scan ;;
+  command) shift; cmd_command "$@" ;;
+  *)
+    echo "usage: pocket-games scan | pocket-games command SYSTEM ROM" >&2
+    exit 2 ;;
+esac

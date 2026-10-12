@@ -28,6 +28,19 @@ both the Hyprland config and the shell read once the shell skeleton exists.
 - plasmashell segfaults on every logout (visible in the journal). Likely
   harmless and unrelated.
 
+## Input
+
+- The built-in controls are `Retroid Pocket Gamepad`. pocknix runs
+  **InputPlumber**, which hides it and presents a virtual
+  `Microsoft X-Box 360 pad` (plus `InputPlumber Keyboard`) to apps. That's
+  what SDL and `pocket-input` see.
+- The touchscreen is `generic ft5x06 (a0)`.
+- The RP5 has a gyroscope in hardware, but pocknix doesn't expose it yet: no
+  IIO accelerometer/gyro and no motion input device show up. The virtual 360
+  pad has no gyro either.
+- InputPlumber has an *intercept mode* for routing input to an overlay instead
+  of the game; a possible future way to keep the shell out of games.
+
 ## Useful pocknix commands
 
 - `pocknix-desktop-select list | current | <name> [--now]`

@@ -6,9 +6,12 @@ designed for both touch and controller.
 
 First target: **Retroid Pocket 5** running **pocknix-os**.
 
-> **Status:** early. The Home screen (landscape) works with touch and controller:
-> clock, media controls, Wi-Fi and Bluetooth toggles, battery, and a dock.
-> Other pages, app launching and portrait layout are still to come.
+> **Status:** early, landscape only. Four pages work with touch and controller:
+> Home (clock, media, toggles, a dock of pinned apps), Library (your games,
+> with box art), Apps (everything installed) and Glance (battery, storage and
+> more). Apps and games open on top of the shell; Home brings you back and
+> holding Home shows Recents. Portrait, dual-screen and an on-screen keyboard
+> are still to come.
 
 ## Layout
 
@@ -18,6 +21,7 @@ First target: **Retroid Pocket 5** running **pocknix-os**.
 | `quickshell/` | The shell itself (`Theme.qml` tokens, `Device.qml` profile, screens) | `~/.config/quickshell` (symlink) |
 | `fonts/` | Archivo, Manrope, Nunito (SIL Open Font License, see each folder) | `~/.local/share/fonts/pocket-shell` (symlink) |
 | `input/` | `pocket-input`, a small SDL3 gamepad reader the shell runs | `/usr/local/bin/pocket-input` (built) |
+| `bin/pocket-games` | Finds games for the Library and works out their emulator commands | `/usr/local/bin/` (copy) |
 | `session/pocketshell-session` | Session launcher | `/usr/local/bin/` (copy) |
 | `session/pocketshell.desktop` | Wayland session entry | `/usr/share/wayland-sessions/` (copy) |
 | `devices/` | Per-device notes and profiles | — |
@@ -67,17 +71,67 @@ pocknix-desktop-select plasma-mobile --now
 Touch works everywhere. With a controller, the first D-pad or A press shows
 the focus ring; touching the screen hides it again.
 
-| Button | Home | Session sheet |
-| --- | --- | --- |
-| D-pad / left stick | Move focus (media · toggles · dock) | Move focus |
-| A | Activate | Activate |
-| B | — | Close |
-| Start | Open the session sheet | Close |
-| Home | Jump to the dock | Close |
+Anywhere in the shell:
+
+| Button | Does |
+| --- | --- |
+| L1 / R1 | Previous / next page (Home · Library · Apps · Glance) |
+| B | Back; on a page's top level, back to Home |
+| Start | Session menu (Plasma Mobile, Steam mode) |
+| Home | Back to the Home page; from an app or game, back to the shell |
+| Hold Home | Recents: switch to (A) or close (X) open apps |
+
+On each page:
+
+| Page | D-pad / stick | A | Other |
+| --- | --- | --- | --- |
+| Home | Move between media, toggles and dock | Activate | |
+| Library | Move between collections, then games | Open / play | LT RT filter, X refresh |
+| Apps | Move around the grid | Open | X pin to / unpin from the dock |
+| Glance | Choose a media button | Press it | |
+
+While an app or game is in front, only Home and hold-Home go to the shell;
+everything else stays with the app.
 
 Buttons are named by the letter printed on the controller, as SDL reports
 it. To see what the shell receives, run `pocket-input` over SSH and press
 buttons; each press prints a line like `down a`.
+
+## Apps and windows
+
+The shell sits on Hyprland's bottom layer, under app windows. Workspace 1 is
+kept empty as "home". Each app or game launched from the shell opens on its
+own empty workspace, so Home is just a switch back to workspace 1, and
+Recents lists the open windows.
+
+Long-press an app in the Apps page (or press X) to pin it to the Home dock.
+Pins and recently played games are saved in Quickshell's state folder
+(`~/.local/state/quickshell/by-shell/.../state.json`).
+
+## Library
+
+The Library reads the same folders pocknix's ES-DE setup uses:
+
+- **ROMs:** `~/Emulation`, one folder per system using ES-DE's names
+  (`n64`, `gba`, `psx`, `ps2`, `psp`, `gc`, …). If `~/Emulation/roms` exists,
+  that's used instead.
+- **Box art:** ES-DE's scraped media, from its default folder `~/ES-DE/downloaded_media/<system>/covers`
+  (falls back to miximages, then screenshots). Scrape in ES-DE once and the
+  art shows up here.
+- **Ports:** `.sh` launch scripts in `~/Emulation/ports`.
+- **Android:** Waydroid apps, from their desktop entries.
+- **Steam:** opens Steam mode, where the Steam library lives.
+
+Games launch with the emulators pocknix lists (RetroArch cores, Dolphin,
+PPSSPP, Azahar, ARMSX2). `bin/pocket-games` holds the system table and looks
+for RetroArch cores in the usual folders. To check what a game would run:
+
+```bash
+pocket-games command n64 "$HOME/Emulation/n64/Some Game.z64"
+```
+
+If a system won't start, that command says what's missing. The folders can be
+changed with `POCKET_ROMS`, `POCKET_MEDIA` and `POCKET_PORTS`.
 
 ## Write-up: getting Hyprland to start from Plasma on pocknix
 

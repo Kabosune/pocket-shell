@@ -56,6 +56,33 @@ Singleton {
     readonly property var gallery: ({
         stroke: rrect(3, 4, 18, 16, 3) + circle(9, 10, 1.8) + "M4 18l5-5 4 4 3-3 4 4"
     })
+    readonly property var close: ({
+        stroke: "M6 6l12 12M18 6L6 18"
+    })
+    readonly property var back: ({
+        stroke: "M15 5l-7 7 7 7"
+    })
+    readonly property var pin: ({
+        stroke: "M9 4h6l-1 5 3 3H7l3-3zM12 15v5"
+    })
+    readonly property var storage: ({
+        stroke: rrect(3, 6, 18, 12, 3) + "M7 12h6",
+        fill: circle(17, 12, 1)
+    })
+    readonly property var battery: ({
+        stroke: rrect(2, 7, 18, 10, 3) + "M22 10.5v3"
+    })
+    readonly property var steam: ({
+        stroke: circle(12, 12, 9) + circle(15.5, 9.5, 2.5) + "M3.5 13.5l5 2M13.2 11.4l-3.6 4.2",
+        fill: circle(8.5, 15.8, 1.6)
+    })
+    readonly property var android: ({
+        stroke: rrect(5, 9, 14, 11, 2) + "M5 9a7 6 0 0 1 14 0M8 5l1.2 2M16 5l-1.2 2",
+        fill: circle(9.5, 13, 0.9) + circle(14.5, 13, 0.9)
+    })
+    readonly property var apps: ({
+        stroke: rrect(4, 4, 7, 7, 2) + rrect(13, 4, 7, 7, 2) + rrect(4, 13, 7, 7, 2) + rrect(13, 13, 7, 7, 2)
+    })
     readonly property var settings: ({
         stroke: "M4 7h10M18 7h2M4 17h4M12 17h8" + circle(16, 7, 2) + circle(10, 17, 2)
     })

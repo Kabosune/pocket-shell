@@ -1,8 +1,12 @@
+//@ pragma IconTheme breeze
 import QtQuick
 import Quickshell
+import Quickshell.Wayland
 
 // One window per screen the device profile lists (see Device.qml).
-// The main screen gets Home; a second screen gets the display-only Showcase.
+// The main screen gets the shell (Main.qml); a second screen gets the
+// display-only Showcase. Windows sit on the bottom layer, so apps and
+// games open on top of the shell.
 ShellRoot {
     Variants {
         model: Device.shellScreens
@@ -17,6 +21,8 @@ ShellRoot {
                 screen: modelData
                 anchors { top: true; bottom: true; left: true; right: true }
                 exclusionMode: ExclusionMode.Ignore
+                WlrLayershell.layer: WlrLayer.Bottom
+                WlrLayershell.namespace: "pocket-shell"
                 color: Theme.bg
 
                 // Content loads separately so a broken page falls back to the
@@ -24,7 +30,7 @@ ShellRoot {
                 Loader {
                     id: content
                     anchors.fill: parent
-                    source: window.isMain ? "Home.qml" : "Showcase.qml"
+                    source: window.isMain ? "Main.qml" : "Showcase.qml"
                 }
 
                 Hello {

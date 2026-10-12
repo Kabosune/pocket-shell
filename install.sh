@@ -45,6 +45,8 @@ sudo install -Dm755 "$REPO/session/pocketshell-session"  /usr/local/bin/pocketsh
 sudo install -Dm644 "$REPO/session/pocketshell.desktop"  /usr/share/wayland-sessions/pocketshell.desktop
 echo "installed /usr/local/bin/pocketshell-session"
 echo "installed /usr/share/wayland-sessions/pocketshell.desktop"
+sudo install -Dm755 "$REPO/bin/pocket-games" /usr/local/bin/pocket-games
+echo "installed /usr/local/bin/pocket-games"
 if [ "$HELPER_OK" = 1 ]; then
   sudo install -Dm755 "$REPO/input/pocket-input" /usr/local/bin/pocket-input
   echo "installed /usr/local/bin/pocket-input"

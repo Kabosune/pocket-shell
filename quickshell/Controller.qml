@@ -5,6 +5,7 @@ import Quickshell.Io
 
 // Gamepad input. Runs the pocket-input helper (input/pocket-input.c) and
 // turns its lines into signals. D-pad and stick directions auto-repeat.
+// The Home button sends "home" on a tap and "recents" when held.
 Singleton {
     id: controller
 
@@ -26,6 +27,20 @@ Singleton {
         const space = line.indexOf(" ");
         const kind = space < 0 ? line : line.slice(0, space);
         const arg = space < 0 ? "" : line.slice(space + 1);
+
+        if (kind === "down" && arg === "home") {
+            // Home is decided on release: a tap is "home", holding is "recents".
+            homeHold.restart();
+            return;
+        }
+        if (kind === "up" && arg === "home") {
+            if (homeHold.running) {
+                homeHold.stop();
+                pressed("home", false);
+            }
+            released(arg);
+            return;
+        }
 
         if (kind === "down") {
             const isDirection = directions.indexOf(arg) >= 0;
@@ -52,6 +67,12 @@ Singleton {
         } else if (kind === "disconnected") {
             padCount = Math.max(0, padCount - 1);
         }
+    }
+
+    Timer {
+        id: homeHold
+        interval: 450
+        onTriggered: controller.pressed("recents", false)
     }
 
     Timer {

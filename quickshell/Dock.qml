@@ -1,24 +1,16 @@
 import QtQuick
 
-// App dock. The focused item gets the focus ring, a slight zoom and a name pill.
+// App dock: pinned apps, then Settings. The focused item gets the focus
+// ring, a slight zoom and a name pill.
+//
+// items: [{ id, name, entry }] for apps, or [{ id, name, glyph }] for built-ins.
 Surface {
     id: dock
 
+    property var items: []
     property int focusedIndex: -1
-    readonly property var apps: [
-        { id: "browser",  name: "Browser",  glyph: Icons.browser },
-        { id: "files",    name: "Files",    glyph: Icons.files },
-        { id: "music",    name: "Music",    glyph: Icons.music },
-        { id: "gallery",  name: "Gallery",  glyph: Icons.gallery },
-        { id: "settings", name: "Settings", glyph: Icons.settings }
-    ]
     signal tapped(int index)
-    signal activated(string appId)
-
-    function activate(index) {
-        if (index >= 0 && index < apps.length)
-            activated(apps[index].id);
-    }
+    signal activated(int index)
 
     implicitWidth: row.implicitWidth + 28
     implicitHeight: row.implicitHeight + 20
@@ -30,7 +22,7 @@ Surface {
         spacing: 14
 
         Repeater {
-            model: dock.apps
+            model: dock.items
 
             Item {
                 id: slot
@@ -58,9 +50,17 @@ Surface {
                         color: slot.focused ? Theme.chipFocused : Theme.chip
                         opacity: tap.pressed ? 0.8 : 1
 
+                        AppIcon {
+                            anchors.centerIn: parent
+                            visible: slot.modelData.entry !== undefined
+                            entry: slot.modelData.entry ?? null
+                            size: 32
+                        }
+
                         Icon {
                             anchors.centerIn: parent
-                            glyph: slot.modelData.glyph
+                            visible: slot.modelData.glyph !== undefined
+                            glyph: slot.modelData.glyph ?? ({})
                             size: 26
                             color: slot.focused ? Theme.textStrong : Theme.iconOnChip
                         }
@@ -92,7 +92,7 @@ Surface {
                     anchors.fill: parent
                     onClicked: {
                         dock.tapped(slot.index);
-                        dock.activate(slot.index);
+                        dock.activated(slot.index);
                     }
                 }
             }

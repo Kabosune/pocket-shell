@@ -1,13 +1,21 @@
 import QtQuick
+import Quickshell
 
-// Status bar: notifications · page tabs between L1/R1 · Wi-Fi and battery.
+// Status bar: notifications (Home) or the time (other pages) · page tabs
+// between L1/R1 · Wi-Fi and battery.
 Item {
     id: bar
 
     property int page: 0
-    readonly property var pages: ["Home", "Library", "Apps", "Glance"]
+    property var pages: ["Home", "Library", "Apps", "Glance"]
+    signal pageTapped(int index)
 
     implicitHeight: 48
+
+    SystemClock {
+        id: clock
+        precision: SystemClock.Minutes
+    }
 
     Row {
         anchors.left: parent.left
@@ -16,9 +24,19 @@ Item {
         spacing: 8
 
         Icon {
+            visible: bar.page === 0
             glyph: Icons.bell
             size: 18
             color: Theme.text
+        }
+
+        Text {
+            visible: bar.page !== 0
+            text: Qt.formatTime(clock.date, "HH:mm")
+            color: Theme.text
+            font.family: Theme.bodyFont
+            font.weight: Font.Bold
+            font.pixelSize: 12
         }
     }
 
@@ -56,6 +74,8 @@ Item {
                         radius: Theme.rPill
                         color: current ? Theme.accent : "transparent"
 
+                        Behavior on color { ColorAnimation { duration: 120 } }
+
                         Text {
                             id: tabLabel
                             anchors.centerIn: parent
@@ -64,6 +84,12 @@ Item {
                             font.family: Theme.bodyFont
                             font.weight: tab.current ? Font.ExtraBold : Font.Bold
                             font.pixelSize: 12
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            anchors.margins: -6
+                            onClicked: bar.pageTapped(tab.index)
                         }
                     }
                 }
