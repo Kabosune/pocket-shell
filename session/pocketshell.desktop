@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Pocket Shell
+Comment=Pocket Shell on Hyprland
+Exec=/usr/local/bin/pocketshell-session
+TryExec=start-hyprland
+DesktopNames=Hyprland
+Type=Application

@@ -1,0 +1,10 @@
+#!/bin/bash
+# Plasma runs KWin as a systemd user service that outlives a session switch;
+# wait for it to give up the display before Hyprland asks for it.
+systemctl --user stop plasma-workspace.target 2>/dev/null
+for _ in $(seq 1 50); do
+  systemctl --user is-active --quiet plasma-kwin_wayland.service || break
+  sleep 0.2
+done
+unset WAYLAND_DISPLAY DISPLAY
+exec start-hyprland
