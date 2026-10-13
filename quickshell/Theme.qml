@@ -63,7 +63,9 @@ Singleton {
             tabs: "segmented",
             status: "icons",
             cards: "card",
-            home: "classic"
+            home: "classic",
+            textCase: "normal",
+            titlePrefix: ""
         }
     })
 
@@ -259,10 +261,17 @@ Singleton {
     readonly property bool bevel: get("style.bevel") === true
     readonly property bool squareIcons: get("style.squareIcons") === true
     readonly property string keyStyle: get("style.keys")        // "outline" | "filled"
-    readonly property string tabStyle: get("style.tabs")        // "segmented" | "buttons"
-    readonly property string statusStyle: get("style.status")   // "icons" | "pixel"
+    readonly property string tabStyle: get("style.tabs")        // "segmented" | "buttons" | "workspaces"
+    readonly property string statusStyle: get("style.status")   // "icons" | "pixel" | "text"
     readonly property string cardStyle: get("style.cards")      // "card" | "cartridge"
-    readonly property string homeLayout: get("style.home")      // "classic" | "panels"
+    readonly property string homeLayout: get("style.home")      // "classic" | "panels" | "fetch"
+    readonly property bool lowercase: get("style.textCase") === "lower"
+    readonly property string titlePrefix: get("style.titlePrefix") || ""
+
+    // Labels in the theme's text case (titles, tabs, buttons, hints).
+    function label(text) {
+        return lowercase ? String(text).toLowerCase() : text;
+    }
 
     // Spacing
     readonly property real touchMin: 44

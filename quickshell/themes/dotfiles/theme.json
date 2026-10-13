@@ -1,0 +1,51 @@
+{
+  "name": "Dotfiles",
+  "description": "A terminal rice: mono type, a status bar, fetch on Home",
+  "author": "KaboWabo",
+  "colors": {
+    "bg": "#101218",
+    "surface": "#161920",
+    "surfaceStrong": "#1A1E26",
+    "surfaceBorder": "#2A2F3B",
+    "chip": "#1F232C",
+    "chipFocused": "#2A303C",
+    "focusGap": "#101218",
+    "keyBorder": "#3A4150",
+    "line": "#2E3442",
+    "textStrong": "#E3E8F1",
+    "text": "#C5CCD9",
+    "textMuted": "#7D8698",
+    "textHint": "#9AA3B5",
+    "iconOnChip": "#C5CCD9",
+    "accent": "#8FD3A6",
+    "inkDark": "#101218",
+    "inkLight": "#FFFFFF",
+    "dim": "rgba(0, 0, 0, 0)",
+    "scrim": "rgba(10, 11, 15, 0.9)",
+    "ledge": "rgba(0, 0, 0, 0.3)",
+    "bar": "#13161D",
+    "barBorder": "#2A2F3B"
+  },
+  "accentChoices": [
+    "#F28B82", "#8FD3A6", "#F2CF85", "#8AB4F8",
+    "#D3A6F2", "#7FD6D2", "#F5A97F", "#D8DEE9"
+  ],
+  "cardColors": ["#3A2A33", "#23362C", "#3A3423", "#24304A", "#33284A", "#1F3A3A", "#3D2C24", "#2E333D"],
+  "radii": { "card": 4, "art": 3, "pill": 3, "btn": 3, "icon": 4, "dock": 4, "key": 3 },
+  "fonts": { "display": "JetBrains Mono", "body": "JetBrains Mono" },
+  "focus": { "gap": 0, "ring": 2 },
+  "wallpaper": { "type": "dots", "color": "#101218", "dot": "rgba(200, 210, 230, 0.07)", "size": 24 },
+  "sounds": "tty",
+  "style": {
+    "border": 1,
+    "bevel": false,
+    "squareIcons": true,
+    "keys": "outline",
+    "tabs": "workspaces",
+    "status": "text",
+    "cards": "card",
+    "home": "fetch",
+    "textCase": "lower",
+    "titlePrefix": "~/"
+  }
+}

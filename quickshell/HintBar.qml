@@ -29,7 +29,7 @@ Row {
 
             Text {
                 anchors.verticalCenter: parent.verticalCenter
-                text: hint.modelData.text
+                text: Theme.label(hint.modelData.text)
                 color: Theme.textHint
                 font.family: Theme.bodyFont
                 font.weight: Font.Bold

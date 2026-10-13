@@ -146,7 +146,8 @@ Item {
             width: main.width
             height: main.height
             source: modelData
-            opacity: index === main.page ? 1 : 0
+            // Hidden behind full-screen overlays so their hints don't clash
+            opacity: index === main.page && !themes.open && !recents.open ? 1 : 0
             visible: opacity > 0
             Behavior on opacity { NumberAnimation { duration: 140 } }
 

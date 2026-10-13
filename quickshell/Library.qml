@@ -391,7 +391,7 @@ Item {
                     Text {
                         id: chipLabel
                         anchors.centerIn: parent
-                        text: chip.modelData
+                        text: Theme.label(chip.modelData)
                         color: chip.selected ? Theme.accentInk : Theme.text
                         font.family: Theme.bodyFont
                         font.weight: chip.selected ? Font.ExtraBold : Font.Bold
@@ -484,7 +484,7 @@ Item {
                                 wrapMode: Text.Wrap
                                 maximumLineCount: 2
                                 elide: Text.ElideRight
-                                text: card.modelData.name
+                                text: Theme.label(card.modelData.name)
                                 color: Qt.rgba(1, 1, 1, 0.95)
                                 font.family: Theme.bodyFont
                                 font.weight: Font.ExtraBold
@@ -494,7 +494,7 @@ Item {
                             Text {
                                 width: parent.width
                                 elide: Text.ElideRight
-                                text: card.modelData.subtitle
+                                text: Theme.label(card.modelData.subtitle)
                                 color: Qt.rgba(1, 1, 1, 0.7)
                                 font.family: Theme.bodyFont
                                 font.weight: Font.DemiBold
@@ -565,7 +565,7 @@ Item {
                             wrapMode: Text.Wrap
                             maximumLineCount: 2
                             elide: Text.ElideRight
-                            text: card.modelData.name
+                            text: Theme.label(card.modelData.name)
                             color: Theme.textStrong
                             font.family: Theme.bodyFont
                             font.weight: Font.Black
@@ -647,7 +647,7 @@ Item {
                 spacing: 4
 
                 Text {
-                    text: "COLLECTION"
+                    text: Theme.label("COLLECTION")
                     color: Theme.textMuted
                     font.family: Theme.bodyFont
                     font.weight: Font.ExtraBold
@@ -715,7 +715,7 @@ Item {
 
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
-                        text: page.currentCollection && page.currentCollection.kind === "steam" ? "Switch to Steam" : "Open"
+                        text: Theme.label(page.currentCollection && page.currentCollection.kind === "steam" ? "Switch to Steam" : "Open")
                         color: Theme.accentInk
                         font.family: Theme.bodyFont
                         font.weight: Font.ExtraBold

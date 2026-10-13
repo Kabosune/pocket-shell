@@ -33,7 +33,7 @@ Surface {
         Text {
             anchors.left: parent.left
             anchors.top: parent.top
-            text: "CLOCK"
+            text: Theme.label("CLOCK")
             color: Theme.textHint
             font.family: Theme.bodyFont
             font.weight: Font.Black

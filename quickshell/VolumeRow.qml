@@ -34,7 +34,7 @@ SettingRow {
     glyph: muted ? Icons.volumeOff : Icons.volume
     value: ready ? sink.audio.volume : 0
     note: !ready ? "No audio output" : muted ? "Muted" : ""
-    enabled: ready
+    usable: ready
     onMoved: v => volumeRow.setVolume(v)
     onIconTapped: volumeRow.toggleMute()
 

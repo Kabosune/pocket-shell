@@ -14,7 +14,7 @@ import Quickshell
 Singleton {
     id: sfx
 
-    readonly property bool enabled: Store.sounds
+    readonly property bool soundOn: Store.sounds
     readonly property string folder: {
         const pack = Theme.soundPack;
         if (!pack || pack === "none")
@@ -41,7 +41,7 @@ Singleton {
         const name = pending;
         pending = "";
         pendingPriority = -1;
-        if (name && enabled && player)
+        if (name && soundOn && player)
             player.play(name);
     }
 

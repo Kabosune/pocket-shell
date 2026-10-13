@@ -357,7 +357,7 @@ Item {
         visible: picker.colours.length > 0
 
         Text {
-            text: "YOUR COLOUR"
+            text: Theme.label("YOUR COLOUR")
             color: Theme.textMuted
             font.family: Theme.bodyFont
             font.weight: Font.ExtraBold

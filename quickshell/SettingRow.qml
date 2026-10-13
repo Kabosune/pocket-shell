@@ -10,7 +10,7 @@ Item {
     property string valueText: `${Math.round(value * 100)}%`
     property string note: ""
     property bool focused: false
-    property bool enabled: true
+    property bool usable: true
     signal moved(real value)
     signal iconTapped()
 
@@ -52,7 +52,7 @@ Item {
 
             Text {
                 id: nameText
-                text: row.label
+                text: Theme.label(row.label)
                 color: Theme.textStrong
                 font.family: Theme.bodyFont
                 font.weight: Font.ExtraBold
@@ -73,7 +73,7 @@ Item {
             width: parent.width
             value: row.value
             focused: row.focused
-            enabled: row.enabled
+            usable: row.usable
             onMoved: v => row.moved(v)
         }
     }

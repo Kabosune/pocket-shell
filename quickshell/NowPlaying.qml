@@ -32,6 +32,10 @@ Surface {
             p.next();
     }
 
+    // Short cards (the panels and fetch layouts) drop the label and use
+    // smaller controls so everything fits.
+    readonly property bool compact: height < 150
+
     // Media button. Bevel themes draw every button as a chunky key;
     // otherwise only play/pause has a background.
     component RoundControl: Item {
@@ -42,8 +46,8 @@ Surface {
         property bool focused: false
         signal activated()
 
-        width: Theme.bevel ? (big ? 56 : 44) : (big ? 52 : 44)
-        height: Theme.bevel ? 36 : width
+        width: Theme.bevel ? (big ? 56 : 44) : card.compact ? (big ? 44 : 38) : (big ? 52 : 44)
+        height: Theme.bevel ? (card.compact ? 32 : 36) : width
         opacity: !available ? 0.4 : 1
 
         FocusRing {
@@ -78,13 +82,13 @@ Surface {
 
     Row {
         anchors.fill: parent
-        anchors.margins: 18
-        spacing: 18
+        anchors.margins: card.compact ? 14 : 18
+        spacing: card.compact ? 14 : 18
 
         Item {
             id: art
             anchors.verticalCenter: parent.verticalCenter
-            width: Math.min(120, card.height - 36)
+            width: Math.min(120, card.height - (card.compact ? 28 : 36))
             height: width
 
             // Fallback art: a small sunset in the theme's colours
@@ -134,10 +138,11 @@ Surface {
         Column {
             anchors.verticalCenter: parent.verticalCenter
             width: parent.width - art.width - parent.spacing
-            spacing: 4
+            spacing: card.compact ? 2 : 4
 
             Text {
-                text: "NOW PLAYING"
+                visible: !card.compact
+                text: Theme.label("NOW PLAYING")
                 color: Theme.textMuted
                 font.family: Theme.bodyFont
                 font.weight: Font.ExtraBold
@@ -148,24 +153,24 @@ Surface {
             Text {
                 width: parent.width
                 elide: Text.ElideRight
-                text: card.player ? (card.player.trackTitle || card.player.identity) : "Nothing playing"
+                text: card.player ? (card.player.trackTitle || card.player.identity) : Theme.label("Nothing playing")
                 color: Theme.textStrong
                 font.family: Theme.bodyFont
                 font.weight: Font.ExtraBold
-                font.pixelSize: 20
+                font.pixelSize: card.compact ? 17 : 20
             }
 
             Text {
                 width: parent.width
                 elide: Text.ElideRight
-                text: card.player ? (card.player.trackArtist || card.player.identity) : "No media app open"
+                text: card.player ? (card.player.trackArtist || card.player.identity) : Theme.label("No media app open")
                 color: Theme.textMuted
                 font.family: Theme.bodyFont
                 font.weight: Font.DemiBold
                 font.pixelSize: 13
             }
 
-            Item { width: 1; height: 4 }
+            Item { width: 1; height: card.compact ? 2 : 4 }
 
             Row {
                 spacing: 10

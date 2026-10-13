@@ -4,6 +4,7 @@ import QtQuick.Shapes
 // The theme's background. "wallpaper" in theme.json picks the kind:
 //   { "type": "scene", "scene": "dusk-tide" }       drawn landscape (built-in)
 //   { "type": "grid", "color": "...", "line": "...", "size": 16 }   graph paper
+//   { "type": "dots", "color": "...", "dot": "...", "size": 24 }    dot grid
 //   { "type": "color", "color": "..." }
 //   { "type": "image", "file": "wallpaper.png" }    from the theme's folder
 Item {
@@ -15,7 +16,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        color: wall.kind === "color" || wall.kind === "grid" ? Theme.toColor(wall.spec.color || Theme.bg) : Theme.bg
+        color: ["color", "grid", "dots"].indexOf(wall.kind) >= 0 ? Theme.toColor(wall.spec.color || Theme.bg) : Theme.bg
     }
 
     // Graph paper
@@ -46,6 +47,33 @@ Item {
                 color: paper.lineColor
             }
         }
+    }
+
+    // Dot grid, drawn once
+    Canvas {
+        id: dots
+        anchors.fill: parent
+        visible: wall.kind === "dots"
+        readonly property real step: wall.spec.size || 24
+        readonly property color dotColor: Theme.toColor(wall.spec.dot || "rgba(200, 210, 230, 0.10)")
+
+        onPaint: {
+            const ctx = getContext("2d");
+            ctx.reset();
+            if (wall.kind !== "dots")
+                return;
+            ctx.fillStyle = dotColor;
+            const r = 1.2;
+            for (let y = step / 2; y < height; y += step) {
+                for (let x = step / 2; x < width; x += step)
+                    ctx.fillRect(x - r, y - r, r * 2, r * 2);
+            }
+        }
+        onWidthChanged: requestPaint()
+        onHeightChanged: requestPaint()
+        onDotColorChanged: requestPaint()
+        onStepChanged: requestPaint()
+        onVisibleChanged: requestPaint()
     }
 
     // Picture from the theme folder

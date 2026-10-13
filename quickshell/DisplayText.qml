@@ -17,4 +17,5 @@ Text {
     font.letterSpacing: Theme.pixelDisplay ? 0 : spacing
     font.hintingPreference: Theme.pixelDisplay ? Font.PreferFullHinting : Font.PreferDefaultHinting
     renderType: Theme.pixelDisplay ? Text.NativeRendering : Text.QtRendering
+    font.capitalization: Theme.lowercase ? Font.AllLowercase : Font.MixedCase
 }

@@ -1,11 +1,13 @@
 import QtQuick
 import Quickshell
 
-// Home page. Two built-in layouts, chosen by the theme ("style.home"):
+// Home page. Three built-in layouts, chosen by the theme ("style.home"):
 //   classic  from Main.dc.html on the canvas (Dusk Tide)
 //   panels   from Retro-Home.dc.html (Stylus): clock card with a week
 //            strip, media and toggles stacked right, a wide dock with a
 //            name banner
+//   fetch    Dotfiles: a terminal "fetch" card with system info on the
+//            left, media and toggles on the right, a centred dock
 // Positions are the mockups' px values; the RP5 screen is 960x540 logical.
 //
 // Controller focus moves between three rows:
@@ -26,6 +28,12 @@ Item {
 
     readonly property var zones: ["media", "toggles", "dock"]
     readonly property bool panels: Theme.homeLayout === "panels"
+    readonly property bool fetch: Theme.homeLayout === "fetch"
+
+    // Value for the current layout
+    function pick(classic, panels, fetch) {
+        return home.fetch ? fetch : home.panels ? panels : classic;
+    }
 
     // Pinned apps, then Settings (which opens the session sheet for now).
     readonly property var dockItems: {
@@ -119,9 +127,18 @@ Item {
     onDockItemsChanged: setZoneIndex("dock", dockIndex)
 
     ClockBlock {
-        visible: !home.panels
+        visible: !home.panels && !home.fetch
         x: 48
         y: 70
+    }
+
+    Loader {
+        active: home.fetch
+        x: 32
+        y: 60
+        width: 548
+        height: 330
+        source: "FetchCard.qml"
     }
 
     ClockPanel {
@@ -134,10 +151,10 @@ Item {
 
     Loader {
         id: media
-        x: home.panels ? 476 : home.width - 40 - width
-        y: home.panels ? 60 : 74
-        width: home.panels ? home.width - 476 - 32 : 400
-        height: home.panels ? 124 : 156
+        x: home.pick(home.width - 40 - width, 476, 600)
+        y: home.pick(74, 60, 60)
+        width: home.pick(400, home.width - 476 - 32, home.width - 600 - 32)
+        height: home.pick(156, 124, 140)
         source: "NowPlaying.qml"
     }
 
@@ -150,11 +167,11 @@ Item {
 
     QuickToggles {
         id: toggles
-        x: home.panels ? 476 : home.width - 40 - width
-        y: home.panels ? 200 : 246
-        width: home.panels ? home.width - 476 - 32 : 400
-        height: home.panels ? 132 : implicitHeight
-        toggleSize: home.panels ? 64 : 52
+        x: home.pick(home.width - 40 - width, 476, 600)
+        y: home.pick(246, 200, 216)
+        width: home.pick(400, home.width - 476 - 32, home.width - 600 - 32)
+        height: home.pick(implicitHeight, 132, 174)
+        toggleSize: home.pick(52, 64, 52)
         focusedIndex: Controller.active && home.zone === "toggles" ? home.toggleIndex : -1
     }
 

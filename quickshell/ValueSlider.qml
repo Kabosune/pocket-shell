@@ -7,7 +7,7 @@ Item {
 
     property real value: 0
     property bool focused: false
-    property bool enabled: true
+    property bool usable: true
     signal moved(real value)
 
     implicitHeight: 36
@@ -17,7 +17,7 @@ Item {
         moved(v);
     }
 
-    opacity: enabled ? 1 : 0.45
+    opacity: usable ? 1 : 0.45
 
     FocusRing {
         visible: slider.focused
@@ -68,7 +68,7 @@ Item {
         anchors.fill: parent
         anchors.topMargin: -8
         anchors.bottomMargin: -8
-        enabled: slider.enabled
+        enabled: slider.usable
         preventStealing: true
         onPressed: mouse => slider.setFromX(mouse.x)
         onPositionChanged: mouse => {

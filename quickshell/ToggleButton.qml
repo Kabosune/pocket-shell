@@ -51,7 +51,7 @@ Item {
 
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
-            text: toggle.label
+            text: Theme.label(toggle.label)
             color: toggle.active ? Theme.textStrong : Theme.text
             font.family: Theme.bodyFont
             font.weight: toggle.active ? Font.Black : Font.Bold

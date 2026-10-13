@@ -1,9 +1,11 @@
 import QtQuick
 import Quickshell
+import Quickshell.Io
 
 // Status bar: notifications (Home) or the time (other pages) · page tabs
-// between L1/R1 · Wi-Fi and battery. Themes choose a segmented tab pill or
-// separate chunky tab buttons, and plain or pixel status icons.
+// between L1/R1 · Wi-Fi and battery. Themes choose the tab style
+// (segmented pill, chunky buttons, or numbered "workspaces") and the
+// status style (icons, pixel, or a plain text line like a rice's bar).
 Item {
     id: bar
 
@@ -13,9 +15,21 @@ Item {
     signal statusTapped()
 
     readonly property bool buttons: Theme.tabStyle === "buttons"
+    readonly property bool workspaces: Theme.tabStyle === "workspaces"
     readonly property bool pixel: Theme.statusStyle === "pixel"
+    readonly property bool textStatus: Theme.statusStyle === "text"
 
-    implicitHeight: bar.buttons ? 40 : 48
+    readonly property string user: Quickshell.env("USER") || "user"
+    readonly property string host: hostFile.text().trim() || "pocket"
+
+    implicitHeight: bar.buttons || bar.workspaces ? 40 : 48
+
+    FileView {
+        id: hostFile
+        path: "/etc/hostname"
+        blockLoading: true
+        printErrors: false
+    }
 
     SystemClock {
         id: clock
@@ -40,6 +54,17 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         spacing: 10
 
+        // Text status: user@host, like a shell prompt
+        Text {
+            visible: bar.textStatus
+            anchors.verticalCenter: parent.verticalCenter
+            textFormat: Text.StyledText
+            text: `<font color="${Theme.accent}">${bar.user}</font>@${bar.host}`
+            color: Theme.textMuted
+            font.family: Theme.bodyFont
+            font.pixelSize: 13
+        }
+
         // Pixel themes: a swatch of your colour, then the date or time
         Rectangle {
             visible: bar.pixel
@@ -52,7 +77,7 @@ Item {
         }
 
         Icon {
-            visible: bar.page === 0 && !bar.pixel
+            visible: bar.page === 0 && !bar.pixel && !bar.textStatus
             anchors.verticalCenter: parent.verticalCenter
             glyph: Icons.bell
             size: 18
@@ -60,7 +85,7 @@ Item {
         }
 
         DisplayText {
-            visible: bar.page !== 0 || bar.pixel
+            visible: (bar.page !== 0 || bar.pixel) && !bar.textStatus
             anchors.verticalCenter: parent.verticalCenter
             text: bar.page === 0 ? Qt.formatDate(clock.date, "ddd M/d").toUpperCase() : Qt.formatTime(clock.date, "HH:mm")
             color: Theme.text
@@ -81,7 +106,7 @@ Item {
 
         // Segmented pill (Dusk Tide)
         Surface {
-            visible: !bar.buttons
+            visible: !bar.buttons && !bar.workspaces
             anchors.verticalCenter: parent.verticalCenter
             width: tabs.implicitWidth + 6
             height: tabs.implicitHeight + 6
@@ -93,7 +118,7 @@ Item {
                 spacing: 2
 
                 Repeater {
-                    model: bar.buttons ? [] : bar.pages
+                    model: bar.buttons || bar.workspaces ? [] : bar.pages
 
                     Rectangle {
                         id: tab
@@ -111,7 +136,7 @@ Item {
                         Text {
                             id: tabLabel
                             anchors.centerIn: parent
-                            text: tab.modelData
+                            text: Theme.label(tab.modelData)
                             color: tab.current ? Theme.accentInk : Theme.text
                             font.family: Theme.bodyFont
                             font.weight: tab.current ? Font.ExtraBold : Font.Bold
@@ -148,7 +173,7 @@ Item {
                     id: buttonLabel
                     anchors.centerIn: parent
                     anchors.verticalCenterOffset: Theme.bevel ? -1 : 0
-                    text: tabButton.modelData
+                    text: Theme.label(tabButton.modelData)
                     color: tabButton.active ? Theme.accentInk : Theme.textStrong
                     font.family: Theme.bodyFont
                     font.weight: tabButton.active ? Font.Black : Font.ExtraBold
@@ -160,6 +185,43 @@ Item {
                     anchors.fill: parent
                     anchors.margins: -6
                     onClicked: bar.pageTapped(tabButton.index)
+                }
+            }
+        }
+
+        // Numbered workspaces, like a tiling WM's bar: "1 home 2 library …"
+        Repeater {
+            model: bar.workspaces ? bar.pages : []
+
+            Rectangle {
+                id: ws
+                required property string modelData
+                required property int index
+                readonly property bool current: index === bar.page
+
+                anchors.verticalCenter: parent.verticalCenter
+                width: wsLabel.implicitWidth + 18
+                height: 26
+                radius: Theme.rKey
+                color: current ? Theme.accent : "transparent"
+
+                Text {
+                    id: wsLabel
+                    anchors.centerIn: parent
+                    textFormat: Text.StyledText
+                    text: ws.current
+                        ? `${ws.index + 1} ${Theme.label(ws.modelData)}`
+                        : `<font color="${Theme.accent}">${ws.index + 1}</font> ${Theme.label(ws.modelData)}`
+                    color: ws.current ? Theme.accentInk : Theme.textMuted
+                    font.family: Theme.bodyFont
+                    font.weight: ws.current ? Font.Bold : Font.Normal
+                    font.pixelSize: 13
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    anchors.margins: -6
+                    onClicked: bar.pageTapped(ws.index)
                 }
             }
         }
@@ -184,8 +246,49 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         spacing: 12
 
+        // Text status: "wifi on │ bat 78% │ 21:58"
+        Row {
+            visible: bar.textStatus
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 10
+
+            component Sep: Text {
+                text: "│"
+                color: Theme.line
+                font.family: Theme.bodyFont
+                font.pixelSize: 13
+            }
+
+            Loader {
+                anchors.verticalCenter: parent.verticalCenter
+                active: bar.textStatus
+                source: "WifiText.qml"
+            }
+            Sep {
+                anchors.verticalCenter: parent.verticalCenter
+            }
+            Loader {
+                id: batteryText
+                anchors.verticalCenter: parent.verticalCenter
+                active: bar.textStatus
+                source: "BatteryText.qml"
+            }
+            Sep {
+                anchors.verticalCenter: parent.verticalCenter
+                visible: batteryText.item !== null && batteryText.item.visible
+            }
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: Qt.formatTime(clock.date, "HH:mm")
+                color: Theme.textStrong
+                font.family: Theme.bodyFont
+                font.weight: Font.Bold
+                font.pixelSize: 13
+            }
+        }
+
         Icon {
-            visible: !bar.pixel
+            visible: !bar.pixel && !bar.textStatus
             anchors.verticalCenter: parent.verticalCenter
             glyph: Icons.wifi
             size: 18
@@ -213,6 +316,7 @@ Item {
 
         Loader {
             anchors.verticalCenter: parent.verticalCenter
+            active: !bar.textStatus
             source: "BatteryStatus.qml"
         }
     }

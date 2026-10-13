@@ -129,7 +129,7 @@ Item {
                     }
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
-                        text: "Close"
+                        text: Theme.label("Close")
                         color: Theme.textHint
                         font.family: Theme.bodyFont
                         font.weight: Font.Bold
@@ -144,7 +144,7 @@ Item {
                 glyph: Icons.brightness
                 value: Brightness.level < 0 ? 0 : Brightness.level
                 note: Brightness.problem || (Brightness.available ? "" : "Checking…")
-                enabled: Brightness.available
+                usable: Brightness.available
                 focused: Controller.active && panel.open && panel.row === 0
                 onMoved: v => Brightness.set(v)
             }
@@ -172,7 +172,7 @@ Item {
                     label: "Volume"
                     glyph: Icons.volume
                     note: "Audio service not available"
-                    enabled: false
+                    usable: false
                     focused: Controller.active && panel.open && panel.row === 1
                 }
             }

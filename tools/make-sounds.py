@@ -11,6 +11,7 @@ regenerated:
 Packs:
     soft  warm bell/marimba tones (Dusk Tide)
     chip  square-wave chiptune bleeps (Stylus)
+    tty   soft mechanical-keyboard thocks (Dotfiles)
 
 Events: move, select, back, page, page-prev, page-next, open, toggle-on,
 toggle-off, launch, error, notice, theme, boot.
@@ -200,6 +201,51 @@ def chip_pack():
     }
 
 
+def key(pitch=1.0, weight=1.0, seed=0):
+    """A soft keyboard "thock": a low thump with a falling pitch plus a
+    short, heavily filtered tap. All body, no clicky top end."""
+    length = 0.06
+    x = t(length)
+    f0 = 150 * pitch
+    freq = f0 * (1 + 0.6 * np.exp(-x / 0.004))
+    thump = np.sin(2 * np.pi * np.cumsum(freq) / RATE) * np.exp(-x / (0.018 * weight))
+    tap = lowpass(noise(length, decay=0.005, seed=seed), 1300 * pitch) * 2.2
+    return lowpass(weight * thump + 0.6 * tap, 2200) * envelope(len(x), attack=0.0008, release=0.01)
+
+
+def typing(pitches, gaps, seed=0):
+    out = np.zeros(0)
+    pos = 0.0
+    for i, p in enumerate(pitches):
+        out = mix(out, at(pos, key(p, seed=seed + i)))
+        if i < len(gaps):
+            pos += gaps[i]
+    return out
+
+
+def tty_pack():
+    return {
+        "move": key(1.35, weight=0.7, seed=1),
+        "select": key(1.0, seed=2),
+        "back": key(0.82, seed=3),
+        "page-next": typing([1.0, 1.15], [0.035], seed=4),
+        "page-prev": typing([1.15, 1.0], [0.035], seed=6),
+        "open": typing([0.95, 1.05, 1.15], [0.03, 0.03], seed=8),
+        "toggle-on": typing([0.9, 1.25], [0.014], seed=11),
+        "toggle-off": typing([1.25, 0.9], [0.014], seed=13),
+        "launch": mix(key(0.7, weight=1.5, seed=15),
+                      at(0.04, bell(note("A4"), 0.25, decay=0.08, level=0.35)),
+                      at(0.09, bell(note("E5"), 0.3, decay=0.1, level=0.3))),
+        "error": typing([0.6, 0.55], [0.08], seed=17),
+        "notice": mix(key(1.1, seed=19), at(0.03, bell(note("E5"), 0.3, decay=0.1, level=0.3))),
+        "theme": typing([1.0, 1.2, 0.95, 1.1, 1.3], [0.07, 0.055, 0.08, 0.06], seed=21),
+        "boot": mix(lowpass(mix(bell(note("A2"), 0.9, decay=0.5, level=0.5),
+                                bell(note("E3"), 0.9, decay=0.45, level=0.3)), 900),
+                    at(0.25, typing([1.0, 1.15, 0.95, 1.2], [0.07, 0.06, 0.08], seed=25)),
+                    at(0.62, key(0.72, weight=1.5, seed=30))),
+    }
+
+
 # Peak level per event, so ticks are quiet and big moments are louder.
 LEVELS = {
     "move": 0.22, "select": 0.42, "back": 0.38, "page-next": 0.3, "page-prev": 0.3, "open": 0.42,
@@ -219,7 +265,7 @@ def write(path, samples, peak):
 
 
 def main():
-    for pack, events in (("soft", soft_pack()), ("chip", chip_pack())):
+    for pack, events in (("soft", soft_pack()), ("chip", chip_pack()), ("tty", tty_pack())):
         folder = os.path.join(ROOT, pack)
         os.makedirs(folder, exist_ok=True)
         # "page" (tapping a tab) is the same as moving forward

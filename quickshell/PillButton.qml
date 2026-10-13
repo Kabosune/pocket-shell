@@ -4,7 +4,7 @@ import QtQuick
 Item {
     id: button
 
-    property alias label: labelText.text
+    property string label: ""
     property bool primary: false
     property bool focused: false
     signal activated()
@@ -28,6 +28,7 @@ Item {
     Text {
         id: labelText
         anchors.centerIn: parent
+        text: Theme.label(button.label)
         anchors.verticalCenterOffset: Theme.bevel ? -1 : 0
         color: button.primary ? Theme.accentInk : Theme.textStrong
         font.family: Theme.bodyFont
