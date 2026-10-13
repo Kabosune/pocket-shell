@@ -27,6 +27,7 @@ First target: **Retroid Pocket 5** running **pocknix-os**.
 | `bin/pocket-games` | Finds games for the Library and works out their emulator commands | `/usr/local/bin/` (copy) |
 | `session/pocketshell-session` | Session launcher | `/usr/local/bin/` (copy) |
 | `session/pocketshell.desktop` | Wayland session entry | `/usr/share/wayland-sessions/` (copy) |
+| `session/pocket-shell.desktop`, `.svg` | "Pocket Shell" app for Plasma Mobile that switches over | `~/.local/share/applications`, `~/.local/share/icons` (symlinks) |
 | `devices/` | Per-device notes and profiles | — |
 | `install.sh` | Sets up all of the above | — |
 
@@ -77,6 +78,10 @@ pocknix-desktop-select pocketshell --now
 ```bash
 pocknix-desktop-select plasma-mobile --now
 ```
+
+From Plasma Mobile, you can also tap the **Pocket Shell** app in the app
+drawer (pin it to the home screen for one tap). From Pocket Shell, Start →
+Plasma Mobile goes the other way.
 
 ## Controls
 

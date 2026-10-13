@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Pocket Shell
+GenericName=Switch to Pocket Shell
+Comment=Leave this desktop and switch to Pocket Shell
+Exec=pocknix-desktop-select pocketshell --now
+Icon=pocket-shell
+Terminal=false
+Categories=System;
+Keywords=pocket;shell;hyprland;desktop;session;switch;

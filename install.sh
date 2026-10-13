@@ -25,6 +25,10 @@ link() {
 link "$REPO/hypr/hyprland.lua"     "$HOME/.config/hypr/hyprland.lua"
 link "$REPO/quickshell"            "$HOME/.config/quickshell"
 link "$REPO/fonts"                 "$HOME/.local/share/fonts/pocket-shell"
+# "Pocket Shell" app for other desktops (Plasma Mobile): switches over
+link "$REPO/session/pocket-shell.desktop" "$HOME/.local/share/applications/pocket-shell.desktop"
+link "$REPO/session/pocket-shell.svg"     "$HOME/.local/share/icons/hicolor/scalable/apps/pocket-shell.svg"
+command -v kbuildsycoca6 >/dev/null && kbuildsycoca6 >/dev/null 2>&1 && echo "apps     Plasma app list refreshed"
 
 if command -v fc-cache >/dev/null; then
   fc-cache -f "$HOME/.local/share/fonts" >/dev/null && echo "fonts    cache refreshed"

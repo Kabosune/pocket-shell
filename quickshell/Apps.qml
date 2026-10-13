@@ -12,8 +12,12 @@ Item {
 
     readonly property int columns: 6
 
+    // Our own "switch to Pocket Shell" launcher is for other desktops; here
+    // it would only restart the shell.
+    readonly property var hiddenIds: ["pocket-shell"]
+
     readonly property var apps: {
-        const list = DesktopEntries.applications.values.slice();
+        const list = DesktopEntries.applications.values.filter(e => hiddenIds.indexOf(e.id) < 0);
         list.sort((a, b) => a.name.localeCompare(b.name));
         return list;
     }
