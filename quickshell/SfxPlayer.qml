@@ -10,7 +10,7 @@ Item {
     property string folder: ""
     property real volume: 0.7
 
-    readonly property var names: ["move", "select", "back", "page", "open", "toggle-on",
+    readonly property var names: ["move", "select", "back", "page", "page-prev", "page-next", "open", "toggle-on",
         "toggle-off", "launch", "error", "notice", "theme", "boot"]
 
     function fileUrl(path) {
@@ -25,6 +25,9 @@ Item {
         if (fx && fx.status === SoundEffect.Ready) {
             fx.stop();
             fx.play();
+        } else if (name === "page-prev" || name === "page-next") {
+            // Sound packs from before these existed only have "page"
+            play("page");
         }
     }
 

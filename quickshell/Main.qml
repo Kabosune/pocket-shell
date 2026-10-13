@@ -20,8 +20,9 @@ Item {
     readonly property bool overlayOpen: themes.open || recents.open || sheet.open || quick.open
 
     function goToPage(i) {
+        const step = i < page ? "page-prev" : "page-next";
         page = (i + pageNames.length) % pageNames.length;
-        Sfx.play("page", 1);
+        Sfx.play(step, 1);
     }
 
     function showSession() {
@@ -181,10 +182,8 @@ Item {
         pages: main.pageNames
         onStatusTapped: quick.show()
         onPageTapped: index => {
-            if (index !== main.page) {
-                main.page = index;
-                Sfx.play("page", 1);
-            }
+            if (index !== main.page)
+                main.goToPage(index);
         }
     }
 

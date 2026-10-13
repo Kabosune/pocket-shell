@@ -188,7 +188,7 @@ All keys:
 | `fonts` | `display`, `body` (font family names), `files` (font files in the theme folder to load), and for pixel fonts `displayGrid` (the font's pixel size at 1x, e.g. `8` for an 8×8 font) and `displayScale` (shrinks display text for wide fonts). With `displayGrid` set, display text snaps to whole multiples of the grid and isn't smoothed or fake-bolded, so it stays crisp |
 | `focus` | Focus ring: `gap` and `ring` widths in px |
 | `wallpaper` | `{ "type": "scene" }` (Dusk Tide), `{ "type": "grid", "color", "line", "size" }`, `{ "type": "color", "color" }` or `{ "type": "image", "file": "wallpaper.png" }` |
-| `sounds` | `"soft"`, `"chip"`, `"none"`, or `"./folder"` with your own 48 kHz WAVs named `move`, `select`, `back`, `page`, `open`, `toggle-on`, `toggle-off`, `launch`, `error`, `notice`, `theme`, `boot` |
+| `sounds` | `"soft"`, `"chip"`, `"none"`, or `"./folder"` with your own 48 kHz WAVs named `move`, `select`, `back`, `page`, `page-prev`, `page-next`, `open`, `toggle-on`, `toggle-off`, `launch`, `error`, `notice`, `theme`, `boot` |
 | `style.border` | Panel border width |
 | `style.bevel` | `true` for chunky buttons with a bottom ledge |
 | `style.squareIcons` | `true` for square line ends (pixel look) |

@@ -12,8 +12,11 @@ Packs:
     soft  warm bell/marimba tones (Dusk Tide)
     chip  square-wave chiptune bleeps (Stylus)
 
-Events: move, select, back, page, open, toggle-on, toggle-off, launch,
-error, notice, theme, boot.
+Events: move, select, back, page, page-prev, page-next, open, toggle-on,
+toggle-off, launch, error, notice, theme, boot.
+
+Page sounds play on every L1/R1, so they're the gentlest: two low notes
+stepping up (next) or down (previous), no noise and nothing buzzy.
 """
 
 import os
@@ -142,8 +145,10 @@ def soft_pack():
         "move": lowpass(marimba(note("E6"), 0.05, level=0.5), 6000),
         "select": mix(bell(note("A5"), 0.16, decay=0.06), at(0.045, bell(note("E6"), 0.2, decay=0.08))),
         "back": mix(bell(note("E6"), 0.12, decay=0.05, level=0.8), at(0.045, bell(note("A5"), 0.2, decay=0.08))),
-        "page": mix(lowpass(noise(0.14, level=0.25, decay=0.05), 3000),
-                    marimba(note("D6"), 0.12, level=0.55)),
+        "page-next": lowpass(mix(marimba(note("A4"), 0.14, level=0.9),
+                                 at(0.05, marimba(note("E5"), 0.18))), 2400),
+        "page-prev": lowpass(mix(marimba(note("E5"), 0.14, level=0.9),
+                                 at(0.05, marimba(note("A4"), 0.18))), 2400),
         "open": mix(bell(note("C6"), 0.14, decay=0.06), at(0.06, bell(note("G6"), 0.3, decay=0.12))),
         "toggle-on": mix(marimba(note("D6"), 0.1), at(0.05, marimba(note("A6"), 0.18))),
         "toggle-off": mix(marimba(note("A6"), 0.1), at(0.05, marimba(note("D6"), 0.18))),
@@ -171,7 +176,10 @@ def chip_pack():
         "move": square(note("C7"), 0.022, duty=0.25, level=0.45),
         "select": seq(square(note("E6"), q, duty=0.5), square(note("A6"), q * 1.6, duty=0.5, decay=0.05)),
         "back": seq(square(note("A6"), q, duty=0.5), square(note("E6"), q * 1.6, duty=0.5, decay=0.05)),
-        "page": sweep(note("C7"), note("G5"), 0.08, duty=0.25, level=0.7),
+        "page-next": lowpass(seq(triangle(note("C5"), 0.035, decay=0.05),
+                                 triangle(note("G5"), 0.07, decay=0.05)), 5000),
+        "page-prev": lowpass(seq(triangle(note("G5"), 0.035, decay=0.05),
+                                 triangle(note("C5"), 0.07, decay=0.05)), 5000),
         "open": seq(square(note("G5"), 0.035, duty=0.25), square(note("C6"), 0.035, duty=0.25),
                     square(note("G6"), 0.09, duty=0.25, decay=0.06)),
         "toggle-on": seq(square(note("D6"), 0.04, duty=0.125), square(note("D7"), 0.08, duty=0.125, decay=0.05)),
@@ -194,7 +202,7 @@ def chip_pack():
 
 # Peak level per event, so ticks are quiet and big moments are louder.
 LEVELS = {
-    "move": 0.22, "select": 0.42, "back": 0.38, "page": 0.38, "open": 0.42,
+    "move": 0.22, "select": 0.42, "back": 0.38, "page-next": 0.3, "page-prev": 0.3, "open": 0.42,
     "toggle-on": 0.4, "toggle-off": 0.36, "launch": 0.5, "error": 0.45,
     "notice": 0.42, "theme": 0.5, "boot": 0.5,
 }
@@ -214,6 +222,9 @@ def main():
     for pack, events in (("soft", soft_pack()), ("chip", chip_pack())):
         folder = os.path.join(ROOT, pack)
         os.makedirs(folder, exist_ok=True)
+        # "page" (tapping a tab) is the same as moving forward
+        events["page"] = events["page-next"]
+        LEVELS["page"] = LEVELS["page-next"]
         for name, samples in events.items():
             write(os.path.join(folder, f"{name}.wav"), samples, LEVELS[name])
         print(f"{pack}: {len(events)} sounds")
