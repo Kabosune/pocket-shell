@@ -61,6 +61,7 @@ Singleton {
             return;
         focusWorkspace(freeWorkspace());
         entry.execute();
+        Sfx.play("launch", 2);
     }
 
     function launchCommand(args) {
@@ -68,11 +69,14 @@ Singleton {
             return;
         focusWorkspace(freeWorkspace());
         Quickshell.execDetached(args);
+        Sfx.play("launch", 2);
     }
 
     function focusApp(toplevel) {
-        if (toplevel && toplevel.workspace)
+        if (toplevel && toplevel.workspace) {
             focusWorkspace(toplevel.workspace.id);
+            Sfx.play("page", 1);
+        }
     }
 
     // Focus the app, close it, then come back to the shell.
@@ -81,6 +85,7 @@ Singleton {
             return;
         focusWorkspace(toplevel.workspace.id);
         closeTimer.restart();
+        Sfx.play("toggle-off", 2);
     }
 
     // Best-effort name for a window: its desktop entry's name, else its title.

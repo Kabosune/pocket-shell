@@ -24,10 +24,12 @@ Item {
         const current = String(Theme.accent).toUpperCase();
         colourIndex = Math.max(0, colours.findIndex(c => String(c).toUpperCase() === current));
         open = true;
+        Sfx.play("open", 1);
     }
 
     function hide() {
         open = false;
+        Sfx.play("back", 1);
     }
 
     function indexOfCurrent() {
@@ -40,14 +42,19 @@ Item {
 
     function apply(index) {
         const t = themes[index];
-        if (t)
-            Theme.useTheme(t.id);
+        if (!t)
+            return;
+        Theme.useTheme(t.id);
+        // Played after the switch, so it's the new theme's chime
+        Sfx.play("theme", 2);
     }
 
     function pickColour(index) {
         const c = colours[index];
-        if (c)
-            Theme.setAccent(c);
+        if (!c)
+            return;
+        Theme.setAccent(c);
+        Sfx.play("toggle-on", 2);
     }
 
     function handle(button) {

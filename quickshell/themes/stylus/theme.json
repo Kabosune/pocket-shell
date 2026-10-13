@@ -37,6 +37,7 @@
   "fonts": { "display": "Press Start 2P", "body": "Nunito", "displayGrid": 8, "displayScale": 0.6 },
   "focus": { "gap": 3, "ring": 3 },
   "wallpaper": { "type": "grid", "color": "#EEF0F2", "line": "rgba(60, 80, 110, 0.07)", "size": 16 },
+  "sounds": "chip",
   "style": {
     "border": 2,
     "bevel": true,

@@ -7,5 +7,8 @@ ToggleButton {
     glyph: Icons.wifi
     active: Networking.wifiEnabled
     available: Networking.wifiHardwareEnabled
-    onActivated: Networking.wifiEnabled = !Networking.wifiEnabled
+    onActivated: {
+        Sfx.play(Networking.wifiEnabled ? "toggle-off" : "toggle-on", 2);
+        Networking.wifiEnabled = !Networking.wifiEnabled;
+    }
 }

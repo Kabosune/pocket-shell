@@ -32,6 +32,7 @@
   "fonts": { "display": "Archivo", "body": "Manrope" },
   "focus": { "gap": 2, "ring": 2 },
   "wallpaper": { "type": "scene", "scene": "dusk-tide" },
+  "sounds": "soft",
   "style": {
     "border": 1,
     "bevel": false,

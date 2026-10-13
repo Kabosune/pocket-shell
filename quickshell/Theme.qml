@@ -54,6 +54,7 @@ Singleton {
         fonts: { display: "Archivo", body: "Manrope", files: [], displayGrid: 0, displayScale: 1 },
         focus: { gap: 2, ring: 2 },
         wallpaper: { type: "scene", scene: "dusk-tide" },
+        sounds: "soft",
         style: {
             border: 1,
             bevel: false,
@@ -67,10 +68,31 @@ Singleton {
     })
 
     // --- Current theme
+    //
+    // Switching themes reads from `installed` (every theme.json, already
+    // parsed by the scan below), so it's instant. FileViews are only used
+    // for the very first load at startup, before the scan finishes, and to
+    // notice when the current theme's file is edited (which rescans).
 
     readonly property string currentId: Store.theme
-    property var themeData: defaults
-    property string dir: ""
+
+    readonly property var currentEntry: {
+        const list = installed;
+        for (let i = 0; i < list.length; i++) {
+            if (list[i].id === currentId)
+                return list[i];
+        }
+        return null;
+    }
+
+    readonly property var themeData: currentEntry ? currentEntry.data
+        : (bootId === currentId && bootData ? bootData : defaults)
+    readonly property string dir: currentEntry ? currentEntry.dir
+        : (bootId === currentId && bootData ? bootDir : "")
+
+    property var bootData: null
+    property string bootId: ""
+    property string bootDir: ""
 
     function parse(text) {
         if (!text)
@@ -79,45 +101,57 @@ Singleton {
             const d = JSON.parse(text);
             return d && typeof d === "object" ? d : null;
         } catch (e) {
-            console.warn(`Theme ${currentId}: theme.json isn't valid JSON (${e})`);
+            console.warn(`Theme: a theme.json isn't valid JSON (${e})`);
             return null;
         }
     }
 
-    function load() {
+    // Startup only: read the saved theme directly so there's no flash of
+    // the default theme while the scan runs. Paths are set once here and
+    // never changed, so the reads can't return another theme's contents.
+    function boot() {
         const id = currentId;
-        userFile.path = `${userDir}/${id}/theme.json`;
-        builtinFile.path = `${builtinDir}/${id}/theme.json`;
-        let d = parse(userFile.text());
+        bootUser.path = `${userDir}/${id}/theme.json`;
+        bootBuiltin.path = `${builtinDir}/${id}/theme.json`;
+        let d = parse(bootUser.text());
         let where = `${userDir}/${id}`;
         if (!d) {
-            d = parse(builtinFile.text());
+            d = parse(bootBuiltin.text());
             where = `${builtinDir}/${id}`;
         }
-        themeData = d || defaults;
-        dir = d ? where : "";
+        bootId = id;
+        bootData = d;
+        bootDir = d ? where : "";
     }
 
-    onCurrentIdChanged: load()
+    onCurrentIdChanged: {
+        if (!currentEntry)
+            refresh();
+    }
+
     Component.onCompleted: {
-        load();
+        boot();
         refresh();
     }
 
     FileView {
-        id: userFile
+        id: bootUser
         blockLoading: true
         printErrors: false
-        watchChanges: true
-        onFileChanged: theme.load()
     }
 
     FileView {
-        id: builtinFile
+        id: bootBuiltin
         blockLoading: true
         printErrors: false
+    }
+
+    // Live editing: when the current theme's file changes, rescan.
+    FileView {
+        path: theme.dir ? `${theme.dir}/theme.json` : ""
+        printErrors: false
         watchChanges: true
-        onFileChanged: theme.load()
+        onFileChanged: theme.refresh()
     }
 
     // Value at a dotted path in the theme, else in the defaults.
@@ -219,6 +253,7 @@ Singleton {
     }
 
     readonly property var wallpaper: get("wallpaper")
+    readonly property string soundPack: get("sounds")
 
     readonly property real borderWidth: get("style.border")
     readonly property bool bevel: get("style.bevel") === true
@@ -255,9 +290,12 @@ Singleton {
 
     // [{ id, dir, user, name, author, description, colors... (raw data) }]
     property var installed: []
+    property bool rescanQueued: false
 
     function refresh() {
-        if (!scanner.running)
+        if (scanner.running)
+            rescanQueued = true;
+        else
             scanner.running = true;
     }
 
@@ -299,6 +337,12 @@ Singleton {
                 const list = order.map(id => byId[id]);
                 list.sort((x, y) => String(x.data.name || x.id).localeCompare(String(y.data.name || y.id)));
                 theme.installed = list;
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            if (theme.rescanQueued) {
+                theme.rescanQueued = false;
+                running = true;
             }
         }
     }

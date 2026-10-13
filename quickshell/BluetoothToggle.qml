@@ -9,5 +9,8 @@ ToggleButton {
     glyph: Icons.bluetooth
     active: adapter !== null && adapter.enabled
     available: adapter !== null
-    onActivated: adapter.enabled = !adapter.enabled
+    onActivated: {
+        Sfx.play(adapter.enabled ? "toggle-off" : "toggle-on", 2);
+        adapter.enabled = !adapter.enabled;
+    }
 }

@@ -37,7 +37,7 @@ Item {
         const wasPinned = Store.isPinned(entry.id);
         if (!Store.togglePin(entry.id)) {
             if (shell)
-                shell.toast(`The dock is full (${Store.maxPins} apps)`);
+                shell.toast(`The dock is full (${Store.maxPins} apps)`, "error");
             return;
         }
         if (shell)

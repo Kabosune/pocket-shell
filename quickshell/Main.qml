@@ -15,16 +15,44 @@ Item {
     readonly property var pageNames: ["Home", "Library", "Apps", "Glance"]
     readonly property var pageFiles: ["Home.qml", "Library.qml", "Apps.qml", "Glance.qml"]
 
+    readonly property var directions: ["up", "down", "left", "right"]
+    readonly property bool overlayOpen: themes.open || recents.open || sheet.open
+
     function goToPage(i) {
         page = (i + pageNames.length) % pageNames.length;
+        Sfx.play("page", 1);
     }
 
     function showSession() {
         sheet.show();
+        Sfx.play("open", 1);
     }
 
-    function toast(message) {
+    // kind: "" for information, "error" when something didn't work
+    function toast(message, kind) {
         toaster.show(message);
+        Sfx.play(kind === "error" ? "error" : "notice", 2);
+    }
+
+    // The default sound for a button press. Whatever the press does can
+    // ask for a more specific sound, which wins (see Sfx.qml).
+    function buttonSound(button) {
+        if (directions.indexOf(button) >= 0)
+            return "move";
+        if (overlayOpen)
+            return button === "a" ? "select" : ["b", "home", "start", "recents"].indexOf(button) >= 0 ? "back" : "";
+        switch (button) {
+        case "a":
+            return "select";
+        case "b":
+            return page !== 0 ? "back" : "";
+        case "home":
+            return page !== 0 ? "page" : "";
+        case "start":
+        case "recents":
+            return "open";
+        }
+        return "";
     }
 
     function pageItem(i) {
@@ -36,12 +64,17 @@ Item {
         if (!Wm.inShell) {
             if (button === "home") {
                 Wm.goHome();
+                Sfx.play("back", 1);
             } else if (button === "recents") {
                 Wm.goHome();
                 recents.show();
+                Sfx.play("open", 1);
             }
             return;
         }
+        const sound = buttonSound(button);
+        if (sound)
+            Sfx.play(sound, 0);
         if (themes.open) {
             themes.handle(button);
             return;
@@ -138,7 +171,12 @@ Item {
         anchors.right: parent.right
         page: main.page
         pages: main.pageNames
-        onPageTapped: index => main.page = index
+        onPageTapped: index => {
+            if (index !== main.page) {
+                main.page = index;
+                Sfx.play("page", 1);
+            }
+        }
     }
 
     SessionSheet {
@@ -160,6 +198,13 @@ Item {
     Toast {
         id: toaster
         anchors.fill: parent
+    }
+
+    // Start-up chime, once the sounds have had a moment to load.
+    Timer {
+        interval: 700
+        running: true
+        onTriggered: Sfx.play("boot", 3)
     }
 
     // Any touch switches back to touch mode, which hides the focus rings.

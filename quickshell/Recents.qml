@@ -17,11 +17,12 @@ Item {
 
     function hide() {
         open = false;
+        Sfx.play("back", 1);
     }
 
     function switchTo(index) {
         const app = items[index];
-        hide();
+        open = false;
         if (app)
             Wm.focusApp(app);
     }

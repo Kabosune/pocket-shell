@@ -8,7 +8,7 @@ Item {
 
     property bool open: false
     property int focusedIndex: 0
-    readonly property var actions: ["themes", "plasma", "steam", "cancel"]
+    readonly property var actions: ["themes", "sounds", "plasma", "steam", "cancel"]
     signal themesRequested()
 
     function show() {
@@ -21,12 +21,18 @@ Item {
         if (action === "themes") {
             open = false;
             themesRequested();
+        } else if (action === "sounds") {
+            Store.setSounds(!Store.sounds);
+            Sfx.play("toggle-on", 2);
         } else if (action === "plasma") {
             toPlasma.running = true;
+            Sfx.play("launch", 2);
         } else if (action === "steam") {
             toSteam.running = true;
+            Sfx.play("launch", 2);
         } else {
             open = false;
+            Sfx.play("back", 1);
         }
     }
 
@@ -50,7 +56,10 @@ Item {
 
         MouseArea {
             anchors.fill: parent
-            onClicked: sheet.open = false
+            onClicked: {
+                sheet.open = false;
+                Sfx.play("back", 1);
+            }
         }
     }
 
@@ -84,21 +93,27 @@ Item {
             }
             PillButton {
                 width: 260
-                label: "Plasma Mobile"
+                label: Store.sounds ? "Sounds: On" : "Sounds: Off"
                 focused: Controller.active && sheet.focusedIndex === 1
                 onActivated: sheet.activate(1)
             }
             PillButton {
                 width: 260
-                label: "Steam mode"
+                label: "Plasma Mobile"
                 focused: Controller.active && sheet.focusedIndex === 2
                 onActivated: sheet.activate(2)
             }
             PillButton {
                 width: 260
-                label: "Cancel"
+                label: "Steam mode"
                 focused: Controller.active && sheet.focusedIndex === 3
                 onActivated: sheet.activate(3)
+            }
+            PillButton {
+                width: 260
+                label: "Cancel"
+                focused: Controller.active && sheet.focusedIndex === 4
+                onActivated: sheet.activate(4)
             }
         }
     }

@@ -16,6 +16,7 @@ Singleton {
     // Selected theme (folder name) and the favourite colour picked per theme.
     property string theme: "dusk-tide"
     property var accents: ({})
+    property bool sounds: true
     property bool loaded: false
 
     readonly property int maxPins: 5
@@ -71,12 +72,18 @@ Singleton {
         save();
     }
 
+    function setSounds(on) {
+        sounds = on;
+        save();
+    }
+
     function save() {
         file.setText(JSON.stringify({
             pinned: pinned,
             recentGames: recentGames,
             theme: theme,
-            accents: accents
+            accents: accents,
+            sounds: sounds
         }, null, 2));
     }
 
@@ -115,6 +122,7 @@ Singleton {
         recentGames = data && Array.isArray(data.recentGames) ? data.recentGames : [];
         theme = data && typeof data.theme === "string" ? data.theme : "dusk-tide";
         accents = data && data.accents && typeof data.accents === "object" ? data.accents : {};
+        sounds = data && typeof data.sounds === "boolean" ? data.sounds : true;
         loaded = true;
     }
 }

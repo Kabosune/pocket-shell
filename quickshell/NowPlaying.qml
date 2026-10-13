@@ -23,6 +23,7 @@ Surface {
         const p = player;
         if (!p)
             return;
+        Sfx.play("select", 0);
         if (index === 0 && p.canGoPrevious)
             p.previous();
         else if (index === 1 && p.canTogglePlaying)

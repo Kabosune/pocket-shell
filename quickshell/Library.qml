@@ -212,7 +212,7 @@ Item {
         } else {
             const why = resolveErr.text.trim();
             if (shell)
-                shell.toast(why ? `Can't start ${game.title}: ${why}` : `Can't start ${game.title}`);
+                shell.toast(why ? `Can't start ${game.title}: ${why}` : `Can't start ${game.title}`, "error");
         }
     }
 
@@ -248,7 +248,7 @@ Item {
                 Wm.launchEntry(entry);
                 Store.addRecent(game);
             } else if (shell) {
-                shell.toast(`${game.title} isn't installed anymore`);
+                shell.toast(`${game.title} isn't installed anymore`, "error");
             }
         } else if (game.kind === "port") {
             Wm.launchCommand(["bash", game.path]);
@@ -273,12 +273,14 @@ Item {
         collectionIndex = index;
         if (c.kind === "steam") {
             toSteam.running = true;
+            Sfx.play("launch", 2);
             return;
         }
         if (c.games.length === 0)
             return;
         gameIndex = 0;
         view = "games";
+        Sfx.play("open", 1);
     }
 
     function setFilter(i) {
@@ -398,7 +400,10 @@ Item {
 
                     MouseArea {
                         anchors.fill: parent
-                        onClicked: page.setFilter(chip.index)
+                        onClicked: {
+                            page.setFilter(chip.index);
+                            Sfx.play("move", 0);
+                        }
                     }
                 }
             }
@@ -593,10 +598,12 @@ Item {
                     id: tap
                     anchors.fill: parent
                     onClicked: {
-                        if (page.collectionIndex === card.index)
+                        if (page.collectionIndex === card.index) {
                             page.openCollection(card.index);
-                        else
+                        } else {
                             page.collectionIndex = card.index;
+                            Sfx.play("move", 0);
+                        }
                     }
                 }
             }
@@ -795,7 +802,10 @@ Item {
                 id: backTap
                 anchors.fill: parent
                 anchors.margins: -6
-                onClicked: page.view = "collections"
+                onClicked: {
+                    page.view = "collections";
+                    Sfx.play("back", 1);
+                }
             }
         }
 
@@ -879,6 +889,7 @@ Item {
                     anchors.fill: parent
                     onClicked: {
                         page.gameIndex = tile.index;
+                        Sfx.play("select", 0);
                         page.play(tile.modelData);
                     }
                 }
