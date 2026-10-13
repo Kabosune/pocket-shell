@@ -43,6 +43,69 @@
     "rain": { "glyph": "#8E88A6", "size": 13, "density": 0.18, "speed": 0.45 }
   },
   "sounds": "tty",
+  "modes": {
+    "dark": {
+      "label": "dark"
+    },
+    "paper": {
+      "label": "paper",
+      "colors": {
+        "bg": "#EEEBE5",
+        "surface": "rgba(246, 244, 240, 0.80)",
+        "surfaceStrong": "rgba(250, 249, 246, 0.97)",
+        "surfaceBorder": "#2E2B36",
+        "chip": "rgba(228, 224, 218, 0.95)",
+        "chipFocused": "#D6D1C8",
+        "focusGap": "#EEEBE5",
+        "keyBorder": "#6A6576",
+        "line": "#B8B3BF",
+        "textStrong": "#121018",
+        "text": "#2A2733",
+        "textMuted": "#6E6979",
+        "textHint": "#55505F",
+        "iconOnChip": "#2A2733",
+        "accent": "#6D4BD8",
+        "inkDark": "#121018",
+        "inkLight": "#FFFFFF",
+        "dim": "rgba(238, 235, 229, 0.4)",
+        "scrim": "rgba(236, 233, 227, 0.93)",
+        "ledge": "rgba(0, 0, 0, 0.15)",
+        "bar": "rgba(240, 237, 231, 0.93)",
+        "barBorder": "#2E2B36"
+      },
+      "accentChoices": [
+        "#6D4BD8",
+        "#121018",
+        "#C2185B",
+        "#0F766E",
+        "#B45309",
+        "#1D4ED8",
+        "#4D7C0F",
+        "#C2410C"
+      ],
+      "wallpaper": {
+        "type": "collage",
+        "color": "#EEEBE5",
+        "ink": "#1C1A22",
+        "seed": 7,
+        "words": [
+          "NO SIGNAL",
+          "ctrl",
+          "[0]",
+          "EOF",
+          "/dev/null",
+          "login:"
+        ],
+        "rain": {
+          "glyph": "#6E6880",
+          "head": "#121018",
+          "size": 13,
+          "density": 0.18,
+          "speed": 0.45
+        }
+      }
+    }
+  },
   "style": {
     "border": 1,
     "bevel": false,

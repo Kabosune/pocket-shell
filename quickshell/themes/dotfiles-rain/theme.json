@@ -36,6 +36,68 @@
   "focus": { "gap": 0, "ring": 2 },
   "wallpaper": { "type": "rain", "color": "#000000", "size": 16, "density": 1.2, "speed": 1 },
   "sounds": "tty",
+  "modes": {
+    "dark": {
+      "label": "dark"
+    },
+    "paper": {
+      "label": "paper",
+      "colors": {
+        "bg": "#F6F4EF",
+        "surface": "rgba(246, 244, 239, 0.86)",
+        "surfaceStrong": "rgba(250, 249, 246, 0.97)",
+        "surfaceBorder": "#1E1E1E",
+        "chip": "#E8E5DE",
+        "chipFocused": "#D9D5CC",
+        "focusGap": "#F6F4EF",
+        "keyBorder": "#5E5A54",
+        "line": "#BDB8AE",
+        "textStrong": "#0B0B0B",
+        "text": "#222222",
+        "textMuted": "#6A665F",
+        "textHint": "#4F4B45",
+        "iconOnChip": "#222222",
+        "inkDark": "#0B0B0B",
+        "inkLight": "#FFFFFF",
+        "dim": "rgba(246, 244, 239, 0.45)",
+        "scrim": "rgba(240, 237, 230, 0.93)",
+        "ledge": "rgba(0, 0, 0, 0.15)",
+        "bar": "rgba(246, 244, 239, 0.92)",
+        "barBorder": "#1E1E1E",
+        "scanline": "rgba(0, 0, 0, 0.07)",
+        "accent": "#C8102E"
+      },
+      "accentChoices": [
+        "#C8102E",
+        "#111111",
+        "#1A7F3C",
+        "#1D4ED8",
+        "#B45309",
+        "#7C3AED",
+        "#0F766E",
+        "#BE185D"
+      ],
+      "cardColors": [
+        "#1E1E1E",
+        "#5A1A24",
+        "#1F3A2B",
+        "#22314F",
+        "#3D2E1C",
+        "#3A2347",
+        "#163B3B",
+        "#4A4744"
+      ],
+      "wallpaper": {
+        "type": "rain",
+        "color": "#F6F4EF",
+        "glyph": "#4A0D1A",
+        "head": "#000000",
+        "size": 16,
+        "density": 1.2,
+        "speed": 1
+      }
+    }
+  },
   "style": {
     "border": 1,
     "bevel": false,

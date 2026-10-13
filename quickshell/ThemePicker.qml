@@ -2,27 +2,54 @@ import QtQuick
 
 // Theme picker: every theme found in the theme folders, with a small
 // preview drawn from each theme's own colours, fonts and corners.
-// Themes that list "accentChoices" also get a "Your colour" row.
+// Themes that list "accentChoices" also get a "Your colour" row, and
+// themes with "modes" a "Background" row (dark, paper...).
 //
-// Controller: left/right move the highlight, A applies it, down moves to
-// the colour row, up goes back, B closes. A tap applies directly.
+// Controller: left/right move the highlight, A applies it, down/up move
+// between the theme, colour and background rows, B closes. A tap applies
+// directly.
 Item {
     id: picker
 
     property bool open: false
-    property string row: "themes"   // "themes" | "colours"
+    property string row: "themes"   // "themes" | "colours" | "modes"
     property int themeIndex: 0
     property int colourIndex: 0
+    property int modeIndex: 0
 
     readonly property var themes: Theme.installed
     readonly property var colours: Theme.accentChoices || []
+    readonly property var modes: Theme.modeList
+    readonly property bool hasModes: modes.length > 1
+
+    // Rows that exist for the current theme, top to bottom
+    readonly property var rows: ["themes"].concat(colours.length > 0 ? ["colours"] : [])
+        .concat(hasModes ? ["modes"] : [])
+
+    function moveRow(step) {
+        const i = rows.indexOf(row) + step;
+        if (i >= 0 && i < rows.length)
+            row = rows[i];
+        colourIndex = Math.max(0, Math.min(colourIndex, colours.length - 1));
+        modeIndex = Math.max(0, Math.min(modeIndex, modes.length - 1));
+    }
+
+    function syncIndexes() {
+        const current = String(Theme.accent).toUpperCase();
+        colourIndex = Math.max(0, colours.findIndex(c => String(c).toUpperCase() === current));
+        modeIndex = Math.max(0, modes.indexOf(Theme.currentMode));
+        if (rows.indexOf(row) < 0)
+            row = "themes";
+    }
+
+    onModesChanged: syncIndexes()
+    onColoursChanged: syncIndexes()
 
     function show() {
         Theme.refresh();
         row = "themes";
         themeIndex = Math.max(0, indexOfCurrent());
-        const current = String(Theme.accent).toUpperCase();
-        colourIndex = Math.max(0, colours.findIndex(c => String(c).toUpperCase() === current));
+        syncIndexes();
         open = true;
         Sfx.play("open", 1);
     }
@@ -57,51 +84,47 @@ Item {
         Sfx.play("toggle-on", 2);
     }
 
+    function pickMode(index) {
+        const m = modes[index];
+        if (!m || m === Theme.currentMode)
+            return;
+        Theme.useMode(m);
+        Sfx.play("theme", 2);
+    }
+
     function handle(button) {
-        if (row === "themes") {
-            switch (button) {
-            case "left":
-                themeIndex = Math.max(0, themeIndex - 1);
-                break;
-            case "right":
-                themeIndex = Math.min(themes.length - 1, themeIndex + 1);
-                break;
-            case "a":
-                apply(themeIndex);
-                break;
-            case "down":
-                if (colours.length > 0) {
-                    row = "colours";
-                    colourIndex = Math.max(0, Math.min(colourIndex, colours.length - 1));
-                }
-                break;
-            case "b":
-            case "home":
-            case "start":
-                hide();
-                break;
-            }
+        if (button === "down" || button === "up") {
+            moveRow(button === "down" ? 1 : -1);
             return;
         }
-        switch (button) {
-        case "left":
-            colourIndex = Math.max(0, colourIndex - 1);
-            break;
-        case "right":
-            colourIndex = Math.min(colours.length - 1, colourIndex + 1);
-            break;
-        case "a":
-            pickColour(colourIndex);
-            break;
-        case "up":
-            row = "themes";
-            break;
-        case "b":
-        case "home":
-        case "start":
+        if (button === "b" || button === "home" || button === "start") {
             hide();
-            break;
+            return;
         }
+        if (row === "modes") {
+            if (button === "left")
+                modeIndex = Math.max(0, modeIndex - 1);
+            else if (button === "right")
+                modeIndex = Math.min(modes.length - 1, modeIndex + 1);
+            else if (button === "a")
+                pickMode(modeIndex);
+            return;
+        }
+        if (row === "themes") {
+            if (button === "left")
+                themeIndex = Math.max(0, themeIndex - 1);
+            else if (button === "right")
+                themeIndex = Math.min(themes.length - 1, themeIndex + 1);
+            else if (button === "a")
+                apply(themeIndex);
+            return;
+        }
+        if (button === "left")
+            colourIndex = Math.max(0, colourIndex - 1);
+        else if (button === "right")
+            colourIndex = Math.min(colours.length - 1, colourIndex + 1);
+        else if (button === "a")
+            pickColour(colourIndex);
     }
 
     // Value from a theme's raw data, falling back to Dusk Tide.
@@ -445,6 +468,74 @@ Item {
                             picker.row = "colours";
                             picker.colourIndex = swatch.index;
                             picker.pickColour(swatch.index);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Background (theme modes)
+    Column {
+        x: 48
+        y: picker.colours.length > 0 ? 440 : 352
+        spacing: 12
+        visible: picker.hasModes
+
+        Text {
+            text: Theme.label("BACKGROUND")
+            color: Theme.textMuted
+            font.family: Theme.bodyFont
+            font.weight: Font.ExtraBold
+            font.pixelSize: 11
+            font.letterSpacing: 1.5
+        }
+
+        Row {
+            spacing: 10
+
+            Repeater {
+                model: picker.modes
+
+                Item {
+                    id: modeChip
+                    required property string modelData
+                    required property int index
+                    readonly property bool chosen: modelData === Theme.currentMode
+                    readonly property bool focused: Controller.active && picker.row === "modes" && index === picker.modeIndex
+
+                    width: modeText.implicitWidth + 32
+                    height: 32
+
+                    FocusRing {
+                        visible: modeChip.focused
+                        radius: Theme.rKey + 2
+                    }
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: Theme.rKey
+                        color: modeChip.chosen ? Theme.accent : Theme.chip
+                        border.width: 1
+                        border.color: modeChip.chosen ? Theme.accent : Theme.keyBorder
+
+                        Text {
+                            id: modeText
+                            anchors.centerIn: parent
+                            text: Theme.label(Theme.modeLabel(modeChip.modelData))
+                            color: modeChip.chosen ? Theme.accentInk : Theme.text
+                            font.family: Theme.bodyFont
+                            font.weight: Font.Bold
+                            font.pixelSize: 13
+                        }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: {
+                            picker.row = "modes";
+                            picker.modeIndex = modeChip.index;
+                            picker.pickMode(modeChip.index);
                         }
                     }
                 }

@@ -13,9 +13,11 @@ Singleton {
     // Recently played games, newest first:
     // { kind, system, path, title, art, entryId }
     property var recentGames: []
-    // Selected theme (folder name) and the favourite colour picked per theme.
+    // Selected theme (folder name), the favourite colour picked per theme
+    // (and per mode), and the mode picked per theme ("dark", "paper"...).
     property string theme: "dusk-tide"
     property var accents: ({})
+    property var modes: ({})
     property bool sounds: true
     // Not saved: whether Quick settings is open (the volume pop-up hides then).
     property bool quickPanelOpen: false
@@ -74,6 +76,16 @@ Singleton {
         save();
     }
 
+    function setMode(themeId, mode) {
+        const map = Object.assign({}, modes);
+        if (mode)
+            map[themeId] = mode;
+        else
+            delete map[themeId];
+        modes = map;
+        save();
+    }
+
     function setSounds(on) {
         sounds = on;
         save();
@@ -85,6 +97,7 @@ Singleton {
             recentGames: recentGames,
             theme: theme,
             accents: accents,
+            modes: modes,
             sounds: sounds
         }, null, 2));
     }
@@ -124,6 +137,7 @@ Singleton {
         recentGames = data && Array.isArray(data.recentGames) ? data.recentGames : [];
         theme = data && typeof data.theme === "string" ? data.theme : "dusk-tide";
         accents = data && data.accents && typeof data.accents === "object" ? data.accents : {};
+        modes = data && data.modes && typeof data.modes === "object" ? data.modes : {};
         sounds = data && typeof data.sounds === "boolean" ? data.sounds : true;
         loaded = true;
     }

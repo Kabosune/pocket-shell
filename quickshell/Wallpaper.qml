@@ -5,7 +5,7 @@ import QtQuick.Shapes
 //   { "type": "scene", "scene": "dusk-tide" }       drawn landscape (built-in)
 //   { "type": "grid", "color": "...", "line": "...", "size": 16 }   graph paper
 //   { "type": "dots", "color": "...", "dot": "...", "size": 24 }    dot grid
-//   { "type": "rain", "color": "...", "glyph": "...", "size": 16,
+//   { "type": "rain", "color": "...", "glyph": "...", "head": "...", "size": 16,
 //     "density": 1, "speed": 1 }                     falling code (animated)
 //   { "type": "collage", "color": "...", "ink": "...", "seed": 7,
 //     "words": ["NO SIGNAL", ...] }                  photocopied-poster collage
@@ -89,6 +89,7 @@ Item {
         sourceComponent: RainField {
             background: Theme.toColor(wall.spec.color || Theme.bg)
             glyphColor: wall.spec.glyph ? Theme.toColor(wall.spec.glyph) : Theme.accent
+            head: wall.spec.head ? Theme.toColor(wall.spec.head) : "transparent"
             size: wall.spec.size || 16
             density: wall.spec.density || 1
             speed: wall.spec.speed || 1
@@ -191,7 +192,9 @@ Item {
         active: wall.kind !== "rain" && wall.spec.rain !== undefined
         sourceComponent: RainField {
             fill: false
+            background: Theme.toColor(wall.spec.color || Theme.bg)
             glyphColor: wall.spec.rain.glyph ? Theme.toColor(wall.spec.rain.glyph) : Theme.accent
+            head: wall.spec.rain.head ? Theme.toColor(wall.spec.rain.head) : "transparent"
             size: wall.spec.rain.size || 14
             density: wall.spec.rain.density || 0.2
             speed: wall.spec.rain.speed || 0.5

@@ -13,6 +13,10 @@ Item {
 
     property color glyphColor: Theme.accent
     property color background: "black"
+    // Colour of the leading glyph. Left transparent, heads are the glyph
+    // colour washed toward white (for dark backgrounds); on a light page
+    // give a dark one.
+    property color head: "transparent"
     property string fontFamily: Theme.bodyFont
     property real size: 16          // glyph size of the middle layer, px
     property real density: 1        // drops per column
@@ -40,7 +44,9 @@ Item {
     // the head; heads get their own, nearly white.
     readonly property int steps: 14
     readonly property var palettes: makePalettes(glyphColor, background)
-    readonly property var heads: layers.map(l => mixHex(glyphColor, "#FFFFFF", 0.35 + 0.5 * l.bright))
+    readonly property var heads: layers.map(l => head.a > 0
+        ? String(mix(background, head, 0.35 + 0.65 * l.bright))
+        : mixHex(glyphColor, "#FFFFFF", 0.35 + 0.5 * l.bright))
 
     function mix(a, b, t) {
         return Qt.rgba(a.r + (b.r - a.r) * t, a.g + (b.g - a.g) * t, a.b + (b.b - a.b) * t, 1);

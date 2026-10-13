@@ -217,6 +217,7 @@ Item {
     Scanlines {
         anchors.fill: parent
         visible: Theme.scanlines
+        shade: Theme.scanline
     }
 
     // Start-up chime, once the sounds have had a moment to load.

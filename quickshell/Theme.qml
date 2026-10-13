@@ -46,6 +46,7 @@ Singleton {
             scrim: "rgba(6, 16, 18, 0.85)",
             ledge: "rgba(0, 0, 0, 0.25)",
             bar: "transparent",
+            scanline: "rgba(0, 0, 0, 0.22)",
             barBorder: "transparent"
         },
         accentChoices: ["#F4B78E", "#9FE0C9", "#C9B6F2", "#F2D37A"],
@@ -93,6 +94,32 @@ Singleton {
         : (bootId === currentId && bootData ? bootData : defaults)
     readonly property string dir: currentEntry ? currentEntry.dir
         : (bootId === currentId && bootData ? bootDir : "")
+
+    // --- Modes
+    //
+    // A theme can offer variants under "modes", e.g. a dark and a paper
+    // background: { "dark": { "label": "dark" }, "paper": { "colors": {...},
+    // "wallpaper": {...} } }. The first mode is the theme as written; the
+    // others override any keys they list. The pick is saved per theme.
+    readonly property var modeList: themeData && themeData.modes && typeof themeData.modes === "object"
+        ? Object.keys(themeData.modes) : []
+    readonly property string currentMode: {
+        const saved = Store.modes[currentId];
+        return modeList.indexOf(saved) >= 0 ? saved : (modeList.length > 0 ? modeList[0] : "");
+    }
+    readonly property var modeData: currentMode !== "" && modeList.indexOf(currentMode) > 0
+        ? themeData.modes[currentMode] : null
+    // Favourite colours are kept per mode (a light accent rarely suits dark)
+    readonly property string accentKey: modeData ? `${currentId}:${currentMode}` : currentId
+
+    function modeLabel(id) {
+        const m = themeData && themeData.modes ? themeData.modes[id] : null;
+        return m && m.label ? m.label : id;
+    }
+
+    function useMode(id) {
+        Store.setMode(currentId, id);
+    }
 
     property var bootData: null
     property string bootId: ""
@@ -158,10 +185,16 @@ Singleton {
         onFileChanged: theme.refresh()
     }
 
-    // Value at a dotted path in the theme, else in the defaults.
+    // Value at a dotted path in the current mode, else the theme, else the
+    // defaults.
     function get(path) {
         const keys = path.split(".");
-        let v = themeData;
+        let v = modeData;
+        for (let i = 0; i < keys.length && v !== undefined && v !== null; i++)
+            v = v[keys[i]];
+        if (v !== undefined && v !== null)
+            return v;
+        v = themeData;
         for (let i = 0; i < keys.length && v !== undefined && v !== null; i++)
             v = v[keys[i]];
         if (v !== undefined && v !== null)
@@ -200,7 +233,7 @@ Singleton {
     readonly property string name: get("name")
 
     // Accent: the user's pick for this theme, else the theme's own.
-    readonly property color accent: toColor(Store.accents[currentId] || get("colors.accent"))
+    readonly property color accent: toColor(Store.accents[accentKey] || get("colors.accent"))
     readonly property color accentInk: luminance(accent) > 0.45 ? col("colors.inkDark") : col("colors.inkLight")
     readonly property color accentDeep: mix(accent, Qt.rgba(0, 0, 0, 1), 0.28)
     readonly property color accentPale: mix(accent, Qt.rgba(1, 1, 1, 1), 0.85)
@@ -226,6 +259,7 @@ Singleton {
     readonly property color ledge: col("colors.ledge")
     readonly property color bar: col("colors.bar")
     readonly property color barBorder: col("colors.barBorder")
+    readonly property color scanline: col("colors.scanline")
     readonly property var cardColors: get("cardColors")
 
     readonly property real rCard: get("radii.card")
@@ -317,7 +351,7 @@ Singleton {
     }
 
     function setAccent(color) {
-        Store.setAccent(currentId, color);
+        Store.setAccent(accentKey, color);
     }
 
     Process {
