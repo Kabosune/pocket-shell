@@ -18,6 +18,8 @@ Item {
     property real density: 1        // drops per column
     property real speed: 1          // fall speed multiplier
     property bool running: true
+    // false: no background and no fade, for rain laid over another wallpaper
+    property bool fill: true
 
     readonly property real columnWidth: Math.round(size * 0.78)
     readonly property int columns: Math.max(1, Math.floor(width / columnWidth))
@@ -143,6 +145,7 @@ Item {
     }
 
     Rectangle {
+        visible: rain.fill
         anchors.fill: parent
         color: rain.background
     }
@@ -192,6 +195,7 @@ Item {
 
     // Fade out behind the button hints so they stay readable
     Rectangle {
+        visible: rain.fill
         z: 10
         anchors.left: parent.left
         anchors.right: parent.right

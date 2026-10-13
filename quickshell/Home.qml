@@ -8,6 +8,9 @@ import Quickshell
 //            name banner
 //   fetch    Dotfiles: a terminal "fetch" card with system info on the
 //            left, media and toggles on the right, a centred dock
+//   tiles    Static: everything in tiled terminal windows, like a tiling
+//            WM desktop: fetch and dock on the left; media, toggles,
+//            pipes and an audio visualizer on the right
 // Positions are the mockups' px values; the RP5 screen is 960x540 logical.
 //
 // Controller focus moves between three rows:
@@ -29,10 +32,13 @@ Item {
     readonly property var zones: ["media", "toggles", "dock"]
     readonly property bool panels: Theme.homeLayout === "panels"
     readonly property bool fetch: Theme.homeLayout === "fetch"
+    readonly property bool tiles: Theme.homeLayout === "tiles"
+    // Animated tiles only run while Home is on screen
+    readonly property bool live: home.current && Wm.inShell
 
     // Value for the current layout
-    function pick(classic, panels, fetch) {
-        return home.fetch ? fetch : home.panels ? panels : classic;
+    function pick(classic, panels, fetch, tiles) {
+        return home.tiles ? tiles : home.fetch ? fetch : home.panels ? panels : classic;
     }
 
     // Pinned apps, then Settings (which opens the session sheet for now).
@@ -126,8 +132,115 @@ Item {
 
     onDockItemsChanged: setZoneIndex("dock", dockIndex)
 
+    // --- Tile windows (tiles layout)
+
+    TileWindow {
+        id: fetchWin
+        visible: home.tiles
+        x: 16
+        y: 52
+        width: 480
+        height: 308
+        title: "pocketfetch"
+    }
+
+    TileWindow {
+        id: dockWin
+        visible: home.tiles
+        x: 16
+        y: 370
+        width: 480
+        height: 124
+        title: "dock"
+        status: `${home.dockItems.length} items`
+        active: Controller.active && home.zone === "dock"
+    }
+
+    TileWindow {
+        id: mediaWin
+        visible: home.tiles
+        x: 506
+        y: 52
+        width: home.width - 506 - 16
+        height: 140
+        title: "now playing"
+        status: "mpris"
+        active: Controller.active && home.zone === "media"
+    }
+
+    TileWindow {
+        id: togglesWin
+        visible: home.tiles
+        x: 506
+        y: 202
+        width: mediaWin.width
+        height: 112
+        title: "toggles"
+        active: Controller.active && home.zone === "toggles"
+    }
+
+    TileWindow {
+        id: pipesWin
+        visible: home.tiles
+        x: 506
+        y: 324
+        width: (mediaWin.width - 10) / 2
+        height: 170
+        title: "pipes"
+
+        Loader {
+            active: home.tiles
+            x: 8
+            y: pipesWin.barHeight + 6
+            width: pipesWin.width - 16
+            height: pipesWin.height - pipesWin.barHeight - 12
+            sourceComponent: PipesView {
+                running: home.live
+                colors: Theme.accentChoices && Theme.accentChoices.length > 0
+                    ? Theme.accentChoices.slice(0, 6).map(c => String(Theme.toColor(c)))
+                    : [String(Theme.accent)]
+            }
+        }
+    }
+
+    TileWindow {
+        id: cavaWin
+        visible: home.tiles
+        x: pipesWin.x + pipesWin.width + 10
+        y: 324
+        width: pipesWin.width
+        height: 170
+        title: "cava"
+        status: viz.status === Loader.Ready ? viz.item.mode : ""
+
+        Loader {
+            id: viz
+            active: home.tiles
+            x: 12
+            y: cavaWin.barHeight + 12
+            width: cavaWin.width - 24
+            height: cavaWin.height - cavaWin.barHeight - 24
+            sourceComponent: Visualizer {
+                running: home.live
+            }
+        }
+    }
+
+    Loader {
+        active: home.tiles
+        x: fetchWin.x
+        y: fetchWin.y + fetchWin.barHeight
+        width: fetchWin.width
+        height: fetchWin.height - fetchWin.barHeight
+        sourceComponent: FetchCard {
+            framed: true
+            showPrompt: false
+            margin: 14
+        }
+    }
+
     ClockBlock {
-        visible: !home.panels && !home.fetch
+        visible: !home.panels && !home.fetch && !home.tiles
         x: 48
         y: 70
     }
@@ -151,11 +264,25 @@ Item {
 
     Loader {
         id: media
-        x: home.pick(home.width - 40 - width, 476, 600)
-        y: home.pick(74, 60, 60)
-        width: home.pick(400, home.width - 476 - 32, home.width - 600 - 32)
-        height: home.pick(156, 124, 140)
+        x: home.pick(home.width - 40 - width, 476, 600, mediaWin.x)
+        y: home.pick(74, 60, 60, mediaWin.y + mediaWin.barHeight)
+        width: home.pick(400, home.width - 476 - 32, home.width - 600 - 32, mediaWin.width)
+        height: home.pick(156, 124, 140, mediaWin.height - mediaWin.barHeight)
         source: "NowPlaying.qml"
+    }
+
+    // Inside a tile window the media card drops its own frame
+    Binding {
+        when: media.status === Loader.Ready && home.tiles
+        target: media.item
+        property: "color"
+        value: "transparent"
+    }
+    Binding {
+        when: media.status === Loader.Ready && home.tiles
+        target: media.item
+        property: "border.width"
+        value: 0
     }
 
     Binding {
@@ -167,21 +294,26 @@ Item {
 
     QuickToggles {
         id: toggles
-        x: home.pick(home.width - 40 - width, 476, 600)
-        y: home.pick(246, 200, 216)
-        width: home.pick(400, home.width - 476 - 32, home.width - 600 - 32)
-        height: home.pick(implicitHeight, 132, 174)
-        toggleSize: home.pick(52, 64, 52)
+        x: home.pick(home.width - 40 - width, 476, 600, togglesWin.x)
+        y: home.pick(246, 200, 216, togglesWin.y + togglesWin.barHeight)
+        width: home.pick(400, home.width - 476 - 32, home.width - 600 - 32, togglesWin.width)
+        height: home.pick(implicitHeight, 132, 174, togglesWin.height - togglesWin.barHeight)
+        toggleSize: home.pick(52, 64, 52, 44)
+        color: home.tiles ? "transparent" : Theme.surface
+        border.width: home.tiles ? 0 : Theme.borderWidth
         focusedIndex: Controller.active && home.zone === "toggles" ? home.toggleIndex : -1
     }
 
     Dock {
         id: dock
-        x: home.panels ? 32 : (home.width - width) / 2
-        y: home.panels ? 352 : home.height - 48 - height
+        x: home.tiles ? dockWin.x + (dockWin.width - width) / 2 : home.panels ? 32 : (home.width - width) / 2
+        y: home.tiles ? dockWin.y + dockWin.barHeight + (dockWin.height - dockWin.barHeight - height) / 2
+            : home.panels ? 352 : home.height - 48 - height
         width: home.panels ? home.width - 64 : implicitWidth
         height: home.panels ? 138 : implicitHeight
         tileSize: home.panels ? 72 : 56
+        color: home.tiles ? "transparent" : Theme.surface
+        border.width: home.tiles ? 0 : Theme.borderWidth
         banner: home.panels
         items: home.dockItems
         focusedIndex: Controller.active && home.zone === "dock" ? home.dockIndex : -1

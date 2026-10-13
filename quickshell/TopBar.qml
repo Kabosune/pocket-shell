@@ -4,8 +4,10 @@ import Quickshell.Io
 
 // Status bar: notifications (Home) or the time (other pages) · page tabs
 // between L1/R1 · Wi-Fi and battery. Themes choose the tab style
-// (segmented pill, chunky buttons, or numbered "workspaces") and the
-// status style (icons, pixel, or a plain text line like a rice's bar).
+// (segmented pill, chunky buttons, numbered "workspaces", or bare
+// "numbers") and the status style (icons, pixel, a plain text line, or
+// "stats": a tiling-WM bar with workspaces left, what's playing in the
+// middle, and cpu/mem/wifi/battery/time on the right).
 Item {
     id: bar
 
@@ -17,12 +19,14 @@ Item {
     readonly property bool buttons: Theme.tabStyle === "buttons"
     readonly property bool workspaces: Theme.tabStyle === "workspaces"
     readonly property bool pixel: Theme.statusStyle === "pixel"
-    readonly property bool textStatus: Theme.statusStyle === "text"
+    readonly property bool stats: Theme.statusStyle === "stats"
+    readonly property bool textStatus: Theme.statusStyle === "text" || stats
+    readonly property bool numbers: Theme.tabStyle === "numbers"
 
     readonly property string user: Quickshell.env("USER") || "user"
     readonly property string host: hostFile.text().trim() || "pocket"
 
-    implicitHeight: bar.buttons || bar.workspaces ? 40 : 48
+    implicitHeight: bar.buttons || bar.workspaces || bar.numbers ? 40 : 48
 
     FileView {
         id: hostFile
@@ -49,6 +53,7 @@ Item {
     }
 
     Row {
+        visible: !bar.stats
         anchors.left: parent.left
         anchors.leftMargin: 20
         anchors.verticalCenter: parent.verticalCenter
@@ -96,7 +101,11 @@ Item {
     }
 
     Row {
-        anchors.centerIn: parent
+        id: tabRow
+        anchors.centerIn: bar.stats ? undefined : parent
+        anchors.left: bar.stats ? parent.left : undefined
+        anchors.leftMargin: 16
+        anchors.verticalCenter: parent.verticalCenter
         spacing: bar.buttons ? 6 : 8
 
         KeyCap {
@@ -106,7 +115,7 @@ Item {
 
         // Segmented pill (Dusk Tide)
         Surface {
-            visible: !bar.buttons && !bar.workspaces
+            visible: !bar.buttons && !bar.workspaces && !bar.numbers
             anchors.verticalCenter: parent.verticalCenter
             width: tabs.implicitWidth + 6
             height: tabs.implicitHeight + 6
@@ -118,7 +127,7 @@ Item {
                 spacing: 2
 
                 Repeater {
-                    model: bar.buttons || bar.workspaces ? [] : bar.pages
+                    model: bar.buttons || bar.workspaces || bar.numbers ? [] : bar.pages
 
                     Rectangle {
                         id: tab
@@ -226,10 +235,69 @@ Item {
             }
         }
 
+        // Bare numbers, the current one opened up: "1 [2 library] 3 4"
+        Repeater {
+            model: bar.numbers ? bar.pages : []
+
+            Rectangle {
+                id: num
+                required property string modelData
+                required property int index
+                readonly property bool current: index === bar.page
+
+                anchors.verticalCenter: parent.verticalCenter
+                width: current ? numLabel.implicitWidth + 18 : 24
+                height: 24
+                radius: Theme.rKey
+                color: current ? Theme.accent : "transparent"
+                border.width: current ? 0 : 1
+                border.color: Theme.line
+                Behavior on width { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
+
+                Text {
+                    id: numLabel
+                    anchors.centerIn: parent
+                    text: num.current ? `${num.index + 1} ${Theme.label(num.modelData)}` : `${num.index + 1}`
+                    color: num.current ? Theme.accentInk : Theme.textMuted
+                    font.family: Theme.bodyFont
+                    font.weight: num.current ? Font.Bold : Font.Normal
+                    font.pixelSize: 12
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    anchors.margins: -6
+                    onClicked: bar.pageTapped(num.index)
+                }
+            }
+        }
+
         KeyCap {
             anchors.verticalCenter: parent.verticalCenter
             label: bar.buttons ? "R" : "R1"
         }
+
+        // Layout tag, like a tiling WM's "[]=" or "BSP"
+        Text {
+            visible: bar.stats
+            anchors.verticalCenter: parent.verticalCenter
+            leftPadding: 4
+            text: "[tile]"
+            color: Theme.textMuted
+            font.family: Theme.bodyFont
+            font.pixelSize: 12
+        }
+    }
+
+    // What's playing, centred between the tabs and the status
+    Loader {
+        id: mediaText
+        readonly property real room: Math.max(0, Math.min(bar.width / 2 - tabRow.x - tabRow.width, status.x - bar.width / 2) - 24)
+        active: bar.stats
+        anchors.centerIn: parent
+        width: item ? Math.min(item.implicitWidth, room * 2) : 0
+        source: "MediaText.qml"
+        onLoaded: item.width = Qt.binding(() => mediaText.width)
     }
 
     // Tap the status icons for Quick settings
@@ -250,7 +318,7 @@ Item {
         Row {
             visible: bar.textStatus
             anchors.verticalCenter: parent.verticalCenter
-            spacing: 10
+            spacing: bar.stats ? 8 : 10
 
             component Sep: Text {
                 text: "│"
@@ -259,6 +327,16 @@ Item {
                 font.pixelSize: 13
             }
 
+            Loader {
+                anchors.verticalCenter: parent.verticalCenter
+                active: bar.stats
+                visible: active
+                source: "StatsText.qml"
+            }
+            Sep {
+                anchors.verticalCenter: parent.verticalCenter
+                visible: bar.stats
+            }
             Loader {
                 anchors.verticalCenter: parent.verticalCenter
                 active: bar.textStatus
@@ -279,7 +357,7 @@ Item {
             }
             Text {
                 anchors.verticalCenter: parent.verticalCenter
-                text: Qt.formatTime(clock.date, "HH:mm")
+                text: bar.stats ? Theme.label(Qt.formatDateTime(clock.date, "ddd HH:mm")) : Qt.formatTime(clock.date, "HH:mm")
                 color: Theme.textStrong
                 font.family: Theme.bodyFont
                 font.weight: Font.Bold

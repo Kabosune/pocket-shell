@@ -239,6 +239,38 @@ Item {
                         }
                     }
 
+                    // A hint of the poster collage
+                    Item {
+                        visible: card.wall && card.wall.type === "collage"
+                        anchors.fill: parent
+
+                        Text {
+                            x: -6
+                            y: 52
+                            text: (card.wall && card.wall.words && card.wall.words[0]) || "NO SIGNAL"
+                            color: "transparent"
+                            style: Text.Outline
+                            styleColor: Qt.rgba(1, 1, 1, 0.12)
+                            font.family: picker.val(card.d, "fonts.body")
+                            font.weight: Font.Bold
+                            font.pixelSize: 40
+                        }
+                        Row {
+                            x: 150
+                            y: 74
+                            spacing: 1
+                            Repeater {
+                                model: [3, 1, 1, 2, 1, 3, 1, 1, 2, 1, 1, 3]
+                                Rectangle {
+                                    required property int modelData
+                                    width: modelData
+                                    height: 26
+                                    color: Qt.rgba(1, 1, 1, 0.18)
+                                }
+                            }
+                        }
+                    }
+
                     // A hint of falling code
                     Repeater {
                         model: card.wall && card.wall.type === "rain" ? 18 : 0

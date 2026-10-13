@@ -1,0 +1,60 @@
+{
+  "name": "Static",
+  "description": "A tiling-WM rice: windowed tiles, pipes, a visualizer, a collage wallpaper",
+  "author": "KaboWabo",
+  "colors": {
+    "bg": "#0C0B10",
+    "surface": "rgba(15, 14, 21, 0.76)",
+    "surfaceStrong": "rgba(19, 18, 27, 0.96)",
+    "surfaceBorder": "#34313F",
+    "chip": "rgba(30, 28, 40, 0.92)",
+    "chipFocused": "#2D2A3B",
+    "focusGap": "#0C0B10",
+    "keyBorder": "#4A4659",
+    "line": "#3A3747",
+    "textStrong": "#EEEBF5",
+    "text": "#C9C5D6",
+    "textMuted": "#7B768E",
+    "textHint": "#9A95AD",
+    "iconOnChip": "#C9C5D6",
+    "accent": "#B9A7F0",
+    "inkDark": "#0C0B10",
+    "inkLight": "#FFFFFF",
+    "dim": "rgba(8, 7, 12, 0.4)",
+    "scrim": "rgba(8, 7, 12, 0.9)",
+    "ledge": "rgba(0, 0, 0, 0.3)",
+    "bar": "rgba(12, 11, 16, 0.92)",
+    "barBorder": "#34313F"
+  },
+  "accentChoices": [
+    "#B9A7F0", "#E6E3EE", "#F0A6B8", "#8CD4C8",
+    "#E8C07D", "#8FB0F0", "#B5CF9A", "#F09A7A"
+  ],
+  "cardColors": ["#26222F", "#2C2533", "#1F2630", "#2A2A22", "#222A27", "#30242A", "#25253A", "#2B2B30"],
+  "radii": { "card": 3, "art": 2, "pill": 3, "btn": 3, "icon": 3, "dock": 3, "key": 3 },
+  "fonts": { "display": "JetBrains Mono", "body": "JetBrains Mono" },
+  "focus": { "gap": 0, "ring": 2 },
+  "wallpaper": {
+    "type": "collage",
+    "color": "#0C0B10",
+    "ink": "#D9D6E3",
+    "seed": 7,
+    "words": ["NO SIGNAL", "ctrl", "[0]", "EOF", "/dev/null", "login:"],
+    "rain": { "glyph": "#8E88A6", "size": 13, "density": 0.18, "speed": 0.45 }
+  },
+  "sounds": "tty",
+  "style": {
+    "border": 1,
+    "bevel": false,
+    "squareIcons": true,
+    "keys": "outline",
+    "tabs": "numbers",
+    "status": "stats",
+    "cards": "card",
+    "home": "tiles",
+    "textCase": "lower",
+    "titlePrefix": "",
+    "cursor": false,
+    "scanlines": false
+  }
+}

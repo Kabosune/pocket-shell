@@ -10,6 +10,12 @@ import Quickshell.Io
 Surface {
     id: card
 
+    // In a tile window the window draws the frame and title, so the
+    // card can drop its own background and the prompt line.
+    property bool framed: false
+    property bool showPrompt: true
+    property real margin: 16
+
     readonly property string user: Quickshell.env("USER") || "user"
     readonly property string host: hostFile.text().trim() || "pocket"
 
@@ -121,13 +127,17 @@ Surface {
         color: Theme.text
     }
 
+    color: framed ? "transparent" : Theme.surface
+    border.width: framed ? 0 : Theme.borderWidth
+
     Column {
         anchors.fill: parent
-        anchors.margins: 16
+        anchors.margins: card.margin
         spacing: 8
 
         // The "command" that printed this
         Row {
+            visible: card.showPrompt
             spacing: 4
 
             Mono {
@@ -189,7 +199,7 @@ Surface {
                             font.weight: Font.Bold
                         }
                         Mono {
-                            width: 270
+                            width: Math.max(120, Math.min(270, card.width - card.margin * 2 - 210))
                             elide: Text.ElideRight
                             text: modelData.value
                         }

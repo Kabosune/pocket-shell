@@ -263,10 +263,10 @@ Singleton {
     readonly property bool bevel: get("style.bevel") === true
     readonly property bool squareIcons: get("style.squareIcons") === true
     readonly property string keyStyle: get("style.keys")        // "outline" | "filled"
-    readonly property string tabStyle: get("style.tabs")        // "segmented" | "buttons" | "workspaces"
-    readonly property string statusStyle: get("style.status")   // "icons" | "pixel" | "text"
+    readonly property string tabStyle: get("style.tabs")        // "segmented" | "buttons" | "workspaces" | "numbers"
+    readonly property string statusStyle: get("style.status")   // "icons" | "pixel" | "text" | "stats"
     readonly property string cardStyle: get("style.cards")      // "card" | "cartridge"
-    readonly property string homeLayout: get("style.home")      // "classic" | "panels" | "fetch"
+    readonly property string homeLayout: get("style.home")      // "classic" | "panels" | "fetch" | "tiles"
     readonly property bool lowercase: get("style.textCase") === "lower"
     readonly property string titlePrefix: get("style.titlePrefix") || ""
     readonly property bool cursor: get("style.cursor") === true          // blinking block after titles

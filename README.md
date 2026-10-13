@@ -20,7 +20,7 @@ First target: **Retroid Pocket 5** running **pocknix-os**.
 | --- | --- | --- |
 | `hypr/hyprland.lua` | Hyprland config (0.56+ uses Lua, not `hyprland.conf`) | `~/.config/hypr/hyprland.lua` (symlink) |
 | `quickshell/` | The shell itself (`Theme.qml` tokens, `Device.qml` profile, screens) | `~/.config/quickshell` (symlink) |
-| `quickshell/themes/` | Built-in themes: Dusk Tide, Dusk Tide Soft, Stylus, Dotfiles, Dotfiles Rain | (part of `quickshell/`) |
+| `quickshell/themes/` | Built-in themes: Dusk Tide, Dusk Tide Soft, Stylus, Dotfiles, Dotfiles Rain, Static | (part of `quickshell/`) |
 | `quickshell/sounds/` | UI sound packs (`soft`, `chip`, `tty`), made by `tools/make-sounds.py` | (part of `quickshell/`) |
 | `fonts/` | Archivo, JetBrains Mono, Manrope, Nunito, Press Start 2P (SIL Open Font License, see each folder) | `~/.local/share/fonts/pocket-shell` (symlink) |
 | `input/` | `pocket-input`, a small SDL3 gamepad reader the shell runs | `/usr/local/bin/pocket-input` (built) |
@@ -46,10 +46,11 @@ For controller support, install the build tools and SDL3 (once):
 sudo pacman -S --needed gcc make pkgconf sdl3
 ```
 
-For sounds, brightness and the volume buttons (once):
+For sounds, brightness, the volume buttons and the Static theme's audio
+visualizer (once):
 
 ```bash
-sudo pacman -S --needed qt6-multimedia brightnessctl wireplumber
+sudo pacman -S --needed qt6-multimedia brightnessctl wireplumber cava
 ```
 
 `install.sh` lists any of these that are missing; the shell still runs
@@ -143,8 +144,8 @@ so the screen can't be turned fully dark by accident.
 UI sounds for moving around, selecting, going back, switching pages,
 menus, toggles, launching, errors, applying a theme, and a start-up chime.
 Each theme picks a pack: Dusk Tide uses `soft` (bells and marimba), Stylus
-uses `chip` (square-wave bleeps), Dotfiles and Dotfiles Rain use
-`tty` (soft keyboard clacks). Turn them off in Start → Sounds.
+uses `chip` (square-wave bleeps), Dotfiles, Dotfiles Rain and Static
+use `tty` (soft keyboard clacks). Turn them off in Start → Sounds.
 
 The packs are synthesized from scratch by `tools/make-sounds.py`; edit it
 and run `python3 tools/make-sounds.py` to regenerate them. Sounds need
@@ -170,6 +171,13 @@ Built in:
   falling code behind everything (in your accent colour, three depths,
   flickering glyphs), CRT scanlines and a blinking block cursor. The rain
   pauses whenever an app or game is in front
+- **Static**: a modern tiling-window-manager rice. Home is a set of tiled
+  terminal windows (fetch, now playing, toggles, dock, a pipes screensaver
+  and an audio visualizer from [cava](https://github.com/karlstav/cava));
+  the bar has workspace numbers on the left, what's playing in the middle
+  and cpu, memory, Wi-Fi, battery and time on the right. Behind it all: a
+  greyscale photocopied-poster collage with a light drizzle of falling
+  glyphs. Lavender by default, 8 colours to pick from
 
 ### Making a theme
 
@@ -201,16 +209,17 @@ All keys:
 | `radii` | Corner radii in px: `card`, `art`, `pill`, `btn`, `icon`, `dock`, `key` |
 | `fonts` | `display`, `body` (font family names), `files` (font files in the theme folder to load), and for pixel fonts `displayGrid` (the font's pixel size at 1x, e.g. `8` for an 8×8 font) and `displayScale` (shrinks display text for wide fonts). With `displayGrid` set, display text snaps to whole multiples of the grid and isn't smoothed or fake-bolded, so it stays crisp |
 | `focus` | Focus ring: `gap` and `ring` widths in px |
-| `wallpaper` | `{ "type": "scene" }` (Dusk Tide), `{ "type": "grid", "color", "line", "size" }`, `{ "type": "dots", "color", "dot", "size" }`, `{ "type": "rain", "color", "glyph", "size", "density", "speed" }` (falling code; `glyph` defaults to the accent), `{ "type": "color", "color" }` or `{ "type": "image", "file": "wallpaper.png" }` |
+| `wallpaper` | `{ "type": "scene" }` (Dusk Tide), `{ "type": "grid", "color", "line", "size" }`, `{ "type": "dots", "color", "dot", "size" }`, `{ "type": "rain", "color", "glyph", "size", "density", "speed" }` (falling code; `glyph` defaults to the accent), `{ "type": "collage", "color", "ink", "seed", "words": [...] }` (poster collage, the same for a given seed), `{ "type": "color", "color" }` or `{ "type": "image", "file": "wallpaper.png" }` |
+| `wallpaper.rain` | Any wallpaper can add light falling code on top: `{ "glyph", "size", "density", "speed" }` |
 | `sounds` | `"soft"`, `"chip"`, `"tty"`, `"none"`, or `"./folder"` with your own 48 kHz WAVs named `move`, `select`, `back`, `page`, `page-prev`, `page-next`, `open`, `toggle-on`, `toggle-off`, `launch`, `error`, `notice`, `theme`, `boot` |
 | `style.border` | Panel border width |
 | `style.bevel` | `true` for chunky buttons with a bottom ledge |
 | `style.squareIcons` | `true` for square line ends (pixel look) |
 | `style.keys` | Button hints: `"outline"` or `"filled"` |
-| `style.tabs` | Page tabs: `"segmented"`, `"buttons"` or `"workspaces"` (numbered, with `user@host` on the left) |
-| `style.status` | Wi-Fi and battery: `"icons"`, `"pixel"` or `"text"` |
+| `style.tabs` | Page tabs: `"segmented"`, `"buttons"` or `"workspaces"` (numbered, with `user@host` on the left) or `"numbers"` (just numbers; the current page opens up to show its name) |
+| `style.status` | Wi-Fi and battery: `"icons"`, `"pixel"`, `"text"`, or `"stats"` (a tiling-WM bar: tabs on the left, what's playing in the middle, cpu/mem/Wi-Fi/battery/time on the right) |
 | `style.cards` | Library collections: `"card"` or `"cartridge"` |
-| `style.home` | Home layout: `"classic"`, `"panels"` or `"fetch"` (system info card) |
+| `style.home` | Home layout: `"classic"`, `"panels"` or `"fetch"` (system info card) or `"tiles"` (tiled terminal windows with pipes and a visualizer) |
 | `style.textCase` | `"lower"` to lowercase labels and titles, or `"normal"` |
 | `style.titlePrefix` | Text drawn in the accent before page titles, e.g. `"~/"` |
 | `style.cursor` | `true` for a blinking block cursor after page titles |

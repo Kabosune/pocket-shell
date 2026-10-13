@@ -7,7 +7,11 @@ import QtQuick.Shapes
 //   { "type": "dots", "color": "...", "dot": "...", "size": 24 }    dot grid
 //   { "type": "rain", "color": "...", "glyph": "...", "size": 16,
 //     "density": 1, "speed": 1 }                     falling code (animated)
+//   { "type": "collage", "color": "...", "ink": "...", "seed": 7,
+//     "words": ["NO SIGNAL", ...] }                  photocopied-poster collage
 //   { "type": "color", "color": "..." }
+// Any type can also have light rain on top:
+//   "rain": { "glyph": "...", "size": 13, "density": 0.2, "speed": 0.5 }
 //   { "type": "image", "file": "wallpaper.png" }    from the theme's folder
 Item {
     id: wall
@@ -18,7 +22,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        color: ["color", "grid", "dots", "rain"].indexOf(wall.kind) >= 0 ? Theme.toColor(wall.spec.color || Theme.bg) : Theme.bg
+        color: ["color", "grid", "dots", "rain", "collage"].indexOf(wall.kind) >= 0 ? Theme.toColor(wall.spec.color || Theme.bg) : Theme.bg
     }
 
     // Graph paper
@@ -89,6 +93,18 @@ Item {
             density: wall.spec.density || 1
             speed: wall.spec.speed || 1
             running: Wm.inShell && wall.visible
+        }
+    }
+
+    // Poster collage, drawn once
+    Loader {
+        anchors.fill: parent
+        active: wall.kind === "collage"
+        sourceComponent: CollageWall {
+            background: Theme.toColor(wall.spec.color || Theme.bg)
+            ink: Theme.toColor(wall.spec.ink || Theme.text)
+            seed: wall.spec.seed || 7
+            words: wall.spec.words || ["NO SIGNAL", "ctrl", "[0]", "EOF", "/dev/null", "login:"]
         }
     }
 
@@ -166,6 +182,20 @@ Item {
                 Layer { fillColor: Qt.rgba(scene.star.r, scene.star.g, scene.star.b, 0.50); d: Icons.circle(880, 40, 1) }
                 Layer { fillColor: Qt.rgba(scene.star.r, scene.star.g, scene.star.b, 0.45); d: Icons.circle(470, 88, 1) }
             }
+        }
+    }
+
+    // Light rain over any wallpaper ("rain" inside the wallpaper spec)
+    Loader {
+        anchors.fill: parent
+        active: wall.kind !== "rain" && wall.spec.rain !== undefined
+        sourceComponent: RainField {
+            fill: false
+            glyphColor: wall.spec.rain.glyph ? Theme.toColor(wall.spec.rain.glyph) : Theme.accent
+            size: wall.spec.rain.size || 14
+            density: wall.spec.rain.density || 0.2
+            speed: wall.spec.rain.speed || 0.5
+            running: Wm.inShell && wall.visible
         }
     }
 }
