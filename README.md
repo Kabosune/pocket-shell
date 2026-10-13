@@ -20,7 +20,7 @@ First target: **Retroid Pocket 5** running **pocknix-os**.
 | --- | --- | --- |
 | `hypr/hyprland.lua` | Hyprland config (0.56+ uses Lua, not `hyprland.conf`) | `~/.config/hypr/hyprland.lua` (symlink) |
 | `quickshell/` | The shell itself (`Theme.qml` tokens, `Device.qml` profile, screens) | `~/.config/quickshell` (symlink) |
-| `quickshell/themes/` | Built-in themes: Dusk Tide, Dusk Tide Soft, Stylus, Dotfiles | (part of `quickshell/`) |
+| `quickshell/themes/` | Built-in themes: Dusk Tide, Dusk Tide Soft, Stylus, Dotfiles, Dotfiles Rain | (part of `quickshell/`) |
 | `quickshell/sounds/` | UI sound packs (`soft`, `chip`, `tty`), made by `tools/make-sounds.py` | (part of `quickshell/`) |
 | `fonts/` | Archivo, JetBrains Mono, Manrope, Nunito, Press Start 2P (SIL Open Font License, see each folder) | `~/.local/share/fonts/pocket-shell` (symlink) |
 | `input/` | `pocket-input`, a small SDL3 gamepad reader the shell runs | `/usr/local/bin/pocket-input` (built) |
@@ -143,8 +143,8 @@ so the screen can't be turned fully dark by accident.
 UI sounds for moving around, selecting, going back, switching pages,
 menus, toggles, launching, errors, applying a theme, and a start-up chime.
 Each theme picks a pack: Dusk Tide uses `soft` (bells and marimba), Stylus
-uses `chip` (square-wave bleeps), Dotfiles uses `tty` (soft keyboard
-clacks). Turn them off in Start → Sounds.
+uses `chip` (square-wave bleeps), Dotfiles and Dotfiles Rain use
+`tty` (soft keyboard clacks). Turn them off in Start → Sounds.
 
 The packs are synthesized from scratch by `tools/make-sounds.py`; edit it
 and run `python3 tools/make-sounds.py` to regenerate them. Sounds need
@@ -166,6 +166,10 @@ Built in:
   `~/` page titles, numbered workspace tabs, a plain-text status line
   (`wifi on │ bat 78% │ 21:58`), a dot-grid wallpaper and a fetch-style
   system card on Home; pick from 8 terminal colours
+- **Dotfiles Rain**: Dotfiles turned up: green phosphor on black, animated
+  falling code behind everything (in your accent colour, three depths,
+  flickering glyphs), CRT scanlines and a blinking block cursor. The rain
+  pauses whenever an app or game is in front
 
 ### Making a theme
 
@@ -197,7 +201,7 @@ All keys:
 | `radii` | Corner radii in px: `card`, `art`, `pill`, `btn`, `icon`, `dock`, `key` |
 | `fonts` | `display`, `body` (font family names), `files` (font files in the theme folder to load), and for pixel fonts `displayGrid` (the font's pixel size at 1x, e.g. `8` for an 8×8 font) and `displayScale` (shrinks display text for wide fonts). With `displayGrid` set, display text snaps to whole multiples of the grid and isn't smoothed or fake-bolded, so it stays crisp |
 | `focus` | Focus ring: `gap` and `ring` widths in px |
-| `wallpaper` | `{ "type": "scene" }` (Dusk Tide), `{ "type": "grid", "color", "line", "size" }`, `{ "type": "dots", "color", "dot", "size" }`, `{ "type": "color", "color" }` or `{ "type": "image", "file": "wallpaper.png" }` |
+| `wallpaper` | `{ "type": "scene" }` (Dusk Tide), `{ "type": "grid", "color", "line", "size" }`, `{ "type": "dots", "color", "dot", "size" }`, `{ "type": "rain", "color", "glyph", "size", "density", "speed" }` (falling code; `glyph` defaults to the accent), `{ "type": "color", "color" }` or `{ "type": "image", "file": "wallpaper.png" }` |
 | `sounds` | `"soft"`, `"chip"`, `"tty"`, `"none"`, or `"./folder"` with your own 48 kHz WAVs named `move`, `select`, `back`, `page`, `page-prev`, `page-next`, `open`, `toggle-on`, `toggle-off`, `launch`, `error`, `notice`, `theme`, `boot` |
 | `style.border` | Panel border width |
 | `style.bevel` | `true` for chunky buttons with a bottom ledge |
@@ -209,6 +213,8 @@ All keys:
 | `style.home` | Home layout: `"classic"`, `"panels"` or `"fetch"` (system info card) |
 | `style.textCase` | `"lower"` to lowercase labels and titles, or `"normal"` |
 | `style.titlePrefix` | Text drawn in the accent before page titles, e.g. `"~/"` |
+| `style.cursor` | `true` for a blinking block cursor after page titles |
+| `style.scanlines` | `true` for faint CRT lines over the whole screen |
 
 The theme folder can hold its own fonts (list them in `fonts.files`) and
 wallpaper image. Pocket Shell reloads a theme when its `theme.json` changes,

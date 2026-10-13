@@ -1,0 +1,53 @@
+{
+  "name": "Dotfiles Rain",
+  "description": "Dotfiles, jacked in: green phosphor, falling code, scanlines",
+  "author": "KaboWabo",
+  "colors": {
+    "bg": "#000000",
+    "surface": "rgba(0, 10, 4, 0.84)",
+    "surfaceStrong": "rgba(0, 14, 6, 0.95)",
+    "surfaceBorder": "#145C2E",
+    "chip": "#03170A",
+    "chipFocused": "#0B3418",
+    "focusGap": "#000000",
+    "keyBorder": "#1E7A40",
+    "line": "#0F4423",
+    "textStrong": "#C8FFD6",
+    "text": "#6CF59A",
+    "textMuted": "#2C8F4F",
+    "textHint": "#4CC475",
+    "iconOnChip": "#6CF59A",
+    "accent": "#22FF77",
+    "inkDark": "#000000",
+    "inkLight": "#FFFFFF",
+    "dim": "rgba(0, 0, 0, 0.5)",
+    "scrim": "rgba(0, 0, 0, 0.9)",
+    "ledge": "rgba(0, 0, 0, 0.4)",
+    "bar": "rgba(0, 0, 0, 0.88)",
+    "barBorder": "#145C2E"
+  },
+  "accentChoices": [
+    "#22FF77", "#9DFF3A", "#5CFFD0", "#00D9FF",
+    "#FFB000", "#FF3B5C", "#C77DFF", "#E6FFEE"
+  ],
+  "cardColors": ["#04200E", "#062A13", "#0A1F10", "#03261C", "#0E2A0A", "#082016", "#05180C", "#0B2B1B"],
+  "radii": { "card": 2, "art": 2, "pill": 2, "btn": 2, "icon": 2, "dock": 2, "key": 2 },
+  "fonts": { "display": "JetBrains Mono", "body": "JetBrains Mono" },
+  "focus": { "gap": 0, "ring": 2 },
+  "wallpaper": { "type": "rain", "color": "#000000", "size": 16, "density": 1.2, "speed": 1 },
+  "sounds": "tty",
+  "style": {
+    "border": 1,
+    "bevel": false,
+    "squareIcons": true,
+    "keys": "outline",
+    "tabs": "workspaces",
+    "status": "text",
+    "cards": "card",
+    "home": "fetch",
+    "textCase": "lower",
+    "titlePrefix": "~/",
+    "cursor": true,
+    "scanlines": true
+  }
+}

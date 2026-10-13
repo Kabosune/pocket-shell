@@ -5,6 +5,8 @@ import QtQuick.Shapes
 //   { "type": "scene", "scene": "dusk-tide" }       drawn landscape (built-in)
 //   { "type": "grid", "color": "...", "line": "...", "size": 16 }   graph paper
 //   { "type": "dots", "color": "...", "dot": "...", "size": 24 }    dot grid
+//   { "type": "rain", "color": "...", "glyph": "...", "size": 16,
+//     "density": 1, "speed": 1 }                     falling code (animated)
 //   { "type": "color", "color": "..." }
 //   { "type": "image", "file": "wallpaper.png" }    from the theme's folder
 Item {
@@ -16,7 +18,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        color: ["color", "grid", "dots"].indexOf(wall.kind) >= 0 ? Theme.toColor(wall.spec.color || Theme.bg) : Theme.bg
+        color: ["color", "grid", "dots", "rain"].indexOf(wall.kind) >= 0 ? Theme.toColor(wall.spec.color || Theme.bg) : Theme.bg
     }
 
     // Graph paper
@@ -74,6 +76,20 @@ Item {
         onDotColorChanged: requestPaint()
         onStepChanged: requestPaint()
         onVisibleChanged: requestPaint()
+    }
+
+    // Falling code. Paused while an app or game covers the shell.
+    Loader {
+        anchors.fill: parent
+        active: wall.kind === "rain"
+        sourceComponent: RainField {
+            background: Theme.toColor(wall.spec.color || Theme.bg)
+            glyphColor: wall.spec.glyph ? Theme.toColor(wall.spec.glyph) : Theme.accent
+            size: wall.spec.size || 16
+            density: wall.spec.density || 1
+            speed: wall.spec.speed || 1
+            running: Wm.inShell && wall.visible
+        }
     }
 
     // Picture from the theme folder

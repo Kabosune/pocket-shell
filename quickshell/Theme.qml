@@ -65,7 +65,9 @@ Singleton {
             cards: "card",
             home: "classic",
             textCase: "normal",
-            titlePrefix: ""
+            titlePrefix: "",
+            cursor: false,
+            scanlines: false
         }
     })
 
@@ -267,6 +269,8 @@ Singleton {
     readonly property string homeLayout: get("style.home")      // "classic" | "panels" | "fetch"
     readonly property bool lowercase: get("style.textCase") === "lower"
     readonly property string titlePrefix: get("style.titlePrefix") || ""
+    readonly property bool cursor: get("style.cursor") === true          // blinking block after titles
+    readonly property bool scanlines: get("style.scanlines") === true    // CRT lines over everything
 
     // Labels in the theme's text case (titles, tabs, buttons, hints).
     function label(text) {

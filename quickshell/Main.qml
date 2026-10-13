@@ -214,6 +214,11 @@ Item {
         anchors.fill: parent
     }
 
+    Scanlines {
+        anchors.fill: parent
+        visible: Theme.scanlines
+    }
+
     // Start-up chime, once the sounds have had a moment to load.
     Timer {
         interval: 700

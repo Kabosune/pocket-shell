@@ -134,13 +134,8 @@ Item {
         }
     }
 
-    DisplayText {
-        x: 48
-        y: 58
+    PageTitle {
         text: "Themes"
-        color: Theme.textStrong
-        weight: Font.Black
-        size: 34
     }
 
     Text {
@@ -244,6 +239,23 @@ Item {
                         }
                     }
 
+                    // A hint of falling code
+                    Repeater {
+                        model: card.wall && card.wall.type === "rain" ? 18 : 0
+                        Text {
+                            required property int index
+                            readonly property string set: "0Z7ΔΞΣ:Ж8λ=ψЯ3φ|Ш"
+                            x: 2 + index * 11
+                            y: (index * 37) % 70 - 40
+                            text: Array.from({ length: 8 }, (_, i) => set.charAt((index * 5 + i * 3) % set.length)).join("\n")
+                            color: card.pAccent
+                            opacity: 0.18 + ((index * 7) % 10) / 22
+                            font.family: picker.val(card.d, "fonts.body")
+                            font.pixelSize: 10
+                            lineHeight: 0.95
+                        }
+                    }
+
                     Rectangle {
                         x: 12
                         y: 12
@@ -317,7 +329,7 @@ Item {
                             Text {
                                 id: inUseLabel
                                 anchors.centerIn: parent
-                                text: "In use"
+                                text: Theme.label("In use")
                                 color: Theme.accentInk
                                 font.family: Theme.bodyFont
                                 font.weight: Font.ExtraBold

@@ -127,11 +127,24 @@ Surface {
         spacing: 8
 
         // The "command" that printed this
-        Mono {
-            textFormat: Text.StyledText
-            text: `<font color="${Theme.accent}">${card.user}@${card.host}</font> `
-                + `<font color="${Theme.textMuted}">~</font> `
-                + `<font color="${Theme.accent}">❯</font> pocketfetch`
+        Row {
+            spacing: 4
+
+            Mono {
+                id: prompt
+                textFormat: Text.StyledText
+                text: `<font color="${Theme.accent}">${card.user}@${card.host}</font> `
+                    + `<font color="${Theme.textMuted}">~</font> `
+                    + `<font color="${Theme.accent}">❯</font> pocketfetch`
+            }
+            Rectangle {
+                visible: Theme.cursor
+                anchors.verticalCenter: prompt.verticalCenter
+                width: 8
+                height: 15
+                color: Theme.accent
+                BlinkCursor on opacity {}
+            }
         }
 
         Row {

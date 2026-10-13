@@ -1,7 +1,8 @@
 import QtQuick
 
 // Big page title, top left (Apps, Library, Glance). Themes can add a
-// prefix in the accent colour, like a shell path: "~/library".
+// prefix in the accent colour, like a shell path: "~/library", and a
+// blinking block cursor after it.
 Row {
     id: title
 
@@ -20,9 +21,26 @@ Row {
     }
 
     DisplayText {
+        id: titleText
         text: title.text
         color: title.color
         weight: Font.Black
         size: 34
+    }
+
+    Item {
+        visible: Theme.cursor
+        width: cursorBlock.width + 6
+        height: titleText.height
+
+        Rectangle {
+            id: cursorBlock
+            x: 6
+            anchors.verticalCenter: parent.verticalCenter
+            width: 18
+            height: 32
+            color: Theme.accent
+            BlinkCursor on opacity {}
+        }
     }
 }
