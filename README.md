@@ -10,8 +10,9 @@ First target: **Retroid Pocket 5** running **pocknix-os**.
 > Home (clock, media, toggles, a dock of pinned apps), Library (your games,
 > with box art), Apps (everything installed) and Glance (battery, storage and
 > more). Apps and games open on top of the shell; Home brings you back and
-> holding Home shows Recents. Portrait, dual-screen and an on-screen keyboard
-> are still to come.
+> holding Home shows Recents. Quick settings (Select) has brightness, volume
+> and toggles, the volume buttons work everywhere, and there are UI sounds.
+> Portrait, dual-screen and an on-screen keyboard are still to come.
 
 ## Layout
 
@@ -20,6 +21,7 @@ First target: **Retroid Pocket 5** running **pocknix-os**.
 | `hypr/hyprland.lua` | Hyprland config (0.56+ uses Lua, not `hyprland.conf`) | `~/.config/hypr/hyprland.lua` (symlink) |
 | `quickshell/` | The shell itself (`Theme.qml` tokens, `Device.qml` profile, screens) | `~/.config/quickshell` (symlink) |
 | `quickshell/themes/` | Built-in themes: Dusk Tide, Dusk Tide Soft, Stylus | (part of `quickshell/`) |
+| `quickshell/sounds/` | UI sound packs (`soft`, `chip`), made by `tools/make-sounds.py` | (part of `quickshell/`) |
 | `fonts/` | Archivo, Manrope, Nunito, Press Start 2P (SIL Open Font License, see each folder) | `~/.local/share/fonts/pocket-shell` (symlink) |
 | `input/` | `pocket-input`, a small SDL3 gamepad reader the shell runs | `/usr/local/bin/pocket-input` (built) |
 | `bin/pocket-games` | Finds games for the Library and works out their emulator commands | `/usr/local/bin/` (copy) |
@@ -42,6 +44,15 @@ For controller support, install the build tools and SDL3 (once):
 ```bash
 sudo pacman -S --needed gcc make pkgconf sdl3
 ```
+
+For sounds, brightness and the volume buttons (once):
+
+```bash
+sudo pacman -S --needed qt6-multimedia brightnessctl wireplumber
+```
+
+`install.sh` lists any of these that are missing; the shell still runs
+without them, minus that feature.
 
 Then clone and install:
 
@@ -78,7 +89,9 @@ Anywhere in the shell:
 | --- | --- |
 | L1 / R1 | Previous / next page (Home · Library · Apps · Glance) |
 | B | Back; on a page's top level, back to Home |
-| Start | Menu: Themes, Plasma Mobile, Steam mode |
+| Start | Menu: Themes, Sounds on/off, Plasma Mobile, Steam mode |
+| Select | Quick settings: brightness, volume, Wi-Fi, Bluetooth (also: tap the status icons) |
+| Volume buttons | Change volume anywhere, games included, with an on-screen level |
 | Home | Back to the Home page; from an app or game, back to the shell |
 | Hold Home | Recents: switch to (A) or close (X) open apps |
 
@@ -108,6 +121,28 @@ Recents lists the open windows.
 Long-press an app in the Apps page (or press X) to pin it to the Home dock.
 Pins and recently played games are saved in Quickshell's state folder
 (`~/.local/state/quickshell/by-shell/.../state.json`).
+
+## Quick settings, volume and brightness
+
+Select (or tapping the Wi-Fi/battery icons) pulls down Quick settings: a
+brightness slider, a volume slider (tap the speaker or press A to mute)
+and the Wi-Fi/Bluetooth toggles. Up/down picks a row, left/right adjusts.
+
+The hardware volume buttons are bound in `hypr/hyprland.lua` to `wpctl`, so
+they work in games too; a small volume level pops up over whatever is on
+screen. Brightness goes through `brightnessctl` and never drops below 5%,
+so the screen can't be turned fully dark by accident.
+
+## Sounds
+
+UI sounds for moving around, selecting, going back, switching pages,
+menus, toggles, launching, errors, applying a theme, and a start-up chime.
+Each theme picks a pack: Dusk Tide uses `soft` (bells and marimba), Stylus
+uses `chip` (square-wave bleeps). Turn them off in Start → Sounds.
+
+The packs are synthesized from scratch by `tools/make-sounds.py`; edit it
+and run `python3 tools/make-sounds.py` to regenerate them. Sounds need
+`qt6-multimedia`.
 
 ## Themes
 
@@ -153,6 +188,7 @@ All keys:
 | `fonts` | `display`, `body` (font family names), `files` (font files in the theme folder to load), and for pixel fonts `displayGrid` (the font's pixel size at 1x, e.g. `8` for an 8×8 font) and `displayScale` (shrinks display text for wide fonts). With `displayGrid` set, display text snaps to whole multiples of the grid and isn't smoothed or fake-bolded, so it stays crisp |
 | `focus` | Focus ring: `gap` and `ring` widths in px |
 | `wallpaper` | `{ "type": "scene" }` (Dusk Tide), `{ "type": "grid", "color", "line", "size" }`, `{ "type": "color", "color" }` or `{ "type": "image", "file": "wallpaper.png" }` |
+| `sounds` | `"soft"`, `"chip"`, `"none"`, or `"./folder"` with your own 48 kHz WAVs named `move`, `select`, `back`, `page`, `open`, `toggle-on`, `toggle-off`, `launch`, `error`, `notice`, `theme`, `boot` |
 | `style.border` | Panel border width |
 | `style.bevel` | `true` for chunky buttons with a bottom ledge |
 | `style.squareIcons` | `true` for square line ends (pixel look) |

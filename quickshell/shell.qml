@@ -40,4 +40,11 @@ ShellRoot {
             }
         }
     }
+
+    // Volume pop-up, above apps and games. Loaded separately so a problem
+    // with it can't take the rest of the shell down.
+    LazyLoader {
+        active: true
+        source: "OsdWindow.qml"
+    }
 }

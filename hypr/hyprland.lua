@@ -13,4 +13,10 @@ hl.config({
     input      = { kb_layout = "us", touchdevice = { output = "DSI-1", transform = 1 } },
 })
 
+-- Hardware volume buttons: work everywhere, in games too ("locked" also
+-- covers a locked screen). Pocket Shell shows the level on screen.
+hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"), { locked = true, repeating = true })
+hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"), { locked = true, repeating = true })
+hl.bind("XF86AudioMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"), { locked = true })
+
 hl.config({ debug = { disable_logs = false } })

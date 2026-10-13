@@ -17,6 +17,8 @@ Singleton {
     property string theme: "dusk-tide"
     property var accents: ({})
     property bool sounds: true
+    // Not saved: whether Quick settings is open (the volume pop-up hides then).
+    property bool quickPanelOpen: false
     property bool loaded: false
 
     readonly property int maxPins: 5

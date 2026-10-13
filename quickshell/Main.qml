@@ -4,7 +4,8 @@ import QtQuick
 // the overlays (Start menu, theme picker, Recents, toasts). Routes
 // controller input.
 //
-// L1/R1 change page, B goes back to Home, Start opens the session sheet,
+// L1/R1 change page, B goes back to Home, Start opens the menu, Select
+// opens Quick settings,
 // Home returns to the Home page (or from an app, back to the shell), and
 // holding Home opens Recents. While an app is in front, only Home and
 // hold-Home reach the shell; everything else is the app's.
@@ -16,7 +17,7 @@ Item {
     readonly property var pageFiles: ["Home.qml", "Library.qml", "Apps.qml", "Glance.qml"]
 
     readonly property var directions: ["up", "down", "left", "right"]
-    readonly property bool overlayOpen: themes.open || recents.open || sheet.open
+    readonly property bool overlayOpen: themes.open || recents.open || sheet.open || quick.open
 
     function goToPage(i) {
         page = (i + pageNames.length) % pageNames.length;
@@ -40,7 +41,7 @@ Item {
         if (directions.indexOf(button) >= 0)
             return "move";
         if (overlayOpen)
-            return button === "a" ? "select" : ["b", "home", "start", "recents"].indexOf(button) >= 0 ? "back" : "";
+            return button === "a" ? "select" : ["b", "home", "start", "recents", "select"].indexOf(button) >= 0 ? "back" : "";
         switch (button) {
         case "a":
             return "select";
@@ -75,6 +76,10 @@ Item {
         const sound = buttonSound(button);
         if (sound)
             Sfx.play(sound, 0);
+        if (quick.open) {
+            quick.handle(button);
+            return;
+        }
         if (themes.open) {
             themes.handle(button);
             return;
@@ -96,6 +101,9 @@ Item {
             return;
         case "recents":
             recents.show();
+            return;
+        case "select":
+            quick.show();
             return;
         case "start":
             sheet.show();
@@ -171,6 +179,7 @@ Item {
         anchors.right: parent.right
         page: main.page
         pages: main.pageNames
+        onStatusTapped: quick.show()
         onPageTapped: index => {
             if (index !== main.page) {
                 main.page = index;
@@ -192,6 +201,11 @@ Item {
 
     Recents {
         id: recents
+        anchors.fill: parent
+    }
+
+    QuickPanel {
+        id: quick
         anchors.fill: parent
     }
 

@@ -182,6 +182,7 @@ Item {
         anchors.bottomMargin: 14
         items: [
             { key: "A", round: true, text: "Open" },
+            { key: "SELECT", round: false, text: "Quick" },
             { key: "START", round: false, text: "Menu" },
             { key: "HOLD HOME", round: false, text: "Recents" }
         ]

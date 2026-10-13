@@ -10,6 +10,7 @@ Item {
     property int page: 0
     property var pages: ["Home", "Library", "Apps", "Glance"]
     signal pageTapped(int index)
+    signal statusTapped()
 
     readonly property bool buttons: Theme.tabStyle === "buttons"
     readonly property bool pixel: Theme.statusStyle === "pixel"
@@ -169,7 +170,15 @@ Item {
         }
     }
 
+    // Tap the status icons for Quick settings
+    MouseArea {
+        anchors.fill: status
+        anchors.margins: -10
+        onClicked: bar.statusTapped()
+    }
+
     Row {
+        id: status
         anchors.right: parent.right
         anchors.rightMargin: 20
         anchors.verticalCenter: parent.verticalCenter

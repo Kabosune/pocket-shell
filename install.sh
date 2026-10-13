@@ -52,5 +52,17 @@ if [ "$HELPER_OK" = 1 ]; then
   echo "installed /usr/local/bin/pocket-input"
 fi
 
+# Optional extras: the shell works without them, minus these features.
+missing=()
+command -v wpctl >/dev/null || missing+=("wireplumber (volume buttons)")
+command -v brightnessctl >/dev/null || missing+=("brightnessctl (brightness)")
+compgen -G "/usr/lib*/qt6/qml/QtMultimedia" >/dev/null || missing+=("qt6-multimedia (sounds)")
+if [ ${#missing[@]} -gt 0 ]; then
+  echo
+  echo "Optional, not installed:"
+  printf '  - %s\n' "${missing[@]}"
+  echo "Install with: sudo pacman -S --needed wireplumber brightnessctl qt6-multimedia"
+fi
+
 echo
 echo "Done. Switch with: pocknix-desktop-select pocketshell --now"

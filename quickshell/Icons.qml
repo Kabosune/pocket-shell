@@ -83,6 +83,15 @@ Singleton {
     readonly property var apps: ({
         stroke: rrect(4, 4, 7, 7, 2) + rrect(13, 4, 7, 7, 2) + rrect(4, 13, 7, 7, 2) + rrect(13, 13, 7, 7, 2)
     })
+    readonly property var volume: ({
+        stroke: "M4 9h4l5-4v14l-5-4H4zM16.5 9a4 4 0 0 1 0 6M19 6.5a8 8 0 0 1 0 11"
+    })
+    readonly property var volumeOff: ({
+        stroke: "M4 9h4l5-4v14l-5-4H4zM16.5 9.5l5 5M21.5 9.5l-5 5"
+    })
+    readonly property var brightness: ({
+        stroke: circle(12, 12, 4) + "M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"
+    })
     readonly property var settings: ({
         stroke: "M4 7h10M18 7h2M4 17h4M12 17h8" + circle(16, 7, 2) + circle(10, 17, 2)
     })
