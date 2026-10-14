@@ -7,8 +7,10 @@ import QtQuick
 // L1/R1 change page, B goes back to Home, Start opens the menu, Select
 // opens Quick settings,
 // Home returns to the Home page (or from an app, back to the shell), and
-// holding Home opens Recents. While an app is in front, only Home and
-// hold-Home reach the shell; everything else is the app's.
+// holding Home opens Recents. Back works like B in the shell; in an app
+// it sends that app's own "back" key (see AppBack.qml). While an app is
+// in front, only Home, hold-Home and Back reach the shell; everything
+// else is the app's.
 Item {
     id: main
 
@@ -64,7 +66,9 @@ Item {
 
     function handle(button) {
         if (!Wm.inShell) {
-            if (button === "home") {
+            if (button === "back") {
+                AppBack.press();
+            } else if (button === "home") {
                 Wm.goHome();
                 Sfx.play("back", 1);
             } else if (button === "recents") {
@@ -74,6 +78,8 @@ Item {
             }
             return;
         }
+        if (button === "back")
+            button = "b";
         const sound = buttonSound(button);
         if (sound)
             Sfx.play(sound, 0);

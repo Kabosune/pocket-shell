@@ -100,6 +100,16 @@ Anywhere in the shell:
 | Volume buttons | Change volume anywhere, games included, with an on-screen level |
 | Home | Back to the Home page; from an app or game, back to the shell |
 | Hold Home | Recents: switch to (A) or close (X) open apps |
+| Back (device button) | In the shell, same as B. In an app, that app's own "back": RetroArch opens its menu, web browsers go to the previous page, anything else gets Escape |
+
+**The Back button.** Devices driven by InputPlumber with an Xbox 360-style
+pad (pocknix on Retroid handhelds, for one) have no Back button on that pad;
+InputPlumber sends the device's Back as Home, then A 80 ms later. Pocket Shell
+reads Home followed by A within 160 ms as Back. Apps and games still receive
+that Home + A, so a game may see a quick A tap when you press Back. The
+per-app keys live in `quickshell/AppBack.qml`. `install.sh` sets up RetroArch's
+controller profiles and stops Home (Guide) from also opening RetroArch's
+menu, since Home belongs to the shell.
 
 On each page:
 

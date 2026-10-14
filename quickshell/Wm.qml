@@ -31,6 +31,15 @@ Singleton {
             Hyprland.dispatch(`workspace ${id}`);
     }
 
+    // Send a key or shortcut to the window in front (mods like "ALT",
+    // "" for none; key names as in Hyprland binds).
+    function sendShortcut(mods, key) {
+        if (Hyprland.usingLua)
+            Hyprland.dispatch(`hl.dsp.send_shortcut({ mods = "${mods}", key = "${key}" })`);
+        else
+            Hyprland.dispatch(`sendshortcut ${mods}, ${key}, activewindow`);
+    }
+
     function closeActiveWindow() {
         if (Hyprland.usingLua)
             Hyprland.dispatch("hl.dsp.window.close()");

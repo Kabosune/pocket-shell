@@ -56,6 +56,27 @@ if [ "$HELPER_OK" = 1 ]; then
   echo "installed /usr/local/bin/pocket-input"
 fi
 
+# RetroArch: controller profiles (Arch's package ships none, so pads do
+# nothing), minus the Guide button opening RetroArch's menu, since Home
+# belongs to the shell. The Back button opens the menu instead (F1).
+if command -v retroarch >/dev/null; then
+  RA_AUTO="$HOME/.config/retroarch/autoconfig"
+  RA_PAD="$RA_AUTO/udev/Microsoft X-Box 360 pad.cfg"
+  if [ ! -f "$RA_PAD" ] && command -v git >/dev/null; then
+    tmp="$(mktemp -d)"
+    if git clone -q --depth 1 https://github.com/libretro/retroarch-joypad-autoconfig "$tmp/ra"; then
+      mkdir -p "$RA_AUTO"
+      cp -r "$tmp/ra/udev" "$tmp/ra/sdl2" "$RA_AUTO/"
+      echo "installed RetroArch controller profiles"
+    fi
+    rm -rf "$tmp"
+  fi
+  if [ -f "$RA_PAD" ] && grep -q '^input_menu_toggle_btn' "$RA_PAD"; then
+    sed -i '/^input_menu_toggle_btn/d' "$RA_PAD"
+    echo "RetroArch: Guide/Home no longer opens its menu (use Back)"
+  fi
+fi
+
 # Optional extras: the shell works without them, minus these features.
 missing=()
 command -v wpctl >/dev/null || missing+=("wireplumber (volume buttons)")

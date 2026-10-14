@@ -6,6 +6,12 @@ import Quickshell.Io
 // Gamepad input. Runs the pocket-input helper (input/pocket-input.c) and
 // turns its lines into signals. D-pad and stick directions auto-repeat.
 // The Home button sends "home" on a tap and "recents" when held.
+//
+// Back button: handhelds run through InputPlumber with an Xbox 360-style
+// pad have no Back button on that pad, so InputPlumber sends the device's
+// Back (its "QuickAccess" button) as Guide, then A 80 ms later. A Home
+// press followed by A within `chordWindow` is therefore read as "back",
+// and neither the Home nor the A is passed on.
 Singleton {
     id: controller
 
@@ -23,6 +29,10 @@ Singleton {
     readonly property var directions: ["up", "down", "left", "right"]
     property string held: ""
 
+    readonly property int chordWindow: 160
+    property real homeDownAt: 0
+    property bool backChord: false
+
     function handle(line) {
         const space = line.indexOf(" ");
         const kind = space < 0 ? line : line.slice(0, space);
@@ -30,7 +40,24 @@ Singleton {
 
         if (kind === "down" && arg === "home") {
             // Home is decided on release: a tap is "home", holding is "recents".
+            homeDownAt = Date.now();
+            backChord = false;
             homeHold.restart();
+            return;
+        }
+        if (kind === "down" && arg === "a" && homeHold.running && Date.now() - homeDownAt <= chordWindow) {
+            backChord = true;
+            homeHold.stop();
+            return;
+        }
+        if (kind === "up" && arg === "a" && backChord)
+            return;
+        if (kind === "up" && arg === "home" && backChord) {
+            // Fires on release, like a phone's back button
+            backChord = false;
+            active = true;
+            pressed("back", false);
+            released("back");
             return;
         }
         if (kind === "up" && arg === "home") {
