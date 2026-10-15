@@ -235,7 +235,7 @@ Built in:
   glyphs. Lavender by default, 8 colours to pick from. The pipes and cava
   tiles have a pause button in their title bar (tap it, or reach it with
   the d-pad) to save power; the choice is remembered
-  The fetch card's picture has three choices; tap it to go to the next:
+  The fetch card's picture starts as the handheld; tap it to go to the next of three:
   the handheld drawing, a dancing chibi girl (pixel art in half-block
   text, `tools/make-dancer.py`) and a headphone girl portrait in hi-fi
   ASCII line art that blinks now and then (`tools/make-portrait.py`
