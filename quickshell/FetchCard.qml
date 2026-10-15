@@ -17,9 +17,13 @@ Surface {
     property real margin: 16
     // Animation (the dancer) only runs while this is true
     property bool animate: true
-    // The picture: the handheld drawing or the dancing chibi. Tap it to
-    // switch; the choice is saved.
-    readonly property string logoKind: Store.fetchLogo || Theme.fetchLogo
+    // The picture: the handheld drawing, the dancing chibi or the
+    // headphone girl portrait. Tap it to go to the next; the choice is
+    // saved.
+    readonly property var logoKinds: ["handheld", "dancer", "portrait"]
+    readonly property string logoKind: logoKinds.indexOf(Store.fetchLogo) >= 0 ? Store.fetchLogo
+        : logoKinds.indexOf(Theme.fetchLogo) >= 0 ? Theme.fetchLogo : "handheld"
+    readonly property Item logoItem: logoKind === "dancer" ? dancer : logoKind === "portrait" ? portrait : handheld
 
     readonly property string user: Quickshell.env("USER") || "user"
     readonly property string host: hostFile.text().trim() || "pocket"
@@ -163,15 +167,16 @@ Surface {
         }
 
         Row {
-            spacing: 22
+            spacing: card.logoKind === "portrait" ? 14 : 22
 
             Item {
-                width: card.logoKind === "dancer" ? dancer.implicitWidth : handheld.implicitWidth
-                height: card.logoKind === "dancer" ? dancer.implicitHeight : handheld.implicitHeight
+                id: logoBox
+                width: card.logoItem.implicitWidth
+                height: card.logoItem.implicitHeight
 
                 Column {
                     id: handheld
-                    visible: card.logoKind !== "dancer"
+                    visible: card.logoKind === "handheld"
                     spacing: 0
 
                     Repeater {
@@ -191,10 +196,19 @@ Surface {
                     running: card.animate
                 }
 
+                AsciiPortrait {
+                    id: portrait
+                    visible: card.logoKind === "portrait"
+                    running: card.animate
+                    // As big as the card's height allows
+                    size: Math.max(4.5, Math.min(7, (card.height - card.margin * 2 - (card.showPrompt ? 26 : 0)) / (rowCount * 1.32)))
+                }
+
                 MouseArea {
                     anchors.fill: parent
                     onClicked: {
-                        Store.setFetchLogo(card.logoKind === "dancer" ? "handheld" : "dancer");
+                        const i = card.logoKinds.indexOf(card.logoKind);
+                        Store.setFetchLogo(card.logoKinds[(i + 1) % card.logoKinds.length]);
                         Sfx.play("toggle-on", 2);
                     }
                 }
@@ -225,7 +239,7 @@ Surface {
                             font.weight: Font.Bold
                         }
                         Mono {
-                            width: Math.max(120, Math.min(270, card.width - card.margin * 2 - 210))
+                            width: Math.max(90, Math.min(270, card.width - card.margin * 2 - logoBox.width - 22 - 80))
                             elide: Text.ElideRight
                             text: modelData.value
                         }

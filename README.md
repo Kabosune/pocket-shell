@@ -235,9 +235,11 @@ Built in:
   glyphs. Lavender by default, 8 colours to pick from. The pipes and cava
   tiles have a pause button in their title bar (tap it, or reach it with
   the d-pad) to save power; the choice is remembered
-  The fetch card shows a little dancing chibi girl, drawn in half-block
-  text; tap her (or the handheld drawing in Dotfiles) to switch between
-  the two. Her pixels live in `tools/make-dancer.py`
+  The fetch card's picture has three choices; tap it to go to the next:
+  the handheld drawing, a dancing chibi girl (pixel art in half-block
+  text, `tools/make-dancer.py`) and a headphone girl portrait in hi-fi
+  ASCII line art that blinks now and then (`tools/make-portrait.py`
+  draws her and matches characters to the drawing)
 
 ### Making a theme
 
@@ -283,7 +285,7 @@ All keys:
 | `style.cards` | Library collections: `"card"` or `"cartridge"` |
 | `style.home` | Home layout: `"classic"`, `"panels"` or `"fetch"` (system info card) or `"tiles"` (tiled terminal windows with pipes and a visualizer) |
 | `style.textCase` | `"lower"` to lowercase labels and titles, or `"normal"` |
-| `style.fetchLogo` | Fetch card picture: `"handheld"` or `"dancer"` (tap it to switch) |
+| `style.fetchLogo` | Fetch card picture: `"handheld"`, `"dancer"` or `"portrait"` (tap it to switch) |
 | `style.titlePrefix` | Text drawn in the accent before page titles, e.g. `"~/"` |
 | `style.cursor` | `true` for a blinking block cursor after page titles |
 | `style.scanlines` | `true` for faint CRT lines over the whole screen |

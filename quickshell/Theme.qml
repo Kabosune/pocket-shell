@@ -342,7 +342,7 @@ Singleton {
     readonly property string homeLayout: get("style.home")      // "classic" | "panels" | "fetch" | "tiles"
     readonly property bool lowercase: get("style.textCase") === "lower"
     readonly property string titlePrefix: get("style.titlePrefix") || ""
-    readonly property string fetchLogo: get("style.fetchLogo") || "handheld"   // "handheld" | "dancer"
+    readonly property string fetchLogo: get("style.fetchLogo") || "handheld"   // "handheld" | "dancer" | "portrait"
     readonly property bool cursor: get("style.cursor") === true          // blinking block after titles
     readonly property bool scanlines: get("style.scanlines") === true    // CRT lines over everything
 
