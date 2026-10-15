@@ -17,7 +17,9 @@ Surface {
 
     // Controller focus: 0 previous, 1 play/pause, 2 next
     property int focusedIndex: -1
-    readonly property int count: 3
+    // pocket-play adds a fourth button: show the video full screen
+    readonly property bool hasVideo: PocketPlay.isPlayer(player)
+    readonly property int count: hasVideo ? 4 : 3
 
     function activate(index) {
         const p = player;
@@ -30,6 +32,8 @@ Surface {
             p.togglePlaying();
         else if (index === 2 && p.canGoNext)
             p.next();
+        else if (index === 3 && hasVideo)
+            PocketPlay.showVideo();
     }
 
     // Short cards (the panels and fetch layouts) drop the label and use
@@ -196,6 +200,13 @@ Surface {
                     focused: card.focusedIndex === 2
                     available: card.player !== null && card.player.canGoNext
                     onActivated: card.activate(2)
+                }
+                RoundControl {
+                    visible: card.hasVideo
+                    anchors.verticalCenter: parent.verticalCenter
+                    glyph: Icons.screen
+                    focused: card.focusedIndex === 3
+                    onActivated: card.activate(3)
                 }
             }
         }

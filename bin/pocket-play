@@ -1,0 +1,158 @@
+#!/bin/bash
+# pocket-play: plays a YouTube link, a media URL (an .mp4 on a server, a
+# stream) or a local file on the handheld, through mpv.
+#
+#   pocket-play URL           play it with sound only; Pocket Shell's Now
+#                             Playing card shows the title, channel and
+#                             thumbnail, and its screen button shows the video
+#   pocket-play --video URL   play it and show the video full screen
+#   pocket-play --show        show the video of what's playing
+#   pocket-play --hide        back to sound only
+#   pocket-play --pause       pause / resume
+#   pocket-play --stop        stop playing
+#   pocket-play --update-ytdlp
+#                             download the latest yt-dlp to ~/.local/bin
+#                             (YouTube changes often; distro builds fall behind)
+#
+# Works over SSH: it finds the handheld's Wayland session by itself and
+# keeps playing after you log out.
+#
+# Needs mpv, yt-dlp (for YouTube and most sites) and mpv-mpris (for the
+# Now Playing card).
+
+set -u
+
+RUNTIME="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+SOCK="$RUNTIME/pocket-play.sock"
+LOG="$RUNTIME/pocket-play.log"
+YTDLP_LOCAL="$HOME/.local/bin/yt-dlp"
+MAX_HEIGHT="${POCKET_PLAY_MAX_HEIGHT:-720}"
+
+# Prefer H.264 (cheapest to decode), never AV1, at most MAX_HEIGHT lines
+FORMAT="bv*[height<=?${MAX_HEIGHT}][vcodec^=avc1]+ba/bv*[height<=?${MAX_HEIGHT}][vcodec!^=av01]+ba/b[height<=?${MAX_HEIGHT}]/b"
+
+usage() {
+  sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'
+  exit 2
+}
+
+die() {
+  echo "pocket-play: $*" >&2
+  exit 1
+}
+
+# Over SSH there is no WAYLAND_DISPLAY; borrow the running session's.
+find_display() {
+  [ -n "${WAYLAND_DISPLAY:-}" ] && return
+  for s in "$RUNTIME"/wayland-*; do
+    case "$s" in *.lock) continue ;; esac
+    if [ -S "$s" ]; then
+      WAYLAND_DISPLAY="$(basename "$s")"
+      export WAYLAND_DISPLAY
+      return
+    fi
+  done
+}
+
+# Ask Pocket Shell to do something (it owns the screen and workspaces).
+shell_call() {
+  command -v qs >/dev/null || die "Pocket Shell isn't reachable (no 'qs' command)"
+  qs ipc call pocketplay "$@" >/dev/null 2>&1 || die "Pocket Shell isn't running"
+}
+
+running() {
+  pgrep -f -- "--input-ipc-server=$SOCK" >/dev/null
+}
+
+stop_running() {
+  if running; then
+    pkill -f -- "--input-ipc-server=$SOCK"
+    for _ in 1 2 3 4 5 6 7 8 9 10; do
+      running || break
+      sleep 0.1
+    done
+  fi
+  rm -f "$SOCK"
+}
+
+# YouTube links in the form mpv-mpris recognises, so it can fetch the
+# thumbnail: shorts, music. and m. links become www.youtube.com/watch?v=.
+normalize() {
+  printf '%s' "$1" | sed -E \
+    -e 's#^(https?://)(m|music)\.youtube\.com/#\1www.youtube.com/#' \
+    -e 's#^(https?://)(www\.)?youtube\.com/shorts/([A-Za-z0-9_-]+).*#\1www.youtube.com/watch?v=\3#'
+}
+
+play() {
+  local url show="$2"
+  command -v mpv >/dev/null || die "mpv isn't installed (sudo pacman -S --needed mpv mpv-mpris yt-dlp)"
+  url="$(normalize "$1")"
+
+  local ytdl=()
+  if [ -x "$YTDLP_LOCAL" ]; then
+    ytdl=(--script-opts=ytdl_hook-ytdl_path="$YTDLP_LOCAL")
+  fi
+
+  stop_running
+  find_display
+
+  # Sound only to begin with (vid=no, no window); Pocket Shell switches the
+  # video on through the IPC socket when you ask for it.
+  setsid -f mpv \
+    --no-terminal \
+    --vid=no \
+    --force-window=no \
+    --fullscreen \
+    --wayland-app-id=pocket-play \
+    --input-ipc-server="$SOCK" \
+    --hwdec=auto-safe \
+    --ytdl-format="$FORMAT" \
+    "${ytdl[@]}" \
+    -- "$url" >"$LOG" 2>&1 </dev/null
+
+  # Wait for mpv to be up before reporting (or showing the video)
+  for _ in $(seq 1 50); do
+    [ -S "$SOCK" ] && break
+    running || break
+    sleep 0.1
+  done
+  if ! running; then
+    echo "pocket-play: mpv stopped right away. Its log:" >&2
+    tail -n 15 "$LOG" >&2
+    exit 1
+  fi
+
+  echo "playing: $url"
+  [ "$show" = 1 ] && shell_call show
+  return 0
+}
+
+update_ytdlp() {
+  local asset
+  case "$(uname -m)" in
+    aarch64) asset=yt-dlp_linux_aarch64 ;;
+    x86_64)  asset=yt-dlp_linux ;;
+    *)       die "no prebuilt yt-dlp for $(uname -m)" ;;
+  esac
+  command -v curl >/dev/null || die "curl isn't installed"
+  mkdir -p "$(dirname "$YTDLP_LOCAL")"
+  curl -fL --progress-bar -o "$YTDLP_LOCAL.new" \
+    "https://github.com/yt-dlp/yt-dlp/releases/latest/download/$asset" || die "download failed"
+  chmod +x "$YTDLP_LOCAL.new"
+  mv "$YTDLP_LOCAL.new" "$YTDLP_LOCAL"
+  echo "yt-dlp $("$YTDLP_LOCAL" --version) installed in $YTDLP_LOCAL"
+}
+
+case "${1:-}" in
+  ""|-h|--help) usage ;;
+  --video)
+    [ -n "${2:-}" ] || usage
+    play "$2" 1 ;;
+  --show)  shell_call show ;;
+  --hide)  shell_call hide ;;
+  --pause) shell_call pause ;;
+  --stop)  stop_running; echo "stopped" ;;
+  --update-ytdlp) update_ytdlp ;;
+  -*) usage ;;
+  *) play "$1" 0 ;;
+esac

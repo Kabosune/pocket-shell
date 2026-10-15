@@ -51,6 +51,8 @@ echo "installed /usr/local/bin/pocketshell-session"
 echo "installed /usr/share/wayland-sessions/pocketshell.desktop"
 sudo install -Dm755 "$REPO/bin/pocket-games" /usr/local/bin/pocket-games
 echo "installed /usr/local/bin/pocket-games"
+sudo install -Dm755 "$REPO/bin/pocket-play" /usr/local/bin/pocket-play
+echo "installed /usr/local/bin/pocket-play"
 if [ "$HELPER_OK" = 1 ]; then
   sudo install -Dm755 "$REPO/input/pocket-input" /usr/local/bin/pocket-input
   echo "installed /usr/local/bin/pocket-input"
@@ -83,11 +85,12 @@ command -v wpctl >/dev/null || missing+=("wireplumber (volume buttons)")
 command -v brightnessctl >/dev/null || missing+=("brightnessctl (brightness)")
 compgen -G "/usr/lib*/qt6/qml/QtMultimedia" >/dev/null || missing+=("qt6-multimedia (sounds)")
 command -v cava >/dev/null || missing+=("cava (audio visualizer in the Static theme)")
+command -v mpv >/dev/null || missing+=("mpv, mpv-mpris, yt-dlp (pocket-play)")
 if [ ${#missing[@]} -gt 0 ]; then
   echo
   echo "Optional, not installed:"
   printf '  - %s\n' "${missing[@]}"
-  echo "Install with: sudo pacman -S --needed wireplumber brightnessctl qt6-multimedia cava"
+  echo "Install with: sudo pacman -S --needed wireplumber brightnessctl qt6-multimedia cava mpv mpv-mpris yt-dlp"
 fi
 
 echo

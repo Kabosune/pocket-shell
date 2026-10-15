@@ -58,7 +58,7 @@ Item {
 
     function zoneCount(z) {
         if (z === "media")
-            return 3;
+            return media.item ? media.item.count : 3;
         if (z === "toggles")
             return toggles.count;
         return dockItems.length;

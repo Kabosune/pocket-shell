@@ -66,6 +66,9 @@ Item {
 
     function handle(button) {
         if (!Wm.inShell) {
+            // pocket-play's video takes the controller (pause, seek, back)
+            if (PocketPlay.inFront && PocketPlay.handle(button))
+                return;
             if (button === "back") {
                 AppBack.press();
             } else if (button === "home") {

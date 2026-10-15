@@ -44,6 +44,10 @@ Singleton {
     readonly property var pause: ({
         fill: rrect(6.5, 5, 4, 14, 1) + rrect(13.5, 5, 4, 14, 1)
     })
+    // Full screen: four corners
+    readonly property var screen: ({
+        stroke: "M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"
+    })
     readonly property var browser: ({
         stroke: circle(12, 12, 9) + "M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"
     })

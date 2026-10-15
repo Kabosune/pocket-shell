@@ -71,8 +71,9 @@ Singleton {
 
         if (kind === "down") {
             const isDirection = directions.indexOf(arg) >= 0;
-            // The first direction or A press after touch only reveals focus.
-            const revealOnly = !active && (isDirection || arg === "a");
+            // The first direction or A press after touch only reveals focus
+            // (in the shell; in an app every press counts).
+            const revealOnly = !active && Wm.inShell && (isDirection || arg === "a");
             active = true;
             if (revealOnly)
                 return;

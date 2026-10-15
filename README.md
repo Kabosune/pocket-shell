@@ -46,11 +46,11 @@ For controller support, install the build tools and SDL3 (once):
 sudo pacman -S --needed gcc make pkgconf sdl3
 ```
 
-For sounds, brightness, the volume buttons and the Static theme's audio
-visualizer (once):
+For sounds, brightness, the volume buttons, the Static theme's audio
+visualizer and `pocket-play` (once):
 
 ```bash
-sudo pacman -S --needed qt6-multimedia brightnessctl wireplumber cava
+sudo pacman -S --needed qt6-multimedia brightnessctl wireplumber cava mpv mpv-mpris yt-dlp
 ```
 
 `install.sh` lists any of these that are missing; the shell still runs
@@ -148,6 +148,34 @@ The hardware volume buttons are bound in `hypr/hyprland.lua` to `wpctl`, so
 they work in games too; a small volume level pops up over whatever is on
 screen. Brightness goes through `brightnessctl` and never drops below 5%,
 so the screen can't be turned fully dark by accident.
+
+## pocket-play
+
+Play a YouTube link, a media URL (an `.mp4` on a server, a stream) or a
+local file, from a terminal or over SSH:
+
+```bash
+pocket-play https://www.youtube.com/watch?v=...
+```
+
+It starts with sound only. The Now Playing card shows the title, the channel
+and the video's thumbnail (through mpv-mpris), and gets a full-screen
+button that shows the video. While the video is up, A pauses, left/right
+seek 10 seconds, and B, Back or Home go back to sound only.
+
+| Command | Does |
+| --- | --- |
+| `pocket-play URL` | Play, sound only |
+| `pocket-play --video URL` | Play and show the video full screen |
+| `pocket-play --show` / `--hide` | Show the video / back to sound only |
+| `pocket-play --pause` | Pause or resume |
+| `pocket-play --stop` | Stop |
+| `pocket-play --update-ytdlp` | Download the latest yt-dlp to `~/.local/bin` (used when present) |
+
+YouTube changes often and distro builds of yt-dlp fall behind; if YouTube
+links stop working, run `pocket-play --update-ytdlp`. Videos play at up to
+720p by default (H.264 preferred, never AV1); set `POCKET_PLAY_MAX_HEIGHT`
+for more.
 
 ## Sounds
 
