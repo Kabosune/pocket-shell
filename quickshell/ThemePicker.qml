@@ -193,7 +193,7 @@ Item {
             required property var modelData
             required property int index
 
-            readonly property var d: modelData.data
+            readonly property var d: Theme.withMode(modelData.data, modelData.id)
             readonly property bool inUse: modelData.id === Theme.currentId
             readonly property bool focused: Controller.active && picker.row === "themes" && index === picker.themeIndex
             readonly property color pAccent: picker.c(d, "colors.accent")

@@ -97,24 +97,63 @@ Singleton {
 
     // --- Modes
     //
-    // A theme can offer variants under "modes", e.g. a dark and a paper
-    // background: { "dark": { "label": "dark" }, "paper": { "colors": {...},
-    // "wallpaper": {...} } }. The first mode is the theme as written; the
-    // others override any keys they list. The pick is saved per theme.
-    readonly property var modeList: themeData && themeData.modes && typeof themeData.modes === "object"
-        ? Object.keys(themeData.modes) : []
-    readonly property string currentMode: {
-        const saved = Store.modes[currentId];
-        return modeList.indexOf(saved) >= 0 ? saved : (modeList.length > 0 ? modeList[0] : "");
+    // A theme can offer variants under "modes", a list such as
+    // [ { "id": "dark", "label": "dark" },
+    //   { "id": "paper", "colors": {...}, "wallpaper": {...} } ].
+    // Each mode overrides the keys it lists (the first is usually the
+    // theme as written, with nothing to override). "defaultMode" picks the
+    // one used until you choose; else the first. The pick is saved per
+    // theme. (A list, not an object: theme data passes through Qt maps,
+    // which sort object keys, so only a list keeps the order.)
+    function modesOf(data) {
+        const m = data ? data.modes : null;
+        if (!m || typeof m !== "object")
+            return [];
+        if (Array.isArray(m))
+            return m.filter(e => e && typeof e === "object" && e.id);
+        return Object.keys(m).map(k => Object.assign({ id: k }, m[k]));
     }
-    readonly property var modeData: currentMode !== "" && modeList.indexOf(currentMode) > 0
-        ? themeData.modes[currentMode] : null
-    // Favourite colours are kept per mode (a light accent rarely suits dark)
-    readonly property string accentKey: modeData ? `${currentId}:${currentMode}` : currentId
+
+    function modeNameFor(data, id) {
+        const ids = modesOf(data).map(e => e.id);
+        const saved = Store.modes[id];
+        return ids.indexOf(saved) >= 0 ? saved
+            : ids.indexOf(data.defaultMode) >= 0 ? data.defaultMode : (ids.length > 0 ? ids[0] : "");
+    }
+
+    readonly property var modeEntries: modesOf(themeData)
+    readonly property var modeList: modeEntries.map(e => e.id)
+    readonly property string currentMode: modeNameFor(themeData, currentId)
+    readonly property var modeData: {
+        const i = modeList.indexOf(currentMode);
+        return i >= 0 ? modeEntries[i] : null;
+    }
+    // Favourite colours are kept per mode (a light accent rarely suits
+    // dark); the first mode uses the theme's own key.
+    readonly property string accentKey: modeList.indexOf(currentMode) > 0 ? `${currentId}:${currentMode}` : currentId
+
+    // A theme's data with its mode applied, for previews of other themes:
+    // object keys (colors, style...) merge, everything else is replaced.
+    function withMode(data, id) {
+        const entries = modesOf(data);
+        if (entries.length === 0)
+            return data;
+        const name = modeNameFor(data, id);
+        const mode = entries.find(e => e.id === name) || {};
+        const plain = v => v && typeof v === "object" && !Array.isArray(v);
+        const out = Object.assign({}, data);
+        for (const k of Object.keys(mode)) {
+            if (k === "id" || k === "label")
+                continue;
+            const a = data[k], b = mode[k];
+            out[k] = k !== "wallpaper" && plain(a) && plain(b) ? Object.assign({}, a, b) : b;
+        }
+        return out;
+    }
 
     function modeLabel(id) {
-        const m = themeData && themeData.modes ? themeData.modes[id] : null;
-        return m && m.label ? m.label : id;
+        const e = modeEntries.find(m => m.id === id);
+        return e && e.label ? e.label : id;
     }
 
     function useMode(id) {

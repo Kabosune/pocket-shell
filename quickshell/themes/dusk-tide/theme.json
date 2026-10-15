@@ -33,6 +33,119 @@
   "focus": { "gap": 2, "ring": 2 },
   "wallpaper": { "type": "scene", "scene": "dusk-tide" },
   "sounds": "soft",
+  "modes": [
+    {
+      "id": "dusk",
+      "label": "dusk"
+    },
+    {
+      "id": "night",
+      "label": "night",
+      "colors": {
+        "bg": "#0B1220",
+        "surface": "rgba(10, 20, 36, 0.74)",
+        "surfaceStrong": "rgba(10, 20, 36, 0.95)",
+        "surfaceBorder": "rgba(200, 215, 240, 0.12)",
+        "chip": "#18294A",
+        "chipFocused": "#22385F",
+        "focusGap": "#06121F",
+        "keyBorder": "rgba(200, 215, 240, 0.40)",
+        "line": "rgba(200, 215, 240, 0.22)",
+        "textStrong": "#E8EEF8",
+        "text": "#D6DFF0",
+        "textMuted": "#9DAACB",
+        "textHint": "#BCC7E0",
+        "iconOnChip": "#C9D5EE",
+        "dim": "rgba(6, 12, 24, 0.66)",
+        "scrim": "rgba(4, 8, 16, 0.86)"
+      },
+      "wallpaper": {
+        "type": "scene",
+        "scene": "dusk-tide",
+        "sky": [
+          "#101A2E",
+          "#15223A",
+          "#1B2C47"
+        ],
+        "hills": [
+          "#16304A",
+          "#10263C",
+          "#0B1C2E",
+          "#06121F"
+        ],
+        "star": "#DCE6F5"
+      }
+    },
+    {
+      "id": "dawn",
+      "label": "dawn",
+      "colors": {
+        "bg": "#F6E3D6",
+        "surface": "rgba(255, 247, 241, 0.80)",
+        "surfaceStrong": "rgba(255, 249, 245, 0.96)",
+        "surfaceBorder": "rgba(90, 50, 60, 0.14)",
+        "chip": "#F1DED3",
+        "chipFocused": "#E7CABB",
+        "focusGap": "#FFF7F1",
+        "keyBorder": "rgba(90, 50, 60, 0.40)",
+        "line": "rgba(90, 50, 60, 0.20)",
+        "textStrong": "#3A2530",
+        "text": "#4A3340",
+        "textMuted": "#866A74",
+        "textHint": "#6E5560",
+        "iconOnChip": "#4A3340",
+        "accent": "#E07A5F",
+        "dim": "rgba(255, 240, 232, 0.55)",
+        "scrim": "rgba(250, 236, 228, 0.92)",
+        "ledge": "rgba(90, 50, 60, 0.18)"
+      },
+      "accentChoices": [
+        "#E07A5F",
+        "#2F8F83",
+        "#7A5CC9",
+        "#C99A1E",
+        "#D0505F",
+        "#3B7DC0"
+      ],
+      "wallpaper": {
+        "type": "scene",
+        "scene": "dusk-tide",
+        "sky": [
+          "#F2D3C2",
+          "#EBC1AF",
+          "#E0AE9F"
+        ],
+        "hills": [
+          "#D6A49A",
+          "#E2B7AB",
+          "#ECCABE",
+          "#F6DED3"
+        ],
+        "star": "#FFFFFF"
+      }
+    },
+    {
+      "id": "black",
+      "label": "black",
+      "colors": {
+        "bg": "#000000",
+        "surface": "#0A0A0A",
+        "surfaceStrong": "#111111",
+        "surfaceBorder": "rgba(255, 255, 255, 0.10)",
+        "chip": "#161616",
+        "chipFocused": "#242424",
+        "focusGap": "#000000",
+        "keyBorder": "rgba(255, 255, 255, 0.35)",
+        "line": "rgba(255, 255, 255, 0.18)",
+        "dim": "rgba(0, 0, 0, 0.6)",
+        "scrim": "rgba(0, 0, 0, 0.9)"
+      },
+      "wallpaper": {
+        "type": "color",
+        "color": "#000000"
+      }
+    }
+  ],
   "style": {
     "border": 1,
     "bevel": false,

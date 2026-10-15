@@ -36,11 +36,14 @@
   "focus": { "gap": 0, "ring": 2 },
   "wallpaper": { "type": "rain", "color": "#000000", "size": 16, "density": 1.2, "speed": 1 },
   "sounds": "tty",
-  "modes": {
-    "dark": {
+  "defaultMode": "paper",
+  "modes": [
+    {
+      "id": "dark",
       "label": "dark"
     },
-    "paper": {
+    {
+      "id": "paper",
       "label": "paper",
       "colors": {
         "bg": "#F6F4EF",
@@ -96,8 +99,59 @@
         "density": 1.2,
         "speed": 1
       }
+    },
+    {
+      "id": "amber",
+      "label": "amber",
+      "colors": {
+        "bg": "#0A0600",
+        "surface": "rgba(12, 7, 0, 0.84)",
+        "surfaceStrong": "rgba(16, 10, 0, 0.95)",
+        "surfaceBorder": "#5C3A00",
+        "chip": "#1A0F00",
+        "chipFocused": "#3A2400",
+        "focusGap": "#0A0600",
+        "keyBorder": "#8A5A10",
+        "line": "#4A2E00",
+        "textStrong": "#FFE2A8",
+        "text": "#FFC861",
+        "textMuted": "#9A6A12",
+        "textHint": "#D49A2A",
+        "iconOnChip": "#FFC861",
+        "accent": "#FFB000",
+        "inkDark": "#0A0600",
+        "bar": "rgba(10, 6, 0, 0.88)",
+        "barBorder": "#5C3A00"
+      },
+      "accentChoices": [
+        "#FFB000",
+        "#FF8C1A",
+        "#FFD866",
+        "#FF5F3A",
+        "#E6FFEE",
+        "#22FF77",
+        "#00D9FF",
+        "#FF3B5C"
+      ],
+      "cardColors": [
+        "#2A1A00",
+        "#331F05",
+        "#24170A",
+        "#2E1C0C",
+        "#3A2200",
+        "#201408",
+        "#2A1F0F",
+        "#33240F"
+      ],
+      "wallpaper": {
+        "type": "rain",
+        "color": "#0A0600",
+        "size": 16,
+        "density": 1.2,
+        "speed": 1
+      }
     }
-  },
+  ],
   "style": {
     "border": 1,
     "bevel": false,

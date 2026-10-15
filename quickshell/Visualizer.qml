@@ -14,6 +14,11 @@ Item {
     property var levels: []
     property string mode: "idle"     // "live" | "idle" | "no cava"
 
+    onRunningChanged: {
+        if (!running)
+            levels = [];
+    }
+
     function parse(line) {
         const parts = line.split(";");
         const out = [];

@@ -2,7 +2,9 @@ import QtQuick
 import QtQuick.Shapes
 
 // The theme's background. "wallpaper" in theme.json picks the kind:
-//   { "type": "scene", "scene": "dusk-tide" }       drawn landscape (built-in)
+//   { "type": "scene", "scene": "dusk-tide",         drawn landscape (built-in);
+//     "sky": [3 colours, top to bottom], "hills": [4, back to front],
+//     "star": "..." }                                  colours optional
 //   { "type": "grid", "color": "...", "line": "...", "size": 16 }   graph paper
 //   { "type": "dots", "color": "...", "dot": "...", "size": 24 }    dot grid
 //   { "type": "rain", "color": "...", "glyph": "...", "head": "...", "size": 16,
@@ -133,7 +135,9 @@ Item {
             id: scene
 
             readonly property real k: Math.max(width / 960, height / 540)
-            readonly property color star: "#E7F1EE"
+            readonly property var sky: wall.spec.sky || ["#213448", "#2B4457", "#3A5A68"]
+            readonly property var hills: wall.spec.hills || ["#2A5257", "#1D4144", "#12302F", "#0B2222"]
+            readonly property color star: Theme.toColor(wall.spec.star || "#E7F1EE")
 
             component Layer: ShapePath {
                 property alias d: svg.path
@@ -150,9 +154,9 @@ Item {
                 transformOrigin: Item.TopLeft
                 preferredRendererType: Shape.CurveRenderer
 
-                Layer { fillColor: "#213448"; d: "M0 150H960V540H0Z" }
-                Layer { fillColor: "#2B4457"; d: "M0 236H960V540H0Z" }
-                Layer { fillColor: "#3A5A68"; d: "M0 300H960V540H0Z" }
+                Layer { fillColor: Theme.toColor(scene.sky[0]); d: "M0 150H960V540H0Z" }
+                Layer { fillColor: Theme.toColor(scene.sky[1]); d: "M0 236H960V540H0Z" }
+                Layer { fillColor: Theme.toColor(scene.sky[2]); d: "M0 300H960V540H0Z" }
 
                 Layer {
                     fillColor: Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.10)
@@ -161,19 +165,19 @@ Item {
                 Layer { fillColor: Theme.accent; d: Icons.circle(390, 300, 58) }
 
                 Layer {
-                    fillColor: "#2A5257"
+                    fillColor: Theme.toColor(scene.hills[0])
                     d: "M0 330 C 120 300, 240 296, 360 316 S 600 350, 720 322 S 900 292, 960 306 L960 540 L0 540 Z"
                 }
                 Layer {
-                    fillColor: "#1D4144"
+                    fillColor: Theme.toColor(scene.hills[1])
                     d: "M0 384 C 140 352, 260 348, 400 374 S 640 410, 780 382 S 920 356, 960 364 L960 540 L0 540 Z"
                 }
                 Layer {
-                    fillColor: "#12302F"
+                    fillColor: Theme.toColor(scene.hills[2])
                     d: "M0 432 C 160 406, 300 410, 460 434 S 760 462, 960 422 L960 540 L0 540 Z"
                 }
                 Layer {
-                    fillColor: "#0B2222"
+                    fillColor: Theme.toColor(scene.hills[3])
                     d: "M0 492 C 200 472, 420 480, 600 496 S 860 506, 960 486 L960 540 L0 540 Z"
                 }
 

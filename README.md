@@ -193,8 +193,17 @@ and run `python3 tools/make-sounds.py` to regenerate them. Sounds need
 
 Press Start → Themes to switch theme. It applies right away; themes that
 offer favourite colours also show a colour row, and themes with modes a
-background row (down to reach them). Dotfiles, Dotfiles Rain and Static
-each have a dark and a paper (light) background.
+background row (down to reach them). Every built-in theme has several
+backgrounds, including a pure black one (on the RP5's AMOLED screen, black
+pixels are switched off, which saves power):
+
+| Theme | Backgrounds (default first) |
+| --- | --- |
+| Dusk Tide, Dusk Tide Soft | dusk, night, dawn (light), black |
+| Stylus | paper, cream, night, black |
+| Dotfiles | dark, frost, ember, paper, black |
+| Dotfiles Rain | paper, dark, amber |
+| Static | dark, slate, paper, black |
 
 Built in:
 
@@ -217,7 +226,9 @@ Built in:
   the bar has workspace numbers on the left, what's playing in the middle
   and cpu, memory, Wi-Fi, battery and time on the right. Behind it all: a
   greyscale photocopied-poster collage with a light drizzle of falling
-  glyphs. Lavender by default, 8 colours to pick from
+  glyphs. Lavender by default, 8 colours to pick from. The pipes and cava
+  tiles have a pause button in their title bar (tap it, or reach it with
+  the d-pad) to save power; the choice is remembered
 
 ### Making a theme
 
@@ -245,12 +256,13 @@ All keys:
 | `name`, `description`, `author` | Shown in the picker |
 | `colors` | `bg`, `surface`, `surfaceStrong`, `surfaceBorder`, `chip`, `chipFocused`, `focusGap`, `keyBorder`, `line`, `textStrong`, `text`, `textMuted`, `textHint`, `iconOnChip`, `accent`, `inkDark` / `inkLight` (text on the accent; picked by its brightness), `dim` (behind pages other than Home), `scrim` (behind menus), `ledge` (bevel shadow), `bar` / `barBorder` (top bar), `scanline` (style.scanlines). Colours can be `#RGB`, `#RRGGBB`, `#AARRGGBB`, `rgb(…)` or `rgba(…)` |
 | `accentChoices` | Favourite colours offered in the picker |
-| `modes` | Variants picked in the Background row, e.g. `{ "dark": { "label": "dark" }, "paper": { "colors": {…}, "wallpaper": {…} } }`. The first mode is the theme as written; each other mode overrides any keys it lists (`colors`, `wallpaper`, `accentChoices`, `cardColors`, `fonts`, `style`…). The pick and the favourite colour are saved per theme and mode |
+| `modes` | Variants picked in the Background row, as a list: `[ { "id": "dark", "label": "dark" }, { "id": "paper", "colors": {…}, "wallpaper": {…} } ]`. Each mode overrides any keys it lists (`colors`, `wallpaper`, `accentChoices`, `cardColors`, `fonts`, `style`…); the first is usually the theme as written. The pick and the favourite colour are saved per theme and mode |
+| `defaultMode` | The mode used until you pick one (else the first) |
 | `cardColors` | Colours for Library collections and game cards (keep them dark enough for white text) |
 | `radii` | Corner radii in px: `card`, `art`, `pill`, `btn`, `icon`, `dock`, `key` |
 | `fonts` | `display`, `body` (font family names), `files` (font files in the theme folder to load), and for pixel fonts `displayGrid` (the font's pixel size at 1x, e.g. `8` for an 8×8 font) and `displayScale` (shrinks display text for wide fonts). With `displayGrid` set, display text snaps to whole multiples of the grid and isn't smoothed or fake-bolded, so it stays crisp |
 | `focus` | Focus ring: `gap` and `ring` widths in px |
-| `wallpaper` | `{ "type": "scene" }` (Dusk Tide), `{ "type": "grid", "color", "line", "size" }`, `{ "type": "dots", "color", "dot", "size" }`, `{ "type": "rain", "color", "glyph", "head", "size", "density", "speed" }` (falling code; `glyph` defaults to the accent; give a dark `head` on light backgrounds), `{ "type": "collage", "color", "ink", "seed", "words": [...] }` (poster collage, the same for a given seed), `{ "type": "color", "color" }` or `{ "type": "image", "file": "wallpaper.png" }` |
+| `wallpaper` | `{ "type": "scene", "sky": [3 colours], "hills": [4 colours], "star" }` (Dusk Tide; colours optional), `{ "type": "grid", "color", "line", "size" }`, `{ "type": "dots", "color", "dot", "size" }`, `{ "type": "rain", "color", "glyph", "head", "size", "density", "speed" }` (falling code; `glyph` defaults to the accent; give a dark `head` on light backgrounds), `{ "type": "collage", "color", "ink", "seed", "words": [...] }` (poster collage, the same for a given seed), `{ "type": "color", "color" }` or `{ "type": "image", "file": "wallpaper.png" }` |
 | `wallpaper.rain` | Any wallpaper can add light falling code on top: `{ "glyph", "head", "size", "density", "speed" }` |
 | `sounds` | `"soft"`, `"chip"`, `"tty"`, `"none"`, or `"./folder"` with your own 48 kHz WAVs named `move`, `select`, `back`, `page`, `page-prev`, `page-next`, `open`, `toggle-on`, `toggle-off`, `launch`, `error`, `notice`, `theme`, `boot` |
 | `style.border` | Panel border width |

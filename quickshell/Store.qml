@@ -18,6 +18,8 @@ Singleton {
     property string theme: "dusk-tide"
     property var accents: ({})
     property var modes: ({})
+    // Animated tiles switched off to save power: { pipes: true, cava: true }
+    property var paused: ({})
     property bool sounds: true
     // Not saved: whether Quick settings is open (the volume pop-up hides then).
     property bool quickPanelOpen: false
@@ -86,6 +88,16 @@ Singleton {
         save();
     }
 
+    function setPaused(name, on) {
+        const map = Object.assign({}, paused);
+        if (on)
+            map[name] = true;
+        else
+            delete map[name];
+        paused = map;
+        save();
+    }
+
     function setSounds(on) {
         sounds = on;
         save();
@@ -98,6 +110,7 @@ Singleton {
             theme: theme,
             accents: accents,
             modes: modes,
+            paused: paused,
             sounds: sounds
         }, null, 2));
     }
@@ -138,6 +151,7 @@ Singleton {
         theme = data && typeof data.theme === "string" ? data.theme : "dusk-tide";
         accents = data && data.accents && typeof data.accents === "object" ? data.accents : {};
         modes = data && data.modes && typeof data.modes === "object" ? data.modes : {};
+        paused = data && data.paused && typeof data.paused === "object" ? data.paused : {};
         sounds = data && typeof data.sounds === "boolean" ? data.sounds : true;
         loaded = true;
     }

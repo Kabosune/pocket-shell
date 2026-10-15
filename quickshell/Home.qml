@@ -28,8 +28,11 @@ Item {
     property int mediaIndex: 1
     property int toggleIndex: 0
     property int dockIndex: 0
+    property int tileIndex: 0
 
-    readonly property var zones: ["media", "toggles", "dock"]
+    // Tiles layout: the pipes and cava pause buttons are a row too
+    readonly property var zones: home.tiles ? ["media", "toggles", "tiles", "dock"] : ["media", "toggles", "dock"]
+    readonly property var animTiles: ["pipes", "cava"]
     readonly property bool panels: Theme.homeLayout === "panels"
     readonly property bool fetch: Theme.homeLayout === "fetch"
     readonly property bool tiles: Theme.homeLayout === "tiles"
@@ -61,11 +64,13 @@ Item {
             return media.item ? media.item.count : 3;
         if (z === "toggles")
             return toggles.count;
+        if (z === "tiles")
+            return animTiles.length;
         return dockItems.length;
     }
 
     function zoneIndex(z) {
-        return z === "media" ? mediaIndex : z === "toggles" ? toggleIndex : dockIndex;
+        return z === "media" ? mediaIndex : z === "toggles" ? toggleIndex : z === "tiles" ? tileIndex : dockIndex;
     }
 
     function setZoneIndex(z, i) {
@@ -74,6 +79,8 @@ Item {
             mediaIndex = clamped;
         else if (z === "toggles")
             toggleIndex = clamped;
+        else if (z === "tiles")
+            tileIndex = clamped;
         else
             dockIndex = clamped;
     }
@@ -82,6 +89,13 @@ Item {
         const i = zones.indexOf(zone) + step;
         if (i >= 0 && i < zones.length)
             zone = zones[i];
+    }
+
+    // Pause or resume an animated tile (saved, so it stays that way)
+    function toggleTile(name) {
+        const off = !Store.paused[name];
+        Store.setPaused(name, off);
+        Sfx.play(off ? "toggle-off" : "toggle-on", 2);
     }
 
     function activateDock(index) {
@@ -100,6 +114,8 @@ Item {
                 media.item.activate(mediaIndex);
         } else if (zone === "toggles") {
             toggles.activate(toggleIndex);
+        } else if (zone === "tiles") {
+            toggleTile(animTiles[tileIndex]);
         } else {
             activateDock(dockIndex);
         }
@@ -131,6 +147,10 @@ Item {
     }
 
     onDockItemsChanged: setZoneIndex("dock", dockIndex)
+    onTilesChanged: {
+        if (!tiles && zone === "tiles")
+            zone = "dock";
+    }
 
     // --- Tile windows (tiles layout)
 
@@ -187,6 +207,11 @@ Item {
         width: (mediaWin.width - 10) / 2
         height: 170
         title: "pipes"
+        status: Store.paused.pipes ? "paused" : ""
+        hasAction: true
+        running: !Store.paused.pipes
+        actionFocused: Controller.active && home.zone === "tiles" && home.tileIndex === 0
+        onActionTapped: home.toggleTile("pipes")
 
         Loader {
             active: home.tiles
@@ -195,7 +220,7 @@ Item {
             width: pipesWin.width - 16
             height: pipesWin.height - pipesWin.barHeight - 12
             sourceComponent: PipesView {
-                running: home.live
+                running: home.live && !Store.paused.pipes
                 colors: Theme.accentChoices && Theme.accentChoices.length > 0
                     ? Theme.accentChoices.slice(0, 6).map(c => String(Theme.toColor(c)))
                     : [String(Theme.accent)]
@@ -211,7 +236,11 @@ Item {
         width: pipesWin.width
         height: 170
         title: "cava"
-        status: viz.status === Loader.Ready ? viz.item.mode : ""
+        status: Store.paused.cava ? "paused" : viz.status === Loader.Ready ? viz.item.mode : ""
+        hasAction: true
+        running: !Store.paused.cava
+        actionFocused: Controller.active && home.zone === "tiles" && home.tileIndex === 1
+        onActionTapped: home.toggleTile("cava")
 
         Loader {
             id: viz
@@ -221,7 +250,7 @@ Item {
             width: cavaWin.width - 24
             height: cavaWin.height - cavaWin.barHeight - 24
             sourceComponent: Visualizer {
-                running: home.live
+                running: home.live && !Store.paused.cava
             }
         }
     }

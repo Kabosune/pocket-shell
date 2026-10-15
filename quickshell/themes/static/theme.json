@@ -43,11 +43,69 @@
     "rain": { "glyph": "#8E88A6", "size": 13, "density": 0.18, "speed": 0.45 }
   },
   "sounds": "tty",
-  "modes": {
-    "dark": {
+  "modes": [
+    {
+      "id": "dark",
       "label": "dark"
     },
-    "paper": {
+    {
+      "id": "slate",
+      "label": "slate",
+      "colors": {
+        "bg": "#12161C",
+        "surface": "rgba(20, 26, 34, 0.78)",
+        "surfaceStrong": "rgba(24, 30, 40, 0.96)",
+        "surfaceBorder": "#2E3846",
+        "chip": "rgba(34, 42, 54, 0.92)",
+        "chipFocused": "#2E3A4A",
+        "focusGap": "#12161C",
+        "keyBorder": "#4F5B6E",
+        "line": "#36404F",
+        "textStrong": "#EDF1F7",
+        "text": "#C8D0DC",
+        "textMuted": "#7A8698",
+        "textHint": "#97A2B3",
+        "iconOnChip": "#C8D0DC",
+        "accent": "#8FB8E8",
+        "inkDark": "#12161C",
+        "dim": "rgba(10, 13, 18, 0.4)",
+        "scrim": "rgba(10, 13, 18, 0.9)",
+        "bar": "rgba(16, 20, 26, 0.92)",
+        "barBorder": "#2E3846"
+      },
+      "accentChoices": [
+        "#8FB8E8",
+        "#E6E3EE",
+        "#F0A6B8",
+        "#8CD4C8",
+        "#E8C07D",
+        "#B9A7F0",
+        "#B5CF9A",
+        "#F09A7A"
+      ],
+      "wallpaper": {
+        "type": "collage",
+        "color": "#12161C",
+        "ink": "#C8D2E0",
+        "seed": 7,
+        "words": [
+          "NO SIGNAL",
+          "ctrl",
+          "[0]",
+          "EOF",
+          "/dev/null",
+          "login:"
+        ],
+        "rain": {
+          "glyph": "#7D8BA0",
+          "size": 13,
+          "density": 0.18,
+          "speed": 0.45
+        }
+      }
+    },
+    {
+      "id": "paper",
       "label": "paper",
       "colors": {
         "bg": "#EEEBE5",
@@ -104,8 +162,45 @@
           "speed": 0.45
         }
       }
+    },
+    {
+      "id": "black",
+      "label": "black",
+      "colors": {
+        "bg": "#000000",
+        "surface": "rgba(8, 8, 10, 0.86)",
+        "surfaceStrong": "rgba(12, 12, 14, 0.97)",
+        "surfaceBorder": "#2A2A30",
+        "chip": "rgba(22, 22, 26, 0.95)",
+        "chipFocused": "#26262C",
+        "focusGap": "#000000",
+        "dim": "rgba(0, 0, 0, 0.45)",
+        "scrim": "rgba(0, 0, 0, 0.92)",
+        "bar": "rgba(0, 0, 0, 0.92)",
+        "barBorder": "#2A2A30"
+      },
+      "wallpaper": {
+        "type": "collage",
+        "color": "#000000",
+        "ink": "#B8B4C4",
+        "seed": 7,
+        "words": [
+          "NO SIGNAL",
+          "ctrl",
+          "[0]",
+          "EOF",
+          "/dev/null",
+          "login:"
+        ],
+        "rain": {
+          "glyph": "#6E6884",
+          "size": 13,
+          "density": 0.18,
+          "speed": 0.45
+        }
+      }
     }
-  },
+  ],
   "style": {
     "border": 1,
     "bevel": false,
