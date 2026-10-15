@@ -44,6 +44,11 @@ Singleton {
     readonly property var pause: ({
         fill: rrect(6.5, 5, 4, 14, 1) + rrect(13.5, 5, 4, 14, 1)
     })
+    // Video: a screen with a play mark (find something to watch)
+    readonly property var video: ({
+        stroke: rrect(3, 5.5, 18, 13, 3),
+        fill: "M10 9v6l5-3z"
+    })
     // Full screen: four corners
     readonly property var screen: ({
         stroke: "M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"

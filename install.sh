@@ -86,11 +86,12 @@ command -v brightnessctl >/dev/null || missing+=("brightnessctl (brightness)")
 compgen -G "/usr/lib*/qt6/qml/QtMultimedia" >/dev/null || missing+=("qt6-multimedia (sounds)")
 command -v cava >/dev/null || missing+=("cava (audio visualizer in the Static theme)")
 command -v mpv >/dev/null || missing+=("mpv, mpv-mpris, yt-dlp (pocket-play)")
+command -v plasmatube >/dev/null || missing+=("plasmatube (YouTube app for the Now Playing video button)")
 if [ ${#missing[@]} -gt 0 ]; then
   echo
   echo "Optional, not installed:"
   printf '  - %s\n' "${missing[@]}"
-  echo "Install with: sudo pacman -S --needed wireplumber brightnessctl qt6-multimedia cava mpv mpv-mpris yt-dlp"
+  echo "Install with: sudo pacman -S --needed wireplumber brightnessctl qt6-multimedia cava mpv mpv-mpris yt-dlp plasmatube"
 fi
 
 echo

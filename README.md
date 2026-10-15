@@ -158,7 +158,13 @@ local file, from a terminal or over SSH:
 pocket-play https://www.youtube.com/watch?v=...
 ```
 
-It starts with sound only. The Now Playing card shows the title, the channel
+To find something to watch, the Now Playing card has a small video button
+in its top-right corner: it opens [PlasmaTube](https://apps.kde.org/plasmatube/)
+(KDE's YouTube app, `sudo pacman -S plasmatube`) when it's installed, and
+YouTube in the browser otherwise. PlasmaTube goes through public Invidious or
+Piped servers, which come and go; the browser always works.
+
+`pocket-play` starts with sound only. The Now Playing card shows the title, the channel
 and the video's thumbnail (through mpv-mpris), and gets a full-screen
 button that shows the video. While the video is up, A pauses, left/right
 seek 10 seconds, and B, Back or Home go back to sound only.

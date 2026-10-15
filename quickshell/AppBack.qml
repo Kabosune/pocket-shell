@@ -16,8 +16,8 @@ Singleton {
         // RetroArch: its menu (Quick Menu while a game runs). F1 is its
         // default "menu toggle" key.
         { match: /retroarch/i, mods: "", key: "F1" },
-        // Web browsers: previous page
-        { match: /angelfish|firefox|chromium|falkon/i, mods: "ALT", key: "Left" }
+        // Web browsers, and KDE apps such as PlasmaTube: previous page
+        { match: /angelfish|firefox|chromium|falkon|plasmatube/i, mods: "ALT", key: "Left" }
     ]
     readonly property var fallback: ({ mods: "", key: "Escape" })
 

@@ -17,11 +17,17 @@ Surface {
 
     // Controller focus: 0 previous, 1 play/pause, 2 next
     property int focusedIndex: -1
-    // pocket-play adds a fourth button: show the video full screen
+    // pocket-play adds a button that shows the video full screen; the
+    // last button (top right corner) opens YouTube to find something.
     readonly property bool hasVideo: PocketPlay.isPlayer(player)
-    readonly property int count: hasVideo ? 4 : 3
+    readonly property int browseIndex: hasVideo ? 4 : 3
+    readonly property int count: browseIndex + 1
 
     function activate(index) {
+        if (index === browseIndex) {
+            PocketPlay.browse();
+            return;
+        }
         const p = player;
         if (!p)
             return;
@@ -155,7 +161,8 @@ Surface {
             }
 
             Text {
-                width: parent.width
+                // Leave room for the YouTube button in the corner
+                width: parent.width - browse.width - 4
                 elide: Text.ElideRight
                 text: card.player ? (card.player.trackTitle || card.player.identity) : Theme.label("Nothing playing")
                 color: Theme.textStrong
@@ -210,5 +217,18 @@ Surface {
                 }
             }
         }
+    }
+
+    // Find something to watch: PlasmaTube if installed, else YouTube in
+    // the browser
+    RoundControl {
+        id: browse
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.topMargin: card.compact ? 8 : 12
+        anchors.rightMargin: card.compact ? 8 : 12
+        glyph: Icons.video
+        focused: card.focusedIndex === card.browseIndex
+        onActivated: card.activate(card.browseIndex)
     }
 }

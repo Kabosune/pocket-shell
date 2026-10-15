@@ -78,6 +78,16 @@ Singleton {
         Sfx.play("back", 1);
     }
 
+    // Something to watch: PlasmaTube (KDE's YouTube app) when installed,
+    // else YouTube in the default browser.
+    function browse() {
+        const app = DesktopEntries.byId("org.kde.plasmatube");
+        if (app)
+            Wm.launchEntry(app);
+        else
+            Wm.launchCommand(["xdg-open", "https://m.youtube.com/"]);
+    }
+
     function togglePause() {
         send(["cycle", "pause"]);
     }
