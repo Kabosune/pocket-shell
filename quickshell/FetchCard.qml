@@ -15,6 +15,11 @@ Surface {
     property bool framed: false
     property bool showPrompt: true
     property real margin: 16
+    // Animation (the dancer) only runs while this is true
+    property bool animate: true
+    // The picture: the handheld drawing or the dancing chibi. Tap it to
+    // switch; the choice is saved.
+    readonly property string logoKind: Store.fetchLogo || Theme.fetchLogo
 
     readonly property string user: Quickshell.env("USER") || "user"
     readonly property string host: hostFile.text().trim() || "pocket"
@@ -160,16 +165,37 @@ Surface {
         Row {
             spacing: 22
 
-            Column {
-                spacing: 0
+            Item {
+                width: card.logoKind === "dancer" ? dancer.implicitWidth : handheld.implicitWidth
+                height: card.logoKind === "dancer" ? dancer.implicitHeight : handheld.implicitHeight
 
-                Repeater {
-                    model: card.logo
-                    Mono {
-                        required property string modelData
-                        text: modelData
-                        color: Theme.accent
-                        lineHeight: 1.05
+                Column {
+                    id: handheld
+                    visible: card.logoKind !== "dancer"
+                    spacing: 0
+
+                    Repeater {
+                        model: card.logo
+                        Mono {
+                            required property string modelData
+                            text: modelData
+                            color: Theme.accent
+                            lineHeight: 1.05
+                        }
+                    }
+                }
+
+                AsciiDancer {
+                    id: dancer
+                    visible: card.logoKind === "dancer"
+                    running: card.animate
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
+                        Store.setFetchLogo(card.logoKind === "dancer" ? "handheld" : "dancer");
+                        Sfx.play("toggle-on", 2);
                     }
                 }
             }

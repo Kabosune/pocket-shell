@@ -213,6 +213,7 @@
     "textCase": "lower",
     "titlePrefix": "",
     "cursor": false,
-    "scanlines": false
+    "scanlines": false,
+    "fetchLogo": "dancer"
   }
 }

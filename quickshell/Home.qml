@@ -265,6 +265,7 @@ Item {
             framed: true
             showPrompt: false
             margin: 14
+            animate: home.live
         }
     }
 
@@ -280,7 +281,9 @@ Item {
         y: 60
         width: 548
         height: 330
-        source: "FetchCard.qml"
+        sourceComponent: FetchCard {
+            animate: home.live
+        }
     }
 
     ClockPanel {

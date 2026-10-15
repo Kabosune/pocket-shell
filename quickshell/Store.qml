@@ -20,6 +20,8 @@ Singleton {
     property var modes: ({})
     // Animated tiles switched off to save power: { pipes: true, cava: true }
     property var paused: ({})
+    // Fetch card picture: "" (the theme's), "handheld" or "dancer"
+    property string fetchLogo: ""
     property bool sounds: true
     // Not saved: whether Quick settings is open (the volume pop-up hides then).
     property bool quickPanelOpen: false
@@ -98,6 +100,11 @@ Singleton {
         save();
     }
 
+    function setFetchLogo(kind) {
+        fetchLogo = kind;
+        save();
+    }
+
     function setSounds(on) {
         sounds = on;
         save();
@@ -111,6 +118,7 @@ Singleton {
             accents: accents,
             modes: modes,
             paused: paused,
+            fetchLogo: fetchLogo,
             sounds: sounds
         }, null, 2));
     }
@@ -152,6 +160,7 @@ Singleton {
         accents = data && data.accents && typeof data.accents === "object" ? data.accents : {};
         modes = data && data.modes && typeof data.modes === "object" ? data.modes : {};
         paused = data && data.paused && typeof data.paused === "object" ? data.paused : {};
+        fetchLogo = data && typeof data.fetchLogo === "string" ? data.fetchLogo : "";
         sounds = data && typeof data.sounds === "boolean" ? data.sounds : true;
         loaded = true;
     }
