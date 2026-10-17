@@ -17,7 +17,10 @@ Singleton {
         // default "menu toggle" key.
         { match: /retroarch/i, mods: "", key: "F1" },
         // Web browsers, and KDE apps such as PlasmaTube: previous page
-        { match: /angelfish|firefox|chromium|falkon|plasmatube/i, mods: "ALT", key: "Left" }
+        { match: /angelfish|firefox|chromium|falkon|plasmatube/i, mods: "ALT", key: "Left" },
+        // Moonlight: Escape goes back in its menus; while streaming it
+        // reaches the PC as Escape, the usual "back" in PC games
+        { match: /moonlight/i, mods: "", key: "Escape" }
     ]
     readonly property var fallback: ({ mods: "", key: "Escape" })
 

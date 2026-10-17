@@ -1,0 +1,83 @@
+#!/bin/bash
+# pocket-back: switch the Back button between InputPlumber's own handling
+# and Pocket Shell's.
+#
+#   pocket-back on      load Pocket Shell's profile (Back becomes F20)
+#   pocket-back off     put back the profile each device had before
+#   pocket-back status  show each device's current profile
+#
+# The session launcher runs "on" when Pocket Shell starts and "off" when it
+# ends, so other desktops and game mode get Back as before. Loading a
+# profile needs the user to be in the "wheel" or "inputplumber" group.
+set -u
+
+PROFILE=/usr/local/share/pocket-shell/back-button.yaml
+DEFAULT=/usr/share/inputplumber/profiles/default.yaml
+STATE="${XDG_RUNTIME_DIR:-/tmp}/pocket-back"
+SVC=org.shadowblip.InputPlumber
+IFACE=org.shadowblip.Input.CompositeDevice
+
+say() { echo "pocket-back: $*" >&2; }
+
+devices() {
+  busctl --list tree "$SVC" 2>/dev/null | grep -E '/CompositeDevice[0-9]+$'
+}
+
+# A string property of a device, without busctl's s "..." wrapping
+prop() {
+  busctl get-property "$SVC" "$1" "$IFACE" "$2" 2>/dev/null | sed -e 's/^s "//' -e 's/"$//'
+}
+
+load() {
+  busctl call "$SVC" "$1" "$IFACE" LoadProfilePath s "$2" >/dev/null
+}
+
+on() {
+  [ -r "$PROFILE" ] || { say "missing $PROFILE (run install.sh)"; return 1; }
+  mkdir -p "$STATE"
+  local found=0 failed=0 path n
+  for path in $(devices); do
+    found=1
+    n="${path##*CompositeDevice}"
+    # Remember the profile from before; a second "on" keeps the first one
+    [ -f "$STATE/$n" ] || prop "$path" ProfilePath >"$STATE/$n"
+    if load "$path" "$PROFILE"; then
+      say "$(prop "$path" Name): Back now goes to Pocket Shell"
+    else
+      failed=1
+      rm -f "$STATE/$n"
+    fi
+  done
+  [ "$found" = 1 ] || { say "no InputPlumber devices found"; return 1; }
+  return "$failed"
+}
+
+off() {
+  [ -d "$STATE" ] || return 0
+  local file n path prev
+  for file in "$STATE"/*; do
+    [ -f "$file" ] || continue
+    n="${file##*/}"
+    path="/org/shadowblip/InputPlumber/CompositeDevice$n"
+    prev="$(cat "$file")"
+    if [ -z "$prev" ] || [ "$prev" = "$PROFILE" ]; then
+      prev="$DEFAULT"
+    fi
+    load "$path" "$prev" && say "restored $prev"
+    rm -f "$file"
+  done
+}
+
+status() {
+  local path
+  for path in $(devices); do
+    echo "$(prop "$path" Name): $(prop "$path" ProfileName) ($(prop "$path" ProfilePath))"
+  done
+}
+
+case "${1:-}" in
+  on) on ;;
+  off) off ;;
+  status) status ;;
+  *) echo "usage: pocket-back on|off|status" >&2; exit 2 ;;
+esac

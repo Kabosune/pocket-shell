@@ -7,4 +7,17 @@ for _ in $(seq 1 50); do
   sleep 0.2
 done
 unset WAYLAND_DISPLAY DISPLAY
-exec start-hyprland
+
+# The Back button goes to Pocket Shell while it runs (bin/pocket-back), and
+# back to InputPlumber's own handling when the session ends.
+restored=0
+restore() {
+  [ "$restored" = 1 ] && return
+  restored=1
+  [ -x /usr/local/bin/pocket-back ] && /usr/local/bin/pocket-back off
+}
+trap restore EXIT
+trap 'restore; exit 143' TERM HUP INT
+[ -x /usr/local/bin/pocket-back ] && /usr/local/bin/pocket-back on
+
+start-hyprland

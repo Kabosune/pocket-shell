@@ -53,6 +53,14 @@ sudo install -Dm755 "$REPO/bin/pocket-games" /usr/local/bin/pocket-games
 echo "installed /usr/local/bin/pocket-games"
 sudo install -Dm755 "$REPO/bin/pocket-play" /usr/local/bin/pocket-play
 echo "installed /usr/local/bin/pocket-play"
+# Back button profile, loaded by the session while Pocket Shell runs
+sudo install -Dm755 "$REPO/bin/pocket-back" /usr/local/bin/pocket-back
+sudo install -Dm644 "$REPO/input/back-button.yaml" /usr/local/share/pocket-shell/back-button.yaml
+echo "installed /usr/local/bin/pocket-back"
+if ! id -nG | grep -qwE 'wheel|inputplumber'; then
+  echo "note     $USER isn't in the wheel or inputplumber group, so the Back"
+  echo "         button profile can't load; Back falls back to Home + A"
+fi
 if [ "$HELPER_OK" = 1 ]; then
   sudo install -Dm755 "$REPO/input/pocket-input" /usr/local/bin/pocket-input
   echo "installed /usr/local/bin/pocket-input"
@@ -87,11 +95,12 @@ compgen -G "/usr/lib*/qt6/qml/QtMultimedia" >/dev/null || missing+=("qt6-multime
 command -v cava >/dev/null || missing+=("cava (audio visualizer in the Static theme)")
 command -v mpv >/dev/null || missing+=("mpv, mpv-mpris, yt-dlp (pocket-play)")
 command -v plasmatube >/dev/null || missing+=("plasmatube (YouTube app for the Now Playing video button)")
+command -v moonlight >/dev/null || missing+=("moonlight-qt (stream games from a PC)")
 if [ ${#missing[@]} -gt 0 ]; then
   echo
   echo "Optional, not installed:"
   printf '  - %s\n' "${missing[@]}"
-  echo "Install with: sudo pacman -S --needed wireplumber brightnessctl qt6-multimedia cava mpv mpv-mpris yt-dlp plasmatube"
+  echo "Install with: sudo pacman -S --needed wireplumber brightnessctl qt6-multimedia cava mpv mpv-mpris yt-dlp plasmatube moonlight-qt"
 fi
 
 echo

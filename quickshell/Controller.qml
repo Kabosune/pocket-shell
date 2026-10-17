@@ -8,10 +8,12 @@ import Quickshell.Io
 // The Home button sends "home" on a tap and "recents" when held.
 //
 // Back button: handhelds run through InputPlumber with an Xbox 360-style
-// pad have no Back button on that pad, so InputPlumber sends the device's
-// Back (its "QuickAccess" button) as Guide, then A 80 ms later. A Home
-// press followed by A within `chordWindow` is therefore read as "back",
-// and neither the Home nor the A is passed on.
+// pad have no Back button on that pad. While Pocket Shell runs, its
+// InputPlumber profile turns the device's Back into F20, which Hyprland
+// catches and sends here (`qs ipc call controller back`), so apps never
+// see it. Without that profile, InputPlumber sends Back as Guide, then A
+// 80 ms later; a Home press followed by A within `chordWindow` is still
+// read as "back", and neither the Home nor the A goes to the shell.
 Singleton {
     id: controller
 
@@ -128,6 +130,17 @@ Singleton {
             controller.held = "";
             repeatTimer.stop();
             restartTimer.start();
+        }
+    }
+
+    // The Back button as a key, from Hyprland (see the top of this file)
+    IpcHandler {
+        target: "controller"
+
+        function back(): void {
+            controller.active = true;
+            controller.pressed("back", false);
+            controller.released("back");
         }
     }
 

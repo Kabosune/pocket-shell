@@ -1,0 +1,56 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ShadowBlip/InputPlumber/main/rootfs/usr/share/inputplumber/schema/device_profile_v1.json
+#
+# InputPlumber profile loaded while Pocket Shell runs (bin/pocket-back).
+#
+# On an Xbox-style virtual pad there is no Back button, so InputPlumber
+# turns the device's Back ("QuickAccess") into Guide, then A. Every app
+# and streamed game gets those presses too. Here Back becomes the F20 key
+# instead, which Hyprland catches before any app (hypr/hyprland.lua) and
+# hands to the shell.
+#
+# The rest is InputPlumber's own default profile, minus its stick dials
+# (the RP5 has none).
+version: 1
+kind: DeviceProfile
+name: Pocket Shell
+description: Back button as F20 for Pocket Shell; otherwise InputPlumber's defaults
+
+mapping:
+  - name: Back
+    source_event:
+      gamepad:
+        button: QuickAccess
+    target_events:
+      - keyboard: KeyF20
+
+  # InputPlumber defaults
+  - name: LeftTop
+    source_event:
+      gamepad:
+        button: LeftTop
+    target_events:
+      - gamepad:
+          button: LeftPaddle1
+  - name: RightTop
+    source_event:
+      gamepad:
+        button: RightTop
+    target_events:
+      - gamepad:
+          button: RightPaddle1
+  - name: Keyboard
+    source_event:
+      gamepad:
+        button: Keyboard
+    target_events:
+      - gamepad:
+          button: Guide
+      - gamepad:
+          button: North
+  - name: QuickAccess2
+    source_event:
+      gamepad:
+        button: QuickAccess2
+    target_events:
+      - gamepad:
+          button: Screenshot

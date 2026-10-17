@@ -100,16 +100,25 @@ Anywhere in the shell:
 | Volume buttons | Change volume anywhere, games included, with an on-screen level |
 | Home | Back to the Home page; from an app or game, back to the shell |
 | Hold Home | Recents: switch to (A) or close (X) open apps |
-| Back (device button) | In the shell, same as B. In an app, that app's own "back": RetroArch opens its menu, web browsers go to the previous page, anything else gets Escape |
+| Back (device button) | In the shell, same as B. In an app, that app's own "back": RetroArch opens its menu, web browsers go to the previous page, anything else (Moonlight included) gets Escape |
 
 **The Back button.** Devices driven by InputPlumber with an Xbox 360-style
 pad (pocknix on Retroid handhelds, for one) have no Back button on that pad;
-InputPlumber sends the device's Back as Home, then A 80 ms later. Pocket Shell
-reads Home followed by A within 160 ms as Back. Apps and games still receive
-that Home + A, so a game may see a quick A tap when you press Back. The
-per-app keys live in `quickshell/AppBack.qml`. `install.sh` sets up RetroArch's
-controller profiles and stops Home (Guide) from also opening RetroArch's
-menu, since Home belongs to the shell.
+InputPlumber normally sends the device's Back as Home, then A 80 ms later,
+and every app and game gets that Home + A too. So while Pocket Shell runs,
+the session loads its own InputPlumber profile (`input/back-button.yaml`,
+via `pocket-back on`) that turns Back into the F20 key instead. Hyprland
+catches F20 before any app sees it and tells the shell (`qs ipc call
+controller back`). When the session ends, `pocket-back off` puts back the
+profile from before, so game mode and Plasma get Back as usual.
+
+Loading a profile needs your user in the `wheel` (or `inputplumber`) group.
+If it can't be loaded, the shell still reads Home followed by A within
+160 ms as Back, and apps get that Home + A as before. `pocket-back status`
+shows which profile is active. The per-app keys live in
+`quickshell/AppBack.qml`. `install.sh` sets up RetroArch's controller
+profiles and stops Home (Guide) from also opening RetroArch's menu, since
+Home belongs to the shell.
 
 On each page:
 
@@ -182,6 +191,30 @@ YouTube changes often and distro builds of yt-dlp fall behind; if YouTube
 links stop working, run `pocket-play --update-ytdlp`. Videos play at up to
 720p by default (H.264 preferred, never AV1); set `POCKET_PLAY_MAX_HEIGHT`
 for more.
+
+## Moonlight (streaming from a PC)
+
+[Moonlight](https://moonlight-stream.org) streams games from a PC running
+[Sunshine](https://github.com/LizardByte/Sunshine). Install it on the
+device:
+
+```
+sudo pacman -S --needed moonlight-qt
+```
+
+It then shows up on the Apps page (X pins it to the dock). Pairing needs no
+typing on the handheld: open Moonlight, pick your PC (it's found on its own
+on the same network), and type the PIN it shows into Sunshine's web page on
+the PC.
+
+- **Back**: Escape. In Moonlight's menus that goes back; while streaming it
+  reaches the PC as the Escape key. Back itself never reaches the PC.
+- **Home**: back to the shell; Moonlight stops reading the controller while
+  it isn't in front. Home is the pad's Guide button, though, so the PC also
+  gets that press (it may open Steam's overlay).
+- **Quit a stream**: Moonlight's own combo, Start + Select + L1 + R1.
+- **Typing on the PC**: Steam Big Picture's keyboard (Guide + X) works over
+  the stream.
 
 ## Sounds
 

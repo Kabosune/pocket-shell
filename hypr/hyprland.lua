@@ -19,4 +19,10 @@ hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_
 hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"), { locked = true, repeating = true })
 hl.bind("XF86AudioMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"), { locked = true })
 
+-- The device's Back button, which bin/pocket-back turns into F20. Caught
+-- here so no app or streamed game ever sees it; the shell decides what Back
+-- does. Bound by keycode (evdev KEY_F20 = 190, + 8) because xkb gives F20
+-- other names on some layouts.
+hl.bind("code:198", hl.dsp.exec_cmd("qs ipc call controller back"))
+
 hl.config({ debug = { disable_logs = false } })
