@@ -2,6 +2,9 @@ hl.monitor({ output = "DSI-1", mode = "1080x1920@60", position = "auto", scale =
 
 hl.on("hyprland.start", function()
     hl.exec_cmd("quickshell")
+    -- A monitor on the USB-C port mirrors this screen and takes the sound
+    -- (bin/pocket-dock). Checked by name so a missing helper is harmless.
+    hl.exec_cmd("command -v pocket-dock >/dev/null && exec pocket-dock watch")
 end)
 
 hl.config({

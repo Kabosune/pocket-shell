@@ -48,3 +48,16 @@ both the Hyprland config and the shell read once the shell skeleton exists.
 - `sudo pocknix-base rolling` / `sudo pocknix-base locked`, and `pocknix-rollback`
 - Supervisor log: `~/pocknix-session.log`
 - pocknix falls back to game mode if a desktop fails 3 times quickly.
+
+## External display (USB-C)
+
+- DisplayPort Alt Mode works on pocknix: a monitor shows up as `DP-1`
+  (`/sys/class/drm/card0-DP-1/status`). Hyprland only lights it with a rule
+  (`hyprctl eval 'hl.monitor({ output = "DP-1", disabled = false, ... })'`).
+- DisplayPort audio works but isn't in pocknix's UCM profile. Route
+  `DISPLAY_PORT_RX Audio Mixer MultiMedia3` on (look it up by name: numids
+  differ between `-c0` and `-D hw:0`) and play on `hw:0,2`, 48 kHz S16_LE
+  stereo. Without the route, opening the PCM fails with EINVAL. Reopening it
+  right after closing once failed with "Connection timed out".
+- Jack control: `DP0 Jack` (iface=CARD).
+

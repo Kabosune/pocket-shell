@@ -1,0 +1,182 @@
+#!/bin/bash
+# pocket-dock: what happens when a monitor is plugged into the USB-C port.
+#
+#   pocket-dock watch    follow plugging and unplugging (Hyprland starts this,
+#                        see hypr/hyprland.lua); stops when Hyprland does
+#   pocket-dock on       do the plug-in steps now
+#   pocket-dock off      do the unplug steps now
+#   pocket-dock status   show what's connected and where sound goes
+#
+# Plugging in: the monitor mirrors the built-in screen, and a "Monitor
+# (USB-C)" sound output appears and becomes the default. Unplugging: the
+# output goes away and the previous default comes back.
+#
+# Sound: pocknix's audio setup only knows the speaker and headphones, but
+# the kernel has a DisplayPort output on the audio router. A free playback
+# channel (MultiMedia3, hw:0,2) is routed to it and given to PipeWire.
+set -u
+
+MAIN=DSI-1
+CARD=hw:0
+PCM=hw:0,2
+ROUTE="DISPLAY_PORT_RX Audio Mixer MultiMedia3"
+SINK=pocket-shell.monitor
+DRM="${POCKET_DRM:-/sys/class/drm}"
+STATE="${XDG_RUNTIME_DIR:-/tmp}/pocket-dock"
+POLL=2
+
+say() { echo "pocket-dock: $*" >&2; }
+
+# The plugged-in external output, e.g. DP-1, or nothing
+connected_output() {
+  local f
+  for f in "$DRM"/card*-DP-*/status; do
+    [ -r "$f" ] || continue
+    if [ "$(cat "$f")" = connected ]; then
+      f="${f%/status}"
+      echo "${f##*/card[0-9]-}"
+      return
+    fi
+  done
+}
+
+mirror() {
+  hyprctl eval "hl.monitor({ output = \"$1\", disabled = false, mode = \"preferred\", position = \"auto\", scale = \"auto\", mirror = \"$MAIN\" })" >/dev/null \
+    || say "couldn't set up $1 in Hyprland"
+}
+
+# Route the free channel to DisplayPort: route on|off. Looked up by name,
+# since control numbers differ between ALSA devices.
+route() {
+  local id
+  id="$(amixer -D "$CARD" controls 2>/dev/null | grep -F "name='$ROUTE'" | sed -n 's/^numid=\([0-9]*\),.*/\1/p')"
+  if [ -z "$id" ]; then
+    say "no '$ROUTE' control; no sound on the monitor"
+    return 1
+  fi
+  amixer -D "$CARD" -q cset "numid=$id" "$1"
+}
+
+route_state() {
+  local id
+  id="$(amixer -D "$CARD" controls 2>/dev/null | grep -F "name='$ROUTE'" | sed -n 's/^numid=\([0-9]*\),.*/\1/p')"
+  [ -n "$id" ] && amixer -D "$CARD" cget "numid=$id" | sed -n 's/^ *: values=//p'
+}
+
+sink_id() {
+  pw-cli ls Node 2>/dev/null | awk -v want="node.name = \"$SINK\"" '
+    /^[[:space:]]*id [0-9]+,/ { id = $2; sub(",", "", id) }
+    index($0, want) { print id; exit }'
+}
+
+# Kept running while it exists: reopening the DisplayPort output right after
+# closing it can time out.
+sink_on() {
+  [ -n "$(sink_id)" ] && return 0
+  pw-cli create-node adapter "{
+    factory.name = api.alsa.pcm.sink
+    node.name = $SINK
+    node.description = \"Monitor (USB-C)\"
+    media.class = Audio/Sink
+    api.alsa.path = \"$PCM\"
+    audio.format = S16LE
+    audio.rate = 48000
+    audio.channels = 2
+    audio.position = [ FL FR ]
+    node.pause-on-idle = false
+    session.suspend-timeout-seconds = 0
+    object.linger = true
+  }" >/dev/null || { say "couldn't create the monitor sound output"; return 1; }
+}
+
+sink_off() {
+  local id
+  id="$(sink_id)"
+  [ -n "$id" ] && pw-cli destroy "$id" >/dev/null
+}
+
+current_default() {
+  pw-metadata 0 default.configured.audio.sink 2>/dev/null | sed -n "s/.*value:'\([^']*\)'.*/\1/p" | head -1
+}
+
+set_default() {
+  pw-metadata 0 default.configured.audio.sink "$1" Spa:String:JSON >/dev/null
+}
+
+dock_on() {
+  local out="$1" prev
+  mkdir -p "$STATE"
+  say "$out connected"
+  mirror "$out"
+  route on || return 0
+  sink_on || return 0
+  # Remember the default from before, unless it's already ours
+  prev="$(current_default)"
+  if [ ! -f "$STATE/default" ] && [ "${prev#*$SINK}" = "$prev" ]; then
+    printf '%s' "$prev" >"$STATE/default"
+  fi
+  sleep 1
+  set_default "{\"name\":\"$SINK\"}"
+  say "sound now plays on the monitor"
+}
+
+dock_off() {
+  local prev=""
+  sink_off
+  route off 2>/dev/null
+  if [ -f "$STATE/default" ]; then
+    prev="$(cat "$STATE/default")"
+    rm -f "$STATE/default"
+  fi
+  if [ -n "$prev" ]; then
+    set_default "$prev"
+  elif current_default | grep -qF "$SINK"; then
+    # Nothing was chosen before: let WirePlumber pick again
+    pw-metadata -d 0 default.configured.audio.sink >/dev/null
+  fi
+  say "monitor sound off"
+}
+
+watch() {
+  local now was=""
+  mkdir -p "$STATE"
+  exec 9>"$STATE/lock"
+  flock -n 9 || { say "already watching"; exit 0; }
+  # Left over from a run that didn't get to clean up
+  [ -n "$(sink_id)" ] && dock_off
+  trap 'dock_off; exit 0' TERM INT HUP
+  while hyprctl version >/dev/null 2>&1; do
+    now="$(connected_output)"
+    if [ "$now" != "$was" ]; then
+      if [ -n "$now" ]; then
+        sleep 2  # let the link come up before starting sound
+        dock_on "$now"
+      else
+        dock_off
+      fi
+      was="$now"
+    fi
+    sleep "$POLL"
+  done
+  [ -n "$was" ] && dock_off
+}
+
+status() {
+  local out
+  out="$(connected_output)"
+  echo "monitor:  ${out:-none}"
+  echo "route:    $(route_state || echo unknown)"
+  echo "output:   $([ -n "$(sink_id)" ] && echo "Monitor (USB-C), node $(sink_id)" || echo none)"
+  echo "default:  $(current_default)"
+}
+
+case "${1:-}" in
+  watch) watch ;;
+  on)
+    out="$(connected_output)"
+    [ -n "$out" ] || { say "no monitor connected"; exit 1; }
+    dock_on "$out" ;;
+  off) dock_off ;;
+  status) status ;;
+  *) echo "usage: pocket-dock watch|on|off|status" >&2; exit 2 ;;
+esac

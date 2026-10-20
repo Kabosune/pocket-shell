@@ -192,6 +192,30 @@ links stop working, run `pocket-play --update-ytdlp`. Videos play at up to
 720p by default (H.264 preferred, never AV1); set `POCKET_PLAY_MAX_HEIGHT`
 for more.
 
+## Monitor (USB-C)
+
+Plug a monitor into the USB-C port (a USB-C monitor, or a USB-C to HDMI
+adapter or dock with DisplayPort Alt Mode) and Pocket Shell:
+
+- **mirrors the built-in screen** on the monitor, and
+- adds a **Monitor (USB-C)** sound output and makes it the default, so
+  sound comes out of the monitor (or speakers plugged into it).
+
+Unplugging removes the sound output and puts back the one you had before.
+`bin/pocket-dock` does this; Hyprland starts `pocket-dock watch` with the
+session. `pocket-dock status` shows what's connected and where sound goes;
+`pocket-dock on` / `off` do the same steps by hand.
+
+**Why sound needed help.** pocknix's audio setup (its ALSA UCM profile)
+only lists the speaker and headphones, but the kernel has a DisplayPort
+output on the RP5's audio router (`DISPLAY_PORT_RX`). `pocket-dock` routes a
+playback channel pocknix leaves free (`MultiMedia3`, `hw:0,2`) to it and
+gives it to PipeWire. The output stays open while the monitor is connected,
+because reopening it straight after closing it can time out.
+
+Only mirroring for now; a docked mode (shell and games on the monitor,
+handheld screen off) is planned.
+
 ## Moonlight (streaming from a PC)
 
 [Moonlight](https://moonlight-stream.org) streams games from a PC running
