@@ -8,6 +8,14 @@ for _ in $(seq 1 50); do
 done
 unset WAYLAND_DISPLAY DISPLAY
 
+# KDE apps started from here rebuild KDE's shared app cache (ksycoca) when
+# something changed. Without Plasma's menu prefix that rebuild finds no
+# applications.menu, and Plasma Mobile 6.8's app drawer (built from the menu)
+# then shows almost nothing. Use the same menu Plasma does.
+if [ -z "$XDG_MENU_PREFIX" ] && [ -f /etc/xdg/menus/plasma-applications.menu ]; then
+  export XDG_MENU_PREFIX=plasma-
+fi
+
 # The Back button goes to Pocket Shell while it runs (bin/pocket-back), and
 # back to InputPlumber's own handling when the session ends.
 restored=0
