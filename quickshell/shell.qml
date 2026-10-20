@@ -41,6 +41,9 @@ ShellRoot {
         }
     }
 
+    // Apps go dark or light with the theme
+    AppColors {}
+
     // Volume pop-up, above apps and games. Loaded separately so a problem
     // with it can't take the rest of the shell down.
     LazyLoader {

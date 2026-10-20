@@ -23,6 +23,8 @@ restore() {
   [ "$restored" = 1 ] && return
   restored=1
   [ -x /usr/local/bin/pocket-back ] && /usr/local/bin/pocket-back off
+  # Apps' dark/light setting back to how it was (bin/pocket-colors)
+  [ -x /usr/local/bin/pocket-colors ] && /usr/local/bin/pocket-colors restore
 }
 trap restore EXIT
 trap 'restore; exit 143' TERM HUP INT

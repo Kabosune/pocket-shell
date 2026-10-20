@@ -59,6 +59,8 @@ sudo install -Dm644 "$REPO/input/back-button.yaml" /usr/local/share/pocket-shell
 echo "installed /usr/local/bin/pocket-back"
 sudo install -Dm755 "$REPO/bin/pocket-dock" /usr/local/bin/pocket-dock
 echo "installed /usr/local/bin/pocket-dock"
+sudo install -Dm755 "$REPO/bin/pocket-colors" /usr/local/bin/pocket-colors
+echo "installed /usr/local/bin/pocket-colors"
 if ! id -nG | grep -qwE 'wheel|inputplumber'; then
   echo "note     $USER isn't in the wheel or inputplumber group, so the Back"
   echo "         button profile can't load; Back falls back to Home + A"

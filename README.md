@@ -209,6 +209,16 @@ links stop working, run `pocket-play --update-ytdlp`. Videos play at up to
 720p by default (H.264 preferred, never AV1); set `POCKET_PLAY_MAX_HEIGHT`
 for more.
 
+## Dark and light apps
+
+Apps follow the theme: a dark background (Dusk Tide's dusk and night,
+Dotfiles dark…) tells apps to be dark, a light one (the paper, cream and
+dawn backgrounds) light. `bin/pocket-colors` sets GNOME's `color-scheme`
+and `gtk-application-prefer-dark-theme` for GTK 3 and 4, which GTK apps and
+Firefox's "System theme — auto" read. Apps that are already open may need a
+restart to switch. Leaving Pocket Shell puts back the settings from before,
+so Plasma keeps its own. `pocket-colors status` shows what apps are told.
+
 ## Monitor (USB-C)
 
 Plug a monitor into the USB-C port (a USB-C monitor, or a USB-C to HDMI

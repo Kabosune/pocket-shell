@@ -1,0 +1,141 @@
+#!/bin/bash
+# pocket-colors: tell apps whether to look dark or light.
+#
+#   pocket-colors dark|light   set it (Pocket Shell runs this to follow its theme)
+#   pocket-colors restore      put back what was set before Pocket Shell started
+#   pocket-colors status       show the current settings
+#
+# Sets the places GTK apps and Firefox look:
+#   - GNOME's color-scheme (gsettings), which GTK 4 apps and the GTK desktop
+#     portal read, and
+#   - gtk-application-prefer-dark-theme in GTK 3 and 4's settings.ini.
+# The first change of a session saves the previous values in
+# $XDG_RUNTIME_DIR/pocket-colors; the session runs `restore` on the way out,
+# so Plasma (which shares these files) gets its own settings back.
+set -u
+
+STATE="${XDG_RUNTIME_DIR:-/tmp}/pocket-colors"
+CONF="${XDG_CONFIG_HOME:-$HOME/.config}"
+GTK3="$CONF/gtk-3.0/settings.ini"
+GTK4="$CONF/gtk-4.0/settings.ini"
+KEY=gtk-application-prefer-dark-theme
+
+say() { echo "pocket-colors: $*" >&2; }
+
+has_gsettings() {
+  command -v gsettings >/dev/null 2>&1 \
+    && gsettings range org.gnome.desktop.interface color-scheme >/dev/null 2>&1
+}
+
+gs_get() {
+  has_gsettings && gsettings get org.gnome.desktop.interface color-scheme 2>/dev/null | tr -d "'"
+}
+
+gs_set() {
+  has_gsettings || return 0
+  gsettings set org.gnome.desktop.interface color-scheme "$1" 2>/dev/null
+}
+
+# The key's value in a settings.ini, or nothing
+ini_get() {
+  [ -f "$1" ] || return 0
+  awk -v key="$KEY" '
+    /^\[/ { insec = ($0 == "[Settings]") }
+    insec && index($0, key) == 1 { sub(/^[^=]*=[[:space:]]*/, ""); print; exit }' "$1"
+}
+
+# ini_set FILE VALUE: set the key under [Settings] (VALUE "" removes it),
+# leaving every other line alone
+ini_set() {
+  local f="$1" v="$2" tmp
+  mkdir -p "$(dirname "$f")"
+  tmp="$(mktemp)" || return 1
+  if [ -f "$f" ]; then
+    awk -v key="$KEY" -v v="$v" '
+      /^\[/ {
+        if (insec && !done && v != "") { print key "=" v; done = 1 }
+        insec = ($0 == "[Settings]")
+        if (insec) seen = 1
+      }
+      insec && index($0, key) == 1 {
+        if (v != "" && !done) { print key "=" v; done = 1 }
+        next
+      }
+      { print }
+      END {
+        if (!done && v != "") {
+          if (!seen) print "[Settings]"
+          print key "=" v
+        }
+      }' "$f" >"$tmp"
+  else
+    [ -n "$v" ] || { rm -f "$tmp"; return 0; }
+    printf '[Settings]\n%s=%s\n' "$KEY" "$v" >"$tmp"
+  fi
+  cat "$tmp" >"$f"
+  rm -f "$tmp"
+}
+
+# Remember how things were, once per session
+save() {
+  [ -f "$STATE/saved" ] && return 0
+  mkdir -p "$STATE"
+  {
+    echo "gs=$(gs_get)"
+    echo "gtk3_file=$([ -f "$GTK3" ] && echo yes || echo no)"
+    echo "gtk3=$(ini_get "$GTK3")"
+    echo "gtk4_file=$([ -f "$GTK4" ] && echo yes || echo no)"
+    echo "gtk4=$(ini_get "$GTK4")"
+  } >"$STATE/saved"
+}
+
+saved() { sed -n "s/^$1=//p" "$STATE/saved" 2>/dev/null; }
+
+apply() {
+  save
+  if [ "$1" = dark ]; then
+    gs_set prefer-dark
+    ini_set "$GTK3" 1
+    ini_set "$GTK4" 1
+  else
+    # prefer-light is newer than some GNOME schemas; default means light too
+    gs_set prefer-light || gs_set default
+    ini_set "$GTK3" 0
+    ini_set "$GTK4" 0
+  fi
+  echo "$1" >"$STATE/current"
+}
+
+restore() {
+  [ -f "$STATE/saved" ] || return 0
+  local gs
+  gs="$(saved gs)"
+  [ -n "$gs" ] && gs_set "$gs"
+  if [ "$(saved gtk3_file)" = no ]; then rm -f "$GTK3"; else ini_set "$GTK3" "$(saved gtk3)"; fi
+  if [ "$(saved gtk4_file)" = no ]; then rm -f "$GTK4"; else ini_set "$GTK4" "$(saved gtk4)"; fi
+  rm -f "$STATE/saved" "$STATE/current"
+}
+
+status() {
+  echo "pocket shell: $(cat "$STATE/current" 2>/dev/null || echo "not set")"
+  echo "gsettings:    $(gs_get || true)"
+  echo "gtk-3.0:      $(ini_get "$GTK3")"
+  echo "gtk-4.0:      $(ini_get "$GTK4")"
+  local portal
+  portal="$(busctl --user call org.freedesktop.portal.Desktop /org/freedesktop/portal/desktop \
+    org.freedesktop.portal.Settings ReadOne ss org.freedesktop.appearance color-scheme 2>/dev/null)"
+  case "$portal" in
+    *" 1") portal="dark" ;;
+    *" 2") portal="light" ;;
+    *" 0") portal="no preference" ;;
+    "") portal="no answer" ;;
+  esac
+  echo "portal:       $portal (what Firefox and most apps are told)"
+}
+
+case "${1:-}" in
+  dark|light) apply "$1" ;;
+  restore) restore ;;
+  status) status ;;
+  *) echo "usage: pocket-colors dark|light|restore|status" >&2; exit 2 ;;
+esac
