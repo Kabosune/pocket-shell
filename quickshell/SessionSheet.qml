@@ -8,7 +8,7 @@ Item {
 
     property bool open: false
     property int focusedIndex: 0
-    readonly property var actions: ["themes", "sounds", "plasma", "steam", "cancel"]
+    readonly property var actions: ["themes", "sounds", "monitor", "plasma", "steam", "cancel"]
     signal themesRequested()
 
     function show() {
@@ -23,6 +23,9 @@ Item {
             themesRequested();
         } else if (action === "sounds") {
             Store.setSounds(!Store.sounds);
+            Sfx.play("toggle-on", 2);
+        } else if (action === "monitor") {
+            Docking.toggleMode();
             Sfx.play("toggle-on", 2);
         } else if (action === "plasma") {
             toPlasma.running = true;
@@ -97,23 +100,30 @@ Item {
                 focused: Controller.active && sheet.focusedIndex === 1
                 onActivated: sheet.activate(1)
             }
+            // How a monitor on USB-C is used (bin/pocket-dock)
             PillButton {
                 width: 260
-                label: "Plasma Mobile"
+                label: Docking.mode === "rp5" ? "Monitor: RP5 1080p" : "Monitor: Full res"
                 focused: Controller.active && sheet.focusedIndex === 2
                 onActivated: sheet.activate(2)
             }
             PillButton {
                 width: 260
-                label: "Steam mode"
+                label: "Plasma Mobile"
                 focused: Controller.active && sheet.focusedIndex === 3
                 onActivated: sheet.activate(3)
             }
             PillButton {
                 width: 260
-                label: "Cancel"
+                label: "Steam mode"
                 focused: Controller.active && sheet.focusedIndex === 4
                 onActivated: sheet.activate(4)
+            }
+            PillButton {
+                width: 260
+                label: "Cancel"
+                focused: Controller.active && sheet.focusedIndex === 5
+                onActivated: sheet.activate(5)
             }
         }
     }

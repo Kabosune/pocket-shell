@@ -12,7 +12,8 @@ Singleton {
     // This device's screens and what each one is for:
     //   main   - navigation: pages, dock, toggles, keyboard. Controller focus lives here.
     //   second - display only: showcase art and ambience (dual-screen devices).
-    // Screens not listed here get no shell window.
+    // Screens not listed here get no shell window, except a monitor that
+    // pocket-dock made the main screen.
     readonly property var panels: [
         { output: "DSI-1", role: "main" }
     ]
@@ -20,6 +21,17 @@ Singleton {
     function roleOf(screen) {
         if (!screen)
             return "none";
+        // Docked with "match the monitor": the monitor is the main screen and
+        // the built-in one only shows a copy of it (see Docking.qml).
+        const docked = Docking.mainOutput;
+        if (docked !== "") {
+            if (screen.name === docked)
+                return "main";
+            for (let i = 0; i < panels.length; i++) {
+                if (panels[i].output === screen.name && panels[i].role === "main")
+                    return "none";
+            }
+        }
         for (let i = 0; i < panels.length; i++) {
             if (panels[i].output === screen.name)
                 return panels[i].role;

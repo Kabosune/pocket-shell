@@ -6,10 +6,26 @@
 #   pocket-dock on       do the plug-in steps now
 #   pocket-dock off      do the unplug steps now
 #   pocket-dock status   show what's connected and where sound goes
+#   pocket-dock mode [match|rp5]
+#                        show or choose how the picture works (saved; applied
+#                        right away if a monitor is connected)
 #
-# Plugging in: the monitor mirrors the built-in screen, and a "Monitor
-# (USB-C)" sound output appears and becomes the default. Unplugging: the
-# output goes away and the previous default comes back.
+# Picture, two modes:
+#   match (default)  everything is drawn for the monitor: its biggest 16:9
+#                    resolution up to 1440p, at the highest refresh rate up
+#                    to 120 Hz,
+#                    scaled so the shell has the same layout as on the RP5.
+#                    The RP5 screen shows a scaled-down copy, and touch
+#                    follows it.
+#   rp5              everything is drawn for the RP5 screen (1080p, 60 Hz)
+#                    and the monitor shows a copy, sent at 1920x1080@60 when
+#                    the monitor has that mode.
+# Pocket Shell moves to whichever screen is drawn for: this writes its name
+# to $XDG_RUNTIME_DIR/pocket-dock/main (see quickshell/Device.qml).
+#
+# Sound: plugging in adds a "Monitor (USB-C)" sound output and makes it the
+# default. Unplugging: the output goes away and the previous default comes
+# back.
 #
 # Sound: pocknix's audio setup only knows the speaker and headphones, but
 # the kernel has a DisplayPort output on the audio router. A free playback
@@ -17,6 +33,15 @@
 set -u
 
 MAIN=DSI-1
+# The built-in screen's Hyprland rule, as in hypr/hyprland.lua
+MAIN_RULE='output = "DSI-1", mode = "1080x1920@60", position = "auto", scale = 2, transform = 1'
+MAIN_TOUCH_TRANSFORM=1
+# Its height in layout pixels (landscape 960x540), which the shell is laid out for
+MAIN_HEIGHT=540
+MAX_HZ=120.5
+# Tallest resolution to draw at; 4K costs a lot more GPU than the SM8250 has to spare
+MAX_HEIGHT=1440
+CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/pocket-shell"
 CARD=hw:0
 PCM=hw:0,2
 ROUTE="DISPLAY_PORT_RX Audio Mixer MultiMedia3"
@@ -40,9 +65,109 @@ connected_output() {
   done
 }
 
-mirror() {
-  hyprctl eval "hl.monitor({ output = \"$1\", disabled = false, mode = \"preferred\", position = \"auto\", scale = \"auto\", mirror = \"$MAIN\" })" >/dev/null \
-    || say "couldn't set up $1 in Hyprland"
+# Run Lua in Hyprland; it answers "ok" or the error
+hypr() {
+  local out
+  out="$(hyprctl eval "$1" 2>&1)" || { say "Hyprland: ${out:-no answer}"; return 1; }
+  case "$out" in
+    ok*|"") return 0 ;;
+  esac
+  say "Hyprland: $out"
+  return 1
+}
+
+dock_mode() {
+  local m
+  m="$(cat "$CONFIG/dock-mode" 2>/dev/null)"
+  case "$m" in
+    rp5) echo rp5 ;;
+    *) echo match ;;
+  esac
+}
+
+# The output's modes as Hyprland lists them, e.g. "2560x1440@119.99Hz ..."
+modes_of() {
+  hyprctl monitors all 2>/dev/null | awk -v out="$1" '
+    /^Monitor / { inblk = ($2 == out) }
+    inblk && /availableModes:/ { sub(/^[[:space:]]*availableModes:[[:space:]]*/, ""); print; exit }'
+}
+
+# The mode to draw at in "match": the biggest resolution up to MAX_HEIGHT
+# with a refresh rate from 59 to MAX_HZ, then the highest such rate. 16:9 modes first, so the
+# copy on the RP5 isn't stretched.
+best_mode() {
+  modes_of "$1" | tr ' ' '\n' | awk -v max="$MAX_HZ" -v maxh="$MAX_HEIGHT" '
+    /^[0-9]+x[0-9]+@[0-9.]+Hz$/ {
+      m = $0; sub(/Hz$/, "", m)
+      split(m, a, "@"); split(a[1], wh, "x")
+      hz = a[2] + 0; px = wh[1] * wh[2]
+      if (hz < 59 || hz > max || wh[2] > maxh) next
+      wide = (wh[1] * 9 == wh[2] * 16)
+      if (wide && (px > wpx || (px == wpx && hz > whz))) { wpx = px; whz = hz; wbest = m }
+      if (px > apx || (px == apx && hz > ahz)) { apx = px; ahz = hz; abest = m }
+    }
+    END { if (wbest != "") print wbest; else if (abest != "") print abest }'
+}
+
+has_mode() {  # has_mode OUT 1920x1080 (at 59-61 Hz)
+  modes_of "$1" | tr ' ' '\n' | grep -qE "^$2@(59\.|60\.|61\.)"
+}
+
+# Built-in screen back to normal: drawn for, touch on it, shell on it
+main_restore() {
+  hypr "hl.monitor({ $MAIN_RULE, mirror = \"\" })"
+  hypr "hl.config({ input = { touchdevice = { output = \"$MAIN\", transform = $MAIN_TOUCH_TRANSFORM } } })"
+  rm -f "$STATE/main"
+}
+
+# Turn the monitor on (side by side for a moment) so its modes are known
+light() {
+  hypr "hl.monitor({ output = \"$1\", disabled = false, mode = \"preferred\", position = \"auto\", scale = 2, mirror = \"\" })" || return 1
+  local i
+  for i in 1 2 3 4 5; do
+    [ -n "$(modes_of "$1")" ] && return 0
+    sleep 0.4
+  done
+  return 0
+}
+
+video_rp5() {
+  local out="$1" mode=preferred
+  main_restore
+  light "$out" || { say "couldn't set up $out in Hyprland"; return 1; }
+  has_mode "$out" 1920x1080 && mode=1920x1080@60
+  hypr "hl.monitor({ output = \"$out\", disabled = false, mode = \"$mode\", position = \"auto\", scale = 2, mirror = \"$MAIN\" })" \
+    || say "couldn't mirror onto $out"
+  say "$out shows a copy of the RP5 screen ($mode)"
+}
+
+video_match() {
+  local out="$1" mode h scale
+  light "$out" || { say "couldn't set up $out in Hyprland"; return 1; }
+  mode="$(best_mode "$out")"
+  if [ -z "$mode" ]; then
+    say "no mode from 59 to ${MAX_HZ%.*} Hz on $out; using the RP5 screen's picture"
+    video_rp5 "$out"
+    return
+  fi
+  h="${mode%@*}"
+  h="${h#*x}"
+  scale="$(awk -v h="$h" -v m="$MAIN_HEIGHT" 'BEGIN { printf "%.6f", h / m }')"
+  hypr "hl.monitor({ output = \"$out\", disabled = false, mode = \"$mode\", position = \"0x0\", scale = $scale, mirror = \"\" })" \
+    || { say "couldn't set $out to $mode; using the RP5 screen's picture"; video_rp5 "$out"; return; }
+  hypr "hl.monitor({ $MAIN_RULE, mirror = \"$out\" })" || say "couldn't copy $out onto the RP5 screen"
+  hypr "hl.config({ input = { touchdevice = { output = \"$out\", transform = $MAIN_TOUCH_TRANSFORM } } })"
+  mkdir -p "$STATE"
+  printf '%s\n' "$out" >"$STATE/main"
+  say "$out runs at ${mode}Hz (scale $scale); the RP5 screen shows a copy"
+}
+
+video_on() {
+  if [ "$(dock_mode)" = rp5 ]; then
+    video_rp5 "$1"
+  else
+    video_match "$1"
+  fi
 }
 
 # Route the free channel to DisplayPort: route on|off. Looked up by name,
@@ -107,7 +232,7 @@ dock_on() {
   local out="$1" prev
   mkdir -p "$STATE"
   say "$out connected"
-  mirror "$out"
+  video_on "$out"
   route on || return 0
   sink_on || return 0
   # Remember the default from before, unless it's already ours
@@ -122,6 +247,7 @@ dock_on() {
 
 dock_off() {
   local prev=""
+  main_restore
   sink_off
   route off 2>/dev/null
   if [ -f "$STATE/default" ]; then
@@ -143,7 +269,9 @@ watch() {
   exec 9>"$STATE/lock"
   flock -n 9 || { say "already watching"; exit 0; }
   # Left over from a run that didn't get to clean up
-  [ -n "$(sink_id)" ] && dock_off
+  if [ -n "$(sink_id)" ] || [ -f "$STATE/main" ]; then
+    dock_off
+  fi
   trap 'dock_off; exit 0' TERM INT HUP
   while hyprctl version >/dev/null 2>&1; do
     now="$(connected_output)"
@@ -165,6 +293,7 @@ status() {
   local out
   out="$(connected_output)"
   echo "monitor:  ${out:-none}"
+  echo "mode:     $(dock_mode)$([ -f "$STATE/main" ] && echo " (drawn for $(cat "$STATE/main"))")"
   echo "route:    $(route_state || echo unknown)"
   echo "output:   $([ -n "$(sink_id)" ] && echo "Monitor (USB-C), node $(sink_id)" || echo none)"
   echo "default:  $(current_default)"
@@ -178,5 +307,19 @@ case "${1:-}" in
     dock_on "$out" ;;
   off) dock_off ;;
   status) status ;;
-  *) echo "usage: pocket-dock watch|on|off|status" >&2; exit 2 ;;
+  mode)
+    if [ -z "${2:-}" ]; then
+      dock_mode
+      exit 0
+    fi
+    case "$2" in
+      match|rp5) ;;
+      *) echo "usage: pocket-dock mode [match|rp5]" >&2; exit 2 ;;
+    esac
+    mkdir -p "$CONFIG"
+    printf '%s\n' "$2" >"$CONFIG/dock-mode"
+    out="$(connected_output)"
+    [ -n "$out" ] && video_on "$out"
+    exit 0 ;;
+  *) echo "usage: pocket-dock watch|on|off|status|mode [match|rp5]" >&2; exit 2 ;;
 esac

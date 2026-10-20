@@ -214,11 +214,28 @@ for more.
 Plug a monitor into the USB-C port (a USB-C monitor, or a USB-C to HDMI
 adapter or dock with DisplayPort Alt Mode) and Pocket Shell:
 
-- **mirrors the built-in screen** on the monitor, and
+- **moves everything to the monitor** at the monitor's own resolution, and
+  shows a scaled-down copy on the built-in screen, and
 - adds a **Monitor (USB-C)** sound output and makes it the default, so
   sound comes out of the monitor (or speakers plugged into it).
 
-Unplugging removes the sound output and puts back the one you had before.
+Two picture modes, switched in the Start menu ("Monitor: …") or with
+`pocket-dock mode match|rp5`:
+
+| Mode | Drawn for | The other screen |
+| --- | --- | --- |
+| **Full res** (`match`, default) | The monitor: its biggest 16:9 resolution up to 1440p, at the highest refresh rate up to 120 Hz. Scaled so the shell keeps the RP5's layout (2560×1440 → scale 2.67), just sharper | The RP5 screen shows a copy; touch still works on it |
+| **RP5 1080p** (`rp5`) | The RP5 screen, 1080p at 60 Hz, as in handheld mode | The monitor shows a copy, sent as 1920×1080 at 60 Hz when it has that mode |
+
+Full res costs more GPU in games (1440p is about 1.8× the pixels of 1080p);
+switch to RP5 1080p if a game runs slowly docked. The choice is saved
+(`~/.config/pocket-shell/dock-mode`) and applied straight away if a monitor
+is connected. The refresh rate depends on the cable too: with a hub that
+also uses USB 3, the USB-C port has fewer lanes for video, so the monitor
+may not offer its top rates.
+
+Unplugging puts the built-in screen, touch and the sound output back as
+they were.
 `bin/pocket-dock` does this; Hyprland starts `pocket-dock watch` with the
 session. `pocket-dock status` shows what's connected and where sound goes;
 `pocket-dock on` / `off` do the same steps by hand.
@@ -230,8 +247,9 @@ playback channel pocknix leaves free (`MultiMedia3`, `hw:0,2`) to it and
 gives it to PipeWire. The output stays open while the monitor is connected,
 because reopening it straight after closing it can time out.
 
-Only mirroring for now; a docked mode (shell and games on the monitor,
-handheld screen off) is planned.
+Known: Valve's Steam Deck Docking Station gives a picture on the RP5 but no
+sound, and a kernel warning (`tcpm_queue_vdm`) when plugged in; a plain
+USB-C to HDMI adapter worked for both.
 
 ## Moonlight (streaming from a PC)
 
