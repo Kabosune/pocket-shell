@@ -25,7 +25,7 @@ Item {
             Store.setSounds(!Store.sounds);
             Sfx.play("toggle-on", 2);
         } else if (action === "monitor") {
-            Docking.toggleMode();
+            Docking.nextMode();
             Sfx.play("toggle-on", 2);
         } else if (action === "plasma") {
             toPlasma.running = true;
@@ -103,7 +103,7 @@ Item {
             // How a monitor on USB-C is used (bin/pocket-dock)
             PillButton {
                 width: 260
-                label: Docking.mode === "rp5" ? "Monitor: RP5 1080p" : "Monitor: Full res"
+                label: `Monitor: ${Docking.label}`
                 focused: Controller.active && sheet.focusedIndex === 2
                 onActivated: sheet.activate(2)
             }

@@ -219,12 +219,13 @@ adapter or dock with DisplayPort Alt Mode) and Pocket Shell:
 - adds a **Monitor (USB-C)** sound output and makes it the default, so
   sound comes out of the monitor (or speakers plugged into it).
 
-Two picture modes, switched in the Start menu ("Monitor: …") or with
-`pocket-dock mode match|rp5`:
+Three picture modes, switched in the Start menu ("Monitor: …", each press
+goes to the next) or with `pocket-dock mode match|smooth|rp5`:
 
 | Mode | Drawn for | The other screen |
 | --- | --- | --- |
 | **Full res** (`match`, default) | The monitor: its biggest 16:9 resolution up to 1440p, at the highest refresh rate up to 120 Hz. Scaled so the shell keeps the RP5's layout (2560×1440 → scale 2.67), just sharper | The RP5 screen shows a copy; touch still works on it |
+| **Smooth** (`smooth`) | The monitor, with the highest refresh rate up to 120 Hz first, then the biggest resolution at that rate. Through an adapter that can't do both (one tested here: 1440p only at 60 Hz, 1080p at 120 Hz) this picks 1080p at 120 Hz | The RP5 screen shows a copy; touch still works on it |
 | **RP5 1080p** (`rp5`) | The RP5 screen, 1080p at 60 Hz, as in handheld mode | The monitor shows a copy, sent as 1920×1080 at 60 Hz when it has that mode |
 
 Full res costs more GPU in games (1440p is about 1.8× the pixels of 1080p);

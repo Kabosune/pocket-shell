@@ -5,9 +5,10 @@ import Quickshell.Io
 
 // A monitor on the USB-C port (bin/pocket-dock does the work).
 //
-// mode: "match" draws everything for the monitor and shows a copy on the
-// built-in screen; "rp5" draws for the built-in screen (1080p, 60 Hz) and
-// shows a copy on the monitor. Saved by pocket-dock in
+// mode: "match" draws everything for the monitor (biggest resolution first)
+// and shows a copy on the built-in screen; "smooth" does the same with the
+// highest refresh rate first; "rp5" draws for the built-in screen (1080p,
+// 60 Hz) and shows a copy on the monitor. Saved by pocket-dock in
 // ~/.config/pocket-shell/dock-mode.
 //
 // mainOutput: the output everything is drawn for right now, when that isn't
@@ -19,18 +20,22 @@ Singleton {
     readonly property string mainFile: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/pocket-dock/main"
 
     property string mode: "match"
+    readonly property var modes: ["match", "smooth", "rp5"]
+    readonly property var labels: ({ match: "Full res", smooth: "Smooth", rp5: "RP5 1080p" })
+    readonly property string label: labels[mode] || "Full res"
     property string mainOutput: ""
 
     function setMode(m) {
-        if (m !== "match" && m !== "rp5")
+        if (modes.indexOf(m) < 0)
             return;
         mode = m;
         apply.command = ["pocket-dock", "mode", m];
         apply.running = true;
     }
 
-    function toggleMode() {
-        setMode(mode === "match" ? "rp5" : "match");
+    // Full res → Smooth → RP5 1080p → Full res
+    function nextMode() {
+        setMode(modes[(modes.indexOf(mode) + 1) % modes.length]);
     }
 
     Process {
@@ -46,7 +51,10 @@ Singleton {
         path: docking.configFile
         blockLoading: true
         printErrors: false
-        onLoaded: docking.mode = text().trim() === "rp5" ? "rp5" : "match"
+        onLoaded: {
+            const m = text().trim();
+            docking.mode = docking.modes.indexOf(m) >= 0 ? m : "match";
+        }
     }
 
     FileView {
