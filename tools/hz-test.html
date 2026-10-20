@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Refresh Rate Test</title>
+<style>
+  :root {
+    --bg: #10161d;
+    --panel: #18212b;
+    --line: #2a3644;
+    --text: #e8eef3;
+    --muted: #8fa1b2;
+    --accent: #f4b78e;
+    --good: #8fe0b0;
+    --bad: #ff7b7b;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font-family: system-ui, "Manrope", sans-serif; overflow: hidden; }
+  main { height: 100%; display: grid; grid-template-rows: auto auto 1fr auto; gap: 14px; padding: 18px 22px; }
+  .top { display: flex; align-items: flex-end; gap: 28px; flex-wrap: wrap; }
+  .big { font-size: clamp(56px, 13vh, 140px); font-weight: 900; line-height: 0.9; font-variant-numeric: tabular-nums; }
+  .big small { font-size: 0.32em; font-weight: 700; color: var(--muted); margin-left: 6px; }
+  .verdict { font-size: clamp(18px, 3.6vh, 30px); font-weight: 800; color: var(--accent); }
+  .stats { display: flex; gap: 22px; flex-wrap: wrap; color: var(--muted); font-size: 15px; font-variant-numeric: tabular-nums; }
+  .stats b { color: var(--text); font-weight: 800; }
+  canvas { width: 100%; display: block; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; }
+  #graph { height: 100%; min-height: 80px; }
+  #motion { height: 120px; }
+  .hint { color: var(--muted); font-size: 13px; }
+  .row { display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap; }
+  button { font: inherit; font-weight: 800; color: var(--text); background: var(--panel);
+    border: 1px solid var(--line); border-radius: 6px; padding: 8px 16px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <div class="big"><span id="hz">--</span><small>Hz</small></div>
+    <div>
+      <div class="verdict" id="verdict">Measuring…</div>
+      <div class="stats">
+        <span>frame <b id="ft">--</b> ms</span>
+        <span>min <b id="min">--</b> / max <b id="max">--</b> ms</span>
+        <span>missed <b id="miss">0</b></span>
+      </div>
+    </div>
+  </div>
+  <canvas id="motion"></canvas>
+  <canvas id="graph"></canvas>
+  <div class="row">
+    <span class="hint">Moves one step per frame: at 120 Hz the block is smoother and the ghost trail is twice as dense as at 60 Hz. Keep this window in front and still for a few seconds.</span>
+    <button id="reset">Reset</button>
+  </div>
+</main>
+<script>
+(() => {
+  const COMMON = [30, 48, 50, 60, 72, 75, 90, 100, 120, 144, 165, 240];
+  const WINDOW = 120;          // frames averaged for the readout
+  const HISTORY = 360;         // frames drawn in the graph
+  let deltas = [];
+  let last = 0;
+  let missed = 0;
+  let frame = 0;
+
+  const $ = id => document.getElementById(id);
+  const graph = $("graph"), motion = $("motion");
+  const g = graph.getContext("2d"), m = motion.getContext("2d");
+
+  function fit(c) {
+    const r = c.getBoundingClientRect(), d = window.devicePixelRatio || 1;
+    c.width = Math.round(r.width * d);
+    c.height = Math.round(r.height * d);
+  }
+  function fitAll() { fit(graph); fit(motion); }
+  window.addEventListener("resize", fitAll);
+  fitAll();
+
+  function median(list) {
+    const s = list.slice().sort((a, b) => a - b);
+    return s[Math.floor(s.length / 2)];
+  }
+
+  function nearestCommon(hz) {
+    let best = COMMON[0];
+    for (const c of COMMON) if (Math.abs(c - hz) < Math.abs(best - hz)) best = c;
+    return Math.abs(best - hz) / best < 0.04 ? best : null;
+  }
+
+  function reset() {
+    deltas = []; missed = 0; last = 0;
+    $("hz").textContent = "--"; $("verdict").textContent = "Measuring…";
+  }
+  $("reset").addEventListener("click", reset);
+  // Measurements while hidden are meaningless
+  document.addEventListener("visibilitychange", reset);
+
+  function drawGraph(typical) {
+    const w = graph.width, h = graph.height, d = window.devicePixelRatio || 1;
+    g.clearRect(0, 0, w, h);
+    const css = getComputedStyle(document.documentElement);
+    const top = 50; // ms at the top of the graph
+    const y = ms => h - Math.min(ms, top) / top * h;
+    // reference lines for 60 / 120 / 144 Hz
+    g.font = `${12 * d}px system-ui`;
+    for (const hz of [60, 120, 144]) {
+      const yy = y(1000 / hz);
+      g.strokeStyle = css.getPropertyValue("--line"); g.lineWidth = d;
+      g.beginPath(); g.moveTo(0, yy); g.lineTo(w, yy); g.stroke();
+      g.fillStyle = css.getPropertyValue("--muted");
+      g.fillText(`${hz} Hz`, 6 * d, yy - 4 * d);
+    }
+    const bw = w / HISTORY;
+    const start = Math.max(0, deltas.length - HISTORY);
+    for (let i = start; i < deltas.length; i++) {
+      const v = deltas[i];
+      const slow = typical && v > typical * 1.5;
+      g.fillStyle = slow ? css.getPropertyValue("--bad") : css.getPropertyValue("--good");
+      const x = (i - start) * bw;
+      g.fillRect(x, y(v), Math.max(1, bw - d), h - y(v));
+    }
+  }
+
+  function drawMotion() {
+    const w = motion.width, h = motion.height, d = window.devicePixelRatio || 1;
+    const css = getComputedStyle(document.documentElement);
+    const size = 40 * d, step = 8 * d;          // pixels per frame
+    const span = w - size;
+    const pos = (frame * step) % (span * 2);
+    const x = pos < span ? pos : span * 2 - pos;
+    m.fillStyle = css.getPropertyValue("--panel");
+    m.globalAlpha = 0.18;                        // leaves a fading trail, one ghost per frame
+    m.fillRect(0, 0, w, h);
+    m.globalAlpha = 1;
+    m.fillStyle = css.getPropertyValue("--accent");
+    m.fillRect(x, (h - size) / 2, size, size);
+  }
+
+  function tick(now) {
+    if (last) {
+      const dt = now - last;
+      if (dt < 250) {                            // ignore stalls (tab switches etc.)
+        deltas.push(dt);
+        if (deltas.length > HISTORY * 4) deltas.splice(0, deltas.length - HISTORY);
+      }
+    }
+    last = now;
+    frame++;
+
+    if (deltas.length >= 20) {
+      const recent = deltas.slice(-WINDOW);
+      const typical = median(recent);
+      const hz = 1000 / typical;
+      const avg = recent.reduce((a, b) => a + b, 0) / recent.length;
+      if (deltas.length && deltas[deltas.length - 1] > typical * 1.5) missed++;
+      $("hz").textContent = hz.toFixed(hz >= 100 ? 0 : 1);
+      $("ft").textContent = avg.toFixed(2);
+      $("min").textContent = Math.min(...recent).toFixed(1);
+      $("max").textContent = Math.max(...recent).toFixed(1);
+      $("miss").textContent = missed;
+      const snap = nearestCommon(hz);
+      $("verdict").textContent = snap ? `Running at ${snap} Hz` : "Not a steady rate yet";
+      drawGraph(typical);
+    }
+    drawMotion();
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>

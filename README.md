@@ -234,6 +234,10 @@ is connected. The refresh rate depends on the cable too: with a hub that
 also uses USB 3, the USB-C port has fewer lanes for video, so the monitor
 may not offer its top rates.
 
+To see the rate you actually get, open `tools/hz-test.html` in a browser on
+the device (it measures how often the browser gets to draw, on the screen
+it's on).
+
 Unplugging puts the built-in screen, touch and the sound output back as
 they were.
 `bin/pocket-dock` does this; Hyprland starts `pocket-dock watch` with the
