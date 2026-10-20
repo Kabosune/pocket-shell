@@ -25,7 +25,7 @@ PSY="${POCKET_PSY:-/sys/class/power_supply}"
 
 say() { echo "pocket-battery: $*" >&2; }
 
-# The power supply that has the thresholds (the charger, pmi8998_charger)
+# The power supply that has the thresholds (the charger, pm8150b-charger)
 charger() {
   local d
   for d in "$PSY"/*; do
