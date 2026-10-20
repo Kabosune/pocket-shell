@@ -101,7 +101,7 @@ Anywhere in the shell:
 | Home | Back to the Home page; from an app or game, back to the shell |
 | Hold Home | Recents: a picture of each open app, most recent first. A switches, X closes one, Y closes all |
 | Double-tap Home | Jump to the previous app (from the shell: to the last app you used) |
-| Home + R1 | Screenshot of the main screen, saved to `~/Pictures/Screenshots` (needs `grim`: `sudo pacman -S grim`). Works in apps and games too; the game also sees the R1 press |
+| Home + R1 or Home + L1 | Screenshot of the main screen, saved to `~/Pictures/Screenshots` (needs `grim`: `sudo pacman -S grim`). Works in apps and games too; the game also sees the shoulder button press |
 | Back (device button) | In the shell, same as B. In an app, that app's own "back": RetroArch opens its menu, web browsers go to the previous page, anything else (Moonlight included) gets Escape |
 
 **The Back button.** Devices driven by InputPlumber with an Xbox 360-style

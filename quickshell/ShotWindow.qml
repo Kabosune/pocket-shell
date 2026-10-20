@@ -3,7 +3,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 
-// Screenshots: Home + R1 (Controller.qml) saves the main screen to
+// Screenshots: Home + R1 or L1 (Controller.qml) saves the main screen to
 // ~/Pictures/Screenshots with grim, then flashes and shows a small preview.
 // The window sits above apps and games, takes no input, and is only mapped
 // while showing.
