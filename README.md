@@ -210,6 +210,23 @@ links stop working, run `pocket-play --update-ytdlp`. Videos play at up to
 720p by default (H.264 preferred, never AV1); set `POCKET_PLAY_MAX_HEIGHT`
 for more.
 
+## Battery charge limit
+
+Start menu → **Battery**: a slider for where charging stops, 50–100%
+(75% to start with; 100% turns it off). Charging starts again 5% below the
+limit, and while plugged in the RP5 runs from the charger in between, so
+the battery isn't kept at 100% when you play docked or plugged in.
+
+The kernel does the holding: pocknix's charger driver has
+`charge_control_end_threshold` / `_start_threshold` (its patch 1071), and
+checks the level every 30 s. So the limit works in every session, game
+mode and Plasma included. While the RP5 sleeps it can't check, so a limit
+crossed during sleep is acted on after waking. `bin/pocket-battery` sets
+it; `install.sh` saves the setting in `/etc/pocket-shell/charge-limit` and
+adds a udev rule (`system/90-pocket-battery.rules`) that applies it at
+every boot and lets your user change it without sudo.
+`pocket-battery status` shows the current values.
+
 ## Dark and light apps
 
 Apps follow the theme: a dark background (Dusk Tide's dusk and night,

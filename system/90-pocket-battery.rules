@@ -1,0 +1,3 @@
+# Pocket Shell charge limit (bin/pocket-battery): when the charger shows up
+# at boot, let the user's group change the limit and apply the saved one.
+ACTION=="add", SUBSYSTEM=="power_supply", TEST=="charge_control_end_threshold", RUN+="/usr/local/bin/pocket-battery boot /sys%p"

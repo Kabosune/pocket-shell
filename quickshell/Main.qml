@@ -21,7 +21,7 @@ Item {
     readonly property var directions: ["up", "down", "left", "right"]
     // An app that's still starting, when its (still empty) workspace is in front
     readonly property var launching: Wm.inShell ? Wm.launchHere : null
-    readonly property bool overlayOpen: themes.open || recents.open || sheet.open || quick.open || launching !== null
+    readonly property bool overlayOpen: themes.open || recents.open || sheet.open || quick.open || battery.open || launching !== null
 
     // Double-tap Home: back to the previous app. The first tap still does
     // what a tap does (leaves the app), so the second one picks the most
@@ -113,7 +113,7 @@ Item {
         }
         if (button === "back")
             button = "b";
-        if (button === "home" && !(themes.open || recents.open || sheet.open || quick.open) && homeTap())
+        if (button === "home" && !(themes.open || recents.open || sheet.open || quick.open || battery.open) && homeTap())
             return;
         if (launching) {
             // Only leaving works here; extra A presses do nothing
@@ -140,6 +140,10 @@ Item {
         }
         if (recents.open) {
             recents.handle(button);
+            return;
+        }
+        if (battery.open) {
+            battery.handle(button);
             return;
         }
         if (sheet.open) {
@@ -255,6 +259,12 @@ Item {
         id: sheet
         anchors.fill: parent
         onThemesRequested: themes.show()
+        onBatteryRequested: battery.show()
+    }
+
+    BatterySheet {
+        id: battery
+        anchors.fill: parent
     }
 
     ThemePicker {

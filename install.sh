@@ -61,6 +61,25 @@ sudo install -Dm755 "$REPO/bin/pocket-dock" /usr/local/bin/pocket-dock
 echo "installed /usr/local/bin/pocket-dock"
 sudo install -Dm755 "$REPO/bin/pocket-colors" /usr/local/bin/pocket-colors
 echo "installed /usr/local/bin/pocket-colors"
+
+# Charge limit: the helper, its saved setting (75% to start with; your group
+# may change it) and a udev rule that applies it at every boot
+sudo install -Dm755 "$REPO/bin/pocket-battery" /usr/local/bin/pocket-battery
+if [ ! -f /etc/pocket-shell/charge-limit ]; then
+  echo 75 | sudo install -Dm664 -g "$(id -gn)" /dev/stdin /etc/pocket-shell/charge-limit
+else
+  sudo chgrp "$(id -gn)" /etc/pocket-shell/charge-limit
+  sudo chmod 664 /etc/pocket-shell/charge-limit
+fi
+sudo install -Dm644 "$REPO/system/90-pocket-battery.rules" /etc/udev/rules.d/90-pocket-battery.rules
+sudo udevadm control --reload
+# Apply it now as well, without waiting for a reboot
+sudo /usr/local/bin/pocket-battery boot
+if [ -n "$(/usr/local/bin/pocket-battery status | sed -n 's/^supported=1$/y/p')" ]; then
+  echo "installed /usr/local/bin/pocket-battery (charge limit $(cat /etc/pocket-shell/charge-limit)%)"
+else
+  echo "installed /usr/local/bin/pocket-battery (this kernel has no charge limit yet; update pocknix)"
+fi
 if ! id -nG | grep -qwE 'wheel|inputplumber'; then
   echo "note     $USER isn't in the wheel or inputplumber group, so the Back"
   echo "         button profile can't load; Back falls back to Home + A"

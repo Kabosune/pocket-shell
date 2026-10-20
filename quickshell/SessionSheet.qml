@@ -8,8 +8,9 @@ Item {
 
     property bool open: false
     property int focusedIndex: 0
-    readonly property var actions: ["themes", "sounds", "monitor", "plasma", "steam", "cancel"]
+    readonly property var actions: ["themes", "sounds", "battery", "monitor", "plasma", "steam", "cancel"]
     signal themesRequested()
+    signal batteryRequested()
 
     function show() {
         focusedIndex = 0;
@@ -24,6 +25,9 @@ Item {
         } else if (action === "sounds") {
             Store.setSounds(!Store.sounds);
             Sfx.play("toggle-on", 2);
+        } else if (action === "battery") {
+            open = false;
+            batteryRequested();
         } else if (action === "monitor") {
             Docking.nextMode();
             Sfx.play("toggle-on", 2);
@@ -78,7 +82,7 @@ Item {
         Column {
             id: content
             anchors.centerIn: parent
-            spacing: 12
+            spacing: 8
 
             DisplayText {
                 text: "Menu"
@@ -89,6 +93,7 @@ Item {
 
             PillButton {
                 width: 260
+                height: 44
                 label: "Themes"
                 primary: true
                 focused: Controller.active && sheet.focusedIndex === 0
@@ -96,34 +101,46 @@ Item {
             }
             PillButton {
                 width: 260
+                height: 44
                 label: Store.sounds ? "Sounds: On" : "Sounds: Off"
                 focused: Controller.active && sheet.focusedIndex === 1
                 onActivated: sheet.activate(1)
             }
-            // How a monitor on USB-C is used (bin/pocket-dock)
             PillButton {
                 width: 260
-                label: `Monitor: ${Docking.label}`
+                height: 44
+                label: "Battery"
                 focused: Controller.active && sheet.focusedIndex === 2
                 onActivated: sheet.activate(2)
             }
+            // How a monitor on USB-C is used (bin/pocket-dock)
             PillButton {
                 width: 260
-                label: "Plasma Mobile"
+                height: 44
+                label: `Monitor: ${Docking.label}`
                 focused: Controller.active && sheet.focusedIndex === 3
                 onActivated: sheet.activate(3)
             }
             PillButton {
                 width: 260
-                label: "Steam mode"
+                height: 44
+                label: "Plasma Mobile"
                 focused: Controller.active && sheet.focusedIndex === 4
                 onActivated: sheet.activate(4)
             }
             PillButton {
                 width: 260
-                label: "Cancel"
+                height: 44
+                label: "Steam mode"
                 focused: Controller.active && sheet.focusedIndex === 5
                 onActivated: sheet.activate(5)
+            }
+            PillButton {
+                width: 260
+                height: 44
+                label: "Cancel"
+                focused: Controller.active && sheet.focusedIndex === 6
+                onActivated: sheet.activate(6)
             }
         }
     }

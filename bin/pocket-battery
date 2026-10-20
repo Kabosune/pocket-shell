@@ -1,0 +1,110 @@
+#!/bin/bash
+# pocket-battery: charge limit, to keep the battery from sitting at 100%.
+#
+#   pocket-battery set N     stop charging at N% (50-100; 100 = no limit),
+#                            start again at N-5%. Saved, so it comes back
+#                            after a reboot, in every session (game mode too)
+#   pocket-battery status    current values, as key=value lines
+#   pocket-battery apply     set the saved limit again
+#   pocket-battery boot DIR  run by udev as root when the charger appears
+#                            (see install.sh): lets the user's group change
+#                            the limit, then applies the saved one
+#
+# The kernel does the work: pocknix's pm8150b charger driver has
+# charge_control_end_threshold / _start_threshold (patch 1071). When the
+# battery reaches the limit it stops charging the battery but keeps running
+# the device from the charger, checking every 30 s. While asleep it can't
+# check, so a limit crossed during sleep is acted on after waking.
+set -u
+
+SAVED="${POCKET_BATTERY_SAVED:-/etc/pocket-shell/charge-limit}"
+DEFAULT=75
+GAP=5          # resume this far below the limit (the kernel's minimum gap)
+MIN=50         # the kernel refuses lower limits
+PSY="${POCKET_PSY:-/sys/class/power_supply}"
+
+say() { echo "pocket-battery: $*" >&2; }
+
+# The power supply that has the thresholds (the charger, pmi8998_charger)
+charger() {
+  local d
+  for d in "$PSY"/*; do
+    [ -e "$d/charge_control_end_threshold" ] && { echo "$d"; return 0; }
+  done
+  return 1
+}
+
+saved_limit() {
+  local v
+  v="$(tr -dc '0-9' <"$SAVED" 2>/dev/null)"
+  [ -n "$v" ] && [ "$v" -ge "$MIN" ] && [ "$v" -le 100 ] && { echo "$v"; return; }
+  echo "$DEFAULT"
+}
+
+# write DIR N: end first, then start (the kernel wants start <= end - 5,
+# and only lowers start by itself)
+write() {
+  local d="$1" n="$2" start
+  start=$(( n >= 100 ? 100 - GAP : n - GAP ))
+  echo "$n" >"$d/charge_control_end_threshold" || return 1
+  if [ -e "$d/charge_control_start_threshold" ]; then
+    echo "$start" >"$d/charge_control_start_threshold" || return 1
+  fi
+}
+
+set_limit() {
+  local n="${1:-}" d
+  case "$n" in
+    ''|*[!0-9]*) say "give a number from $MIN to 100"; return 2 ;;
+  esac
+  if [ "$n" -lt "$MIN" ] || [ "$n" -gt 100 ]; then
+    say "the limit must be from $MIN to 100"
+    return 2
+  fi
+  d="$(charger)" || { say "this kernel has no charge limit"; return 3; }
+  if [ ! -w "$d/charge_control_end_threshold" ]; then
+    say "can't change the limit (run install.sh, then reboot)"
+    return 4
+  fi
+  write "$d" "$n" || { say "the kernel didn't take $n"; return 1; }
+  if ! echo "$n" >"$SAVED" 2>/dev/null; then
+    say "set to $n% for now, but couldn't save it in $SAVED (run install.sh)"
+    return 5
+  fi
+}
+
+status() {
+  local d
+  if d="$(charger)"; then
+    echo "supported=1"
+    echo "end=$(cat "$d/charge_control_end_threshold" 2>/dev/null)"
+    echo "start=$(cat "$d/charge_control_start_threshold" 2>/dev/null)"
+    echo "writable=$([ -w "$d/charge_control_end_threshold" ] && echo 1 || echo 0)"
+  else
+    echo "supported=0"
+  fi
+  echo "saved=$(saved_limit)"
+  echo "capacity=$(cat "$PSY/battery/capacity" 2>/dev/null)"
+  echo "status=$(cat "$PSY/battery/status" 2>/dev/null)"
+}
+
+boot() {
+  local d="${1:-}" grp
+  [ -d "$d" ] || d="$(charger)" || exit 0
+  grp="$(stat -c %G "$SAVED" 2>/dev/null)"
+  if [ -n "$grp" ] && [ "$grp" != root ]; then
+    chgrp "$grp" "$d"/charge_control_*_threshold 2>/dev/null
+    chmod g+w "$d"/charge_control_*_threshold 2>/dev/null
+  fi
+  write "$d" "$(saved_limit)"
+}
+
+case "${1:-}" in
+  set) set_limit "${2:-}" ;;
+  status) status ;;
+  apply)
+    d="$(charger)" || exit 0
+    write "$d" "$(saved_limit)" ;;
+  boot) boot "${2:-}" ;;
+  *) echo "usage: pocket-battery set N|status|apply" >&2; exit 2 ;;
+esac
