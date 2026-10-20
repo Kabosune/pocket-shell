@@ -6,6 +6,7 @@ import Quickshell.Io
 // Gamepad input. Runs the pocket-input helper (input/pocket-input.c) and
 // turns its lines into signals. D-pad and stick directions auto-repeat.
 // The Home button sends "home" on a tap and "recents" when held.
+// Home + R1 sends "screenshot" (and neither press counts on its own).
 //
 // Back button: handhelds run through InputPlumber with an Xbox 360-style
 // pad have no Back button on that pad. While Pocket Shell runs, its
@@ -34,6 +35,8 @@ Singleton {
     readonly property int chordWindow: 160
     property real homeDownAt: 0
     property bool backChord: false
+    property bool homeDown: false
+    property bool shotChord: false
 
     function handle(line) {
         const space = line.indexOf(" ");
@@ -44,7 +47,20 @@ Singleton {
             // Home is decided on release: a tap is "home", holding is "recents".
             homeDownAt = Date.now();
             backChord = false;
+            homeDown = true;
             homeHold.restart();
+            return;
+        }
+        if (kind === "down" && arg === "r1" && homeDown) {
+            // Screenshot. Stopping the hold timer also means releasing Home
+            // won't count as a tap.
+            shotChord = true;
+            homeHold.stop();
+            pressed("screenshot", false);
+            return;
+        }
+        if (kind === "up" && arg === "r1" && shotChord) {
+            shotChord = false;
             return;
         }
         if (kind === "down" && arg === "a" && homeHold.running && Date.now() - homeDownAt <= chordWindow) {
@@ -54,6 +70,8 @@ Singleton {
         }
         if (kind === "up" && arg === "a" && backChord)
             return;
+        if (kind === "up" && arg === "home")
+            homeDown = false;
         if (kind === "up" && arg === "home" && backChord) {
             // Fires on release, like a phone's back button
             backChord = false;

@@ -44,6 +44,13 @@ ShellRoot {
     // Apps go dark or light with the theme
     AppColors {}
 
+    // Home + R1: screenshot. Its own window above apps, loaded separately
+    // like the volume pop-up.
+    LazyLoader {
+        active: true
+        source: "ShotWindow.qml"
+    }
+
     // Volume pop-up, above apps and games. Loaded separately so a problem
     // with it can't take the rest of the shell down.
     LazyLoader {
