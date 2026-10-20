@@ -7,7 +7,7 @@ import Quickshell.Io
 // turns its lines into signals. D-pad and stick directions auto-repeat.
 // The Home button sends "home" on a tap and "recents" when held.
 // Home + R1 or Home + L1 sends "screenshot" (and neither press counts on
-// its own).
+// its own). So does Back + R1/L1 with the Back key below.
 //
 // Back button: handhelds run through InputPlumber with an Xbox 360-style
 // pad have no Back button on that pad. While Pocket Shell runs, its
@@ -37,6 +37,11 @@ Singleton {
     property real homeDownAt: 0
     property bool backChord: false
     property bool homeDown: false
+    // Back key held (Hyprland reports its press and release over IPC), and
+    // whether it was used for a screenshot so its release isn't a Back
+    property bool backDown: false
+    property bool backUsed: false
+    property real orphanUpAt: 0
     // Shoulder button pressed with Home for a screenshot (its release is swallowed)
     property var shotKeys: []
 
@@ -53,7 +58,9 @@ Singleton {
             homeHold.restart();
             return;
         }
-        if (kind === "down" && (arg === "r1" || arg === "l1") && homeDown) {
+        if (kind === "down" && (arg === "r1" || arg === "l1") && (homeDown || backDown)) {
+            if (backDown)
+                backUsed = true;
             // Screenshot. Stopping the hold timer also means releasing Home
             // won't count as a tap.
             shotKeys = shotKeys.concat([arg]);
@@ -157,10 +164,52 @@ Singleton {
     IpcHandler {
         target: "controller"
 
+        // Back acts on release, so Back + R1/L1 can be a screenshot instead.
+        function backDown(): void {
+            // A quick tap's two calls can arrive the wrong way round; a
+            // press right after a lone release belongs to that tap.
+            if (Date.now() - controller.orphanUpAt < 400)
+                return;
+            controller.backDown = true;
+            controller.backUsed = false;
+            backStuck.restart();
+        }
+
+        function backUp(): void {
+            const wasDown = controller.backDown;
+            const used = controller.backUsed;
+            controller.backDown = false;
+            controller.backUsed = false;
+            backStuck.stop();
+            if (!wasDown)
+                controller.orphanUpAt = Date.now();
+            if (!used)
+                controller.back();
+        }
+
+        // Older Hyprland configs call this on press
         function back(): void {
-            controller.active = true;
-            controller.pressed("back", false);
-            controller.released("back");
+            controller.back();
+        }
+    }
+
+    function back() {
+        active = true;
+        pressed("back", false);
+        released("back");
+    }
+
+    // In case a release never arrives (say the release bind didn't load),
+    // don't leave Back "held", and still do the Back
+    Timer {
+        id: backStuck
+        interval: 1500
+        onTriggered: {
+            const used = controller.backUsed;
+            controller.backDown = false;
+            controller.backUsed = false;
+            if (!used)
+                controller.back();
         }
     }
 

@@ -26,6 +26,9 @@ hl.bind("XF86AudioMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ to
 -- here so no app or streamed game ever sees it; the shell decides what Back
 -- does. Bound by keycode (evdev KEY_F20 = 190, + 8) because xkb gives F20
 -- other names on some layouts.
-hl.bind("code:198", hl.dsp.exec_cmd("qs ipc call controller back"))
+-- Press and release both go to the shell, which acts on release so that
+-- Back + R1/L1 can take a screenshot instead.
+hl.bind("code:198", hl.dsp.exec_cmd("qs ipc call controller backDown"))
+hl.bind("code:198", hl.dsp.exec_cmd("qs ipc call controller backUp"), { release = true })
 
 hl.config({ debug = { disable_logs = false } })
