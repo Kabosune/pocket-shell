@@ -19,7 +19,35 @@ Item {
     readonly property var pageFiles: ["Home.qml", "Library.qml", "Apps.qml", "Glance.qml"]
 
     readonly property var directions: ["up", "down", "left", "right"]
-    readonly property bool overlayOpen: themes.open || recents.open || sheet.open || quick.open
+    // An app that's still starting, when its (still empty) workspace is in front
+    readonly property var launching: Wm.inShell ? Wm.launchHere : null
+    readonly property bool overlayOpen: themes.open || recents.open || sheet.open || quick.open || launching !== null
+
+    // Double-tap Home: back to the previous app. The first tap still does
+    // what a tap does (leaves the app), so the second one picks the most
+    // recent app other than the one you just left.
+    property real lastHomeAt: 0
+    property string lastHomeFrom: ""
+    readonly property int doubleTapWindow: 400
+
+    // Call on every Home tap; true if it was the second of a double tap
+    // and switched apps.
+    function homeTap() {
+        const now = Date.now();
+        if (now - lastHomeAt < doubleTapWindow) {
+            lastHomeAt = 0;
+            const app = Wm.recentApp(lastHomeFrom);
+            if (app) {
+                recents.open = false;
+                Wm.focusApp(app);
+                return true;
+            }
+            return false;
+        }
+        lastHomeAt = now;
+        lastHomeFrom = Wm.frontApp ? Wm.frontApp.address : "";
+        return false;
+    }
 
     function goToPage(i) {
         const step = i < page ? "page-prev" : "page-next";
@@ -72,6 +100,8 @@ Item {
             if (button === "back") {
                 AppBack.press();
             } else if (button === "home") {
+                if (homeTap())
+                    return;
                 Wm.goHome();
                 Sfx.play("back", 1);
             } else if (button === "recents") {
@@ -83,6 +113,20 @@ Item {
         }
         if (button === "back")
             button = "b";
+        if (button === "home" && !(themes.open || recents.open || sheet.open || quick.open) && homeTap())
+            return;
+        if (launching) {
+            // Only leaving works here; extra A presses do nothing
+            if (["b", "home", "start", "select"].indexOf(button) >= 0) {
+                Wm.goHome();
+                Sfx.play("back", 1);
+            } else if (button === "recents") {
+                Wm.goHome();
+                recents.show();
+                Sfx.play("open", 1);
+            }
+            return;
+        }
         const sound = buttonSound(button);
         if (sound)
             Sfx.play(sound, 0);
@@ -133,6 +177,16 @@ Item {
     }
 
     Connections {
+        target: Wm
+        function onLaunchReady(name) {
+            main.toast(`${name} is open · hold Home to switch`);
+        }
+        function onLaunchTimedOut(name, inFront) {
+            main.toast(`${name} still hasn't opened`, "error");
+        }
+    }
+
+    Connections {
         target: Controller
         function onPressed(button, repeat) {
             main.handle(button);
@@ -156,7 +210,7 @@ Item {
             height: main.height
             source: modelData
             // Hidden behind full-screen overlays so their hints don't clash
-            opacity: index === main.page && !themes.open && !recents.open ? 1 : 0
+            opacity: index === main.page && !themes.open && !recents.open && !main.launching ? 1 : 0
             visible: opacity > 0
             Behavior on opacity { NumberAnimation { duration: 140 } }
 
@@ -211,6 +265,11 @@ Item {
     Recents {
         id: recents
         anchors.fill: parent
+    }
+
+    LaunchSplash {
+        anchors.fill: parent
+        launch: main.launching
     }
 
     QuickPanel {

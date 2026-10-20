@@ -85,7 +85,7 @@ Singleton {
         if (app)
             Wm.launchEntry(app);
         else
-            Wm.launchCommand(["xdg-open", "https://m.youtube.com/"]);
+            Wm.launchCommand(["xdg-open", "https://m.youtube.com/"], { track: false });
     }
 
     function togglePause() {

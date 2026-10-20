@@ -207,7 +207,7 @@ Item {
         pendingGame = null;
         if (resolveExit === 0) {
             const args = resolveOut.text.split("\n").filter(a => a.length > 0);
-            Wm.launchCommand(args);
+            Wm.launchCommand(args, { key: `rom:${game.path}`, name: game.title, art: game.art || "" });
             Store.addRecent(game);
         } else {
             const why = resolveErr.text.trim();
@@ -251,7 +251,7 @@ Item {
                 shell.toast(`${game.title} isn't installed anymore`, "error");
             }
         } else if (game.kind === "port") {
-            Wm.launchCommand(["bash", game.path]);
+            Wm.launchCommand(["bash", game.path], { key: `port:${game.path}`, name: game.title, art: game.art || "" });
             Store.addRecent(game);
         } else if (game.kind === "rom") {
             // A stuck lookup (helper missing) shouldn't block launching forever

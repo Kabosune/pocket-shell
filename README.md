@@ -9,8 +9,8 @@ First target: **Retroid Pocket 5** running **pocknix-os**.
 > **Status:** early, landscape only. Four pages work with touch and controller:
 > Home (clock, media, toggles, a dock of pinned apps), Library (your games,
 > with box art), Apps (everything installed) and Glance (battery, storage and
-> more). Apps and games open on top of the shell; Home brings you back and
-> holding Home shows Recents. Quick settings (Select) has brightness, volume
+> more). Apps and games open on top of the shell; Home brings you back,
+> holding Home shows Recents and a double tap jumps to the previous app. Quick settings (Select) has brightness, volume
 > and toggles, the volume buttons work everywhere, and there are UI sounds.
 > Portrait, dual-screen and an on-screen keyboard are still to come.
 
@@ -99,7 +99,8 @@ Anywhere in the shell:
 | Select | Quick settings: brightness, volume, Wi-Fi, Bluetooth (also: tap the status icons) |
 | Volume buttons | Change volume anywhere, games included, with an on-screen level |
 | Home | Back to the Home page; from an app or game, back to the shell |
-| Hold Home | Recents: switch to (A) or close (X) open apps |
+| Hold Home | Recents: a picture of each open app, most recent first. A switches, X closes one, Y closes all |
+| Double-tap Home | Jump to the previous app (from the shell: to the last app you used) |
 | Back (device button) | In the shell, same as B. In an app, that app's own "back": RetroArch opens its menu, web browsers go to the previous page, anything else (Moonlight included) gets Escape |
 
 **The Back button.** Devices driven by InputPlumber with an Xbox 360-style
@@ -142,6 +143,22 @@ The shell sits on Hyprland's bottom layer, under app windows. Workspace 1 is
 kept empty as "home". Each app or game launched from the shell opens on its
 own empty workspace, so Home is just a switch back to workspace 1, and
 Recents lists the open windows.
+
+**Opening apps.** Apps start through Hyprland with a rule that keeps their
+window on the workspace they were opened for, so going Home while one is
+still loading doesn't make it pop up over the shell. Until the window
+shows, that workspace has an "Opening…" screen; pressing the same app again
+just brings you back to it instead of starting a second copy, and an app
+that's already open comes to the front instead of opening again. B (or
+Home) waits on Home; a toast says when it's ready. After 30 seconds
+without a window the shell stops waiting. (Some apps start their window
+from another process, which the rule can't follow; Steam games, for one.
+Those open wherever you are when they're ready.)
+
+**Recents.** Hold Home. Each card shows a still picture of the app (taken
+through Hyprland's toplevel export when Recents opens), most recently used
+first. Touch: swipe sideways, tap to switch, swipe a card up or tap its ×
+to close it, "Close all" at the bottom.
 
 Long-press an app in the Apps page (or press X) to pin it to the Home dock.
 Pins and recently played games are saved in Quickshell's state folder
