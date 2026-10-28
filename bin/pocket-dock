@@ -29,7 +29,8 @@
 #
 # Sound: plugging in adds a "Monitor (USB-C)" sound output and makes it the
 # default. Unplugging: the output goes away and the previous default comes
-# back.
+# back. After waking from sleep, or if PipeWire restarts, `watch` makes the
+# output again.
 #
 # Sound: pocknix's audio setup only knows the speaker and headphones, but
 # the kernel has a DisplayPort output on the audio router. A free playback
@@ -274,8 +275,21 @@ dock_off() {
   say "monitor sound off"
 }
 
+# Make the monitor's sound output again: after waking from sleep (it stays
+# open across sleep, and the RP5's audio path can come back stuck: video in
+# Firefox then never starts) or when it's gone (PipeWire restarted).
+sound_renew() {
+  say "$1; making the monitor sound output again"
+  sink_off
+  sleep 2  # reopening the DisplayPort output straight after closing it can time out
+  route on || return 0
+  sink_on || return 0
+  sleep 1
+  set_default "{\"name\":\"$SINK\"}"
+}
+
 watch() {
-  local now was=""
+  local now was="" tick last
   mkdir -p "$STATE"
   exec 9>"$STATE/lock"
   flock -n 9 || { say "already watching"; exit 0; }
@@ -284,8 +298,18 @@ watch() {
     dock_off
   fi
   trap 'dock_off; exit 0' TERM INT HUP
+  last="$(date +%s)"
+  tick=0
   while hyprctl version >/dev/null 2>&1; do
     now="$(connected_output)"
+    tick=$((tick + 1))
+    # A long gap between two rounds of this loop means the device slept
+    if [ -n "$was" ] && [ "$now" = "$was" ] && [ $(( $(date +%s) - last )) -gt $((POLL + 6)) ]; then
+      sound_renew "woke from sleep"
+    elif [ -n "$was" ] && [ "$now" = "$was" ] && [ $((tick % 5)) -eq 0 ] && [ -z "$(sink_id)" ]; then
+      sound_renew "monitor sound output went away"
+    fi
+    last="$(date +%s)"
     if [ "$now" != "$was" ]; then
       if [ -n "$now" ]; then
         sleep 2  # let the link come up before starting sound

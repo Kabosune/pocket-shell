@@ -269,6 +269,12 @@ it's on).
 
 Unplugging puts the built-in screen, touch and the sound output back as
 they were.
+
+The monitor's sound output stays open while the monitor is connected, sleep
+included. The RP5's audio can come back stuck after waking (video in Firefox
+then never starts: "If playback doesn't begin shortly…"), so after a wake,
+and whenever the output goes missing (say PipeWire was restarted),
+`pocket-dock watch` makes it again.
 `bin/pocket-dock` does this; Hyprland starts `pocket-dock watch` with the
 session. `pocket-dock status` shows what's connected and where sound goes;
 `pocket-dock on` / `off` do the same steps by hand.
