@@ -1,0 +1,3 @@
+# Pocket Shell: put the stick range saved by "pocket-sticks calibrate" on the
+# pad as soon as it appears, before InputPlumber opens it.
+ACTION=="add", SUBSYSTEM=="input", KERNEL=="event*", TEST=="/etc/pocket-shell/stick-range", RUN+="/usr/local/bin/pocket-padtest --apply $devnode"

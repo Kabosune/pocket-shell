@@ -1,8 +1,13 @@
 /*
  * pocket-padtest: gamepad tester.
  *
- *   pocket-padtest          full-screen window: what apps see through SDL3
- *   pocket-padtest --raw    terminal table of the kernel's own axis values
+ *   pocket-padtest              full-screen window: what apps see through SDL3
+ *   pocket-padtest --raw        terminal table of the kernel's own axis values
+ *   pocket-padtest --calibrate  measure how far the sticks really reach and
+ *                               save that as their range (root)
+ *   pocket-padtest --apply [NODE]  put the saved range on the device (root;
+ *                               run by udev when the pad appears)
+ *   pocket-padtest --reset      back to the driver's own range (root)
  *
  * The window shows each stick's reach in every direction (the outline grows
  * as you roll the stick around the edge), the triggers, every button, the
@@ -14,6 +19,13 @@
  * Moonlight and most other games read pads through SDL (SDL2 apps through
  * sdl2-compat, which runs on SDL3), so the window shows what they get.
  *
+ * Why calibrate: a driver may advertise a wider range than its sticks can
+ * reach (the RP5's says +-1408, its sticks stop around +-1200), and
+ * InputPlumber scales by that range, so games never see a full push.
+ * The saved range lives in /etc/pocket-shell/stick-range; InputPlumber reads
+ * a device's range when it opens it, so restart it after a change
+ * (pocket-sticks does all of this).
+ *
  * Window controls: hold Start + Select to quit, Select + X to reset,
  * or tap Reset / Quit at the top right. Esc quits, R resets.
  */
@@ -22,7 +34,9 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <linux/input.h>
+#include <poll.h>
 #include <signal.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -55,6 +69,7 @@ typedef struct {
     char name[128];
     dev_t rdev;
     int fd, err, nax;
+    bool virt;                       /* made by software (uinput), e.g. InputPlumber */
     RawAxis ax[MAX_AXES];
 } RawDev;
 
@@ -125,6 +140,13 @@ static void sys_name(dev_t rdev, char *out, size_t len)
     fclose(f);
 }
 
+static bool sys_virtual(dev_t rdev)
+{
+    char path[128], real[PATH_MAX];
+    snprintf(path, sizeof path, "/sys/dev/char/%u:%u", major(rdev), minor(rdev));
+    return realpath(path, real) && strstr(real, "/virtual/");
+}
+
 static void raw_close(void)
 {
     for (int i = 0; i < nraw; i++)
@@ -156,6 +178,7 @@ static void raw_add(const char *node)
     snprintf(d->node, sizeof d->node, "%s", node);
     d->rdev = sb.st_rdev;
     sys_name(sb.st_rdev, d->name, sizeof d->name);
+    d->virt = sys_virtual(sb.st_rdev);
     d->fd = open(node, O_RDONLY | O_NONBLOCK | O_CLOEXEC);
     d->err = d->fd < 0 ? errno : 0;
     for (int code = 0; code < ABS_MT_SLOT && d->nax < MAX_AXES; code++) {
@@ -316,6 +339,263 @@ static int raw_main(void)
         }
     }
     raw_close();
+    return 0;
+}
+
+/* ---------- stick range calibration ---------- */
+
+#define RANGE_DIR   "/etc/pocket-shell"
+#define RANGE_FILE  RANGE_DIR "/stick-range"
+#define MARGIN      0.98             /* a little inside the measured edge */
+
+typedef struct {
+    int code, min, max, omin, omax;  /* saved range, driver's own range */
+} Range;
+
+typedef struct {
+    char name[128];
+    int n;
+    Range r[4];
+} RangeFile;
+
+static const int stick_codes[] = { ABS_X, ABS_Y, ABS_RX, ABS_RY };
+
+static int stick_code(const char *name)
+{
+    for (int i = 0; i < 4; i++)
+        if (!strcmp(abs_name(stick_codes[i]), name))
+            return stick_codes[i];
+    return -1;
+}
+
+static int iround(double v) { return (int)(v + (v >= 0 ? 0.5 : -0.5)); }
+
+static bool range_load(RangeFile *f)
+{
+    memset(f, 0, sizeof *f);
+    FILE *fp = fopen(RANGE_FILE, "r");
+    if (!fp)
+        return false;
+    char line[256];
+    while (fgets(line, sizeof line, fp)) {
+        line[strcspn(line, "\n")] = 0;
+        if (!strncmp(line, "name ", 5)) {
+            snprintf(f->name, sizeof f->name, "%.127s", line + 5);
+            continue;
+        }
+        char ax[16];
+        Range r;
+        if (f->n < 4 && sscanf(line, "%15s %d %d %d %d", ax, &r.min, &r.max, &r.omin, &r.omax) == 5 &&
+            (r.code = stick_code(ax)) >= 0 && r.max > r.min)
+            f->r[f->n++] = r;
+    }
+    fclose(fp);
+    return f->name[0] && f->n;
+}
+
+static bool range_save(const RangeFile *f)
+{
+    mkdir(RANGE_DIR, 0755);
+    FILE *fp = fopen(RANGE_FILE ".new", "w");
+    if (!fp)
+        return false;
+    fprintf(fp, "# Stick ranges measured by pocket-padtest --calibrate\n"
+                "# axis  min  max  driver-min  driver-max\n"
+                "name %s\n", f->name);
+    for (int i = 0; i < f->n; i++)
+        fprintf(fp, "%s %d %d %d %d\n", abs_name(f->r[i].code), f->r[i].min, f->r[i].max,
+                f->r[i].omin, f->r[i].omax);
+    bool ok = fclose(fp) == 0;
+    return ok && rename(RANGE_FILE ".new", RANGE_FILE) == 0;
+}
+
+static int set_range(const char *node, int code, int min, int max)
+{
+    int fd = open(node, O_RDWR | O_CLOEXEC);
+    if (fd < 0)
+        return errno;
+    struct input_absinfo info;
+    int err = 0;
+    if (ioctl(fd, EVIOCGABS(code), &info) < 0)
+        err = errno;
+    else {
+        info.minimum = min;
+        info.maximum = max;
+        if (ioctl(fd, EVIOCSABS(code), &info) < 0)
+            err = errno;
+    }
+    close(fd);
+    return err;
+}
+
+/* Sets the saved (or, with driver set, the driver's) ranges on every real
+ * device named in the file, or only on ONLY. Returns how many it changed. */
+static int range_apply(const RangeFile *f, const char *only, bool driver, bool verbose)
+{
+    char nodes[32][64];
+    int n = 0;
+    if (only)
+        snprintf(nodes[n++], sizeof nodes[0], "%.63s", only);
+    else {
+        DIR *dir = opendir("/dev/input");
+        struct dirent *e;
+        while (dir && (e = readdir(dir)) && n < 32)
+            if (!strncmp(e->d_name, "event", 5))
+                snprintf(nodes[n++], sizeof nodes[0], "/dev/input/%.40s", e->d_name);
+        if (dir)
+            closedir(dir);
+    }
+    int done = 0;
+    for (int i = 0; i < n; i++) {
+        struct stat sb;
+        char name[128];
+        if (stat(nodes[i], &sb) || !S_ISCHR(sb.st_mode))
+            continue;
+        sys_name(sb.st_rdev, name, sizeof name);
+        if (strcmp(name, f->name) || sys_virtual(sb.st_rdev))
+            continue;
+        for (int k = 0; k < f->n; k++) {
+            const Range *r = &f->r[k];
+            int mn = driver ? r->omin : r->min, mx = driver ? r->omax : r->max;
+            int err = set_range(nodes[i], r->code, mn, mx);
+            if (verbose)
+                printf("  %-3s %6d..%-6d %s\n", abs_name(r->code), mn, mx, err ? strerror(err) : "");
+            if (!err)
+                done++;
+        }
+    }
+    return done;
+}
+
+static int need_root(void)
+{
+    if (geteuid() == 0)
+        return 0;
+    fprintf(stderr, "This changes the pad's settings in the kernel: run it with sudo\n"
+                    "(or use pocket-sticks, which also restarts InputPlumber).\n");
+    return 1;
+}
+
+static int calibrate_main(void)
+{
+    if (need_root())
+        return 1;
+    RangeFile saved;
+    bool have = range_load(&saved);
+
+    raw_scan();
+    RawDev *d = NULL;
+    for (int i = 0; i < nraw && !d; i++)
+        if (raw[i].fd >= 0 && !raw[i].virt)
+            d = &raw[i];
+    if (!d) {
+        fprintf(stderr, "No built-in gamepad found (virtual pads like InputPlumber's are skipped).\n");
+        return 1;
+    }
+
+    /* The driver's own range: from an earlier calibration if there is one */
+    RangeFile f;
+    memset(&f, 0, sizeof f);
+    snprintf(f.name, sizeof f.name, "%s", d->name);
+    RawAxis *axes[4] = { 0 };
+    for (int k = 0; k < d->nax; k++)
+        for (int i = 0; i < 4; i++)
+            if (d->ax[k].code == stick_codes[i] && f.n < 4) {
+                Range *r = &f.r[f.n];
+                r->code = stick_codes[i];
+                r->omin = d->ax[k].info.minimum;
+                r->omax = d->ax[k].info.maximum;
+                if (have && !strcmp(saved.name, d->name))
+                    for (int j = 0; j < saved.n; j++)
+                        if (saved.r[j].code == r->code) {
+                            r->omin = saved.r[j].omin;
+                            r->omax = saved.r[j].omax;
+                        }
+                axes[f.n++] = &d->ax[k];
+            }
+    if (f.n == 0) {
+        fprintf(stderr, "%s has no stick axes.\n", d->name);
+        return 1;
+    }
+
+    signal(SIGINT, on_signal);
+    signal(SIGTERM, on_signal);
+    struct pollfd in = { .fd = 0, .events = POLLIN };
+    bool done = false;
+    for (int frame = 0; !stop && !done; frame++) {
+        raw_poll();
+        if (frame % 25 == 0) {
+            printf("\033[H\033[J");
+            printf("Calibrating %s (%s)\n\n", d->name, d->node);
+            printf("Roll both sticks slowly around their edges 3 or 4 times, pushing\n"
+                   "firmly, then press Enter. Ctrl+C cancels.\n\n");
+            for (int i = 0; i < f.n; i++) {
+                const RawAxis *a = axes[i];
+                double c = (f.r[i].omin + f.r[i].omax) / 2.0, h = (f.r[i].omax - f.r[i].omin) / 2.0;
+                printf("  %-3s seen %6d..%-6d  of %6d..%-6d  %3.0f%% / %3.0f%%\n", abs_name(a->code),
+                       a->seen ? a->lo : 0, a->seen ? a->hi : 0, f.r[i].omin, f.r[i].omax,
+                       a->seen ? 100 * (c - a->lo) / h : 0, a->seen ? 100 * (a->hi - c) / h : 0);
+            }
+            fflush(stdout);
+        }
+        if (poll(&in, 1, 4) > 0) {
+            char line[64];
+            done = fgets(line, sizeof line, stdin) != NULL;
+        }
+    }
+    if (!done) {
+        printf("\nCancelled, nothing changed.\n");
+        return 1;
+    }
+
+    for (int i = 0; i < f.n; i++) {
+        Range *r = &f.r[i];
+        const RawAxis *a = axes[i];
+        double c = (r->omin + r->omax) / 2.0, h = (r->omax - r->omin) / 2.0;
+        double neg = c - a->lo, pos = a->hi - c;
+        if (!a->seen || neg < 0.5 * h || pos < 0.5 * h) {
+            printf("\n%s didn't reach far enough both ways (%d..%d). Nothing saved; try again\n"
+                   "and push each stick all the way around.\n", abs_name(r->code), a->lo, a->hi);
+            return 1;
+        }
+        /* Same distance both ways, so the centre stays where the driver has it */
+        double reach = (neg < pos ? neg : pos) * MARGIN;
+        r->min = iround(c - reach);
+        r->max = iround(c + reach);
+    }
+    if (!range_save(&f)) {
+        fprintf(stderr, "Can't write %s: %s\n", RANGE_FILE, strerror(errno));
+        return 1;
+    }
+    printf("\nSaved to %s:\n", RANGE_FILE);
+    range_apply(&f, d->node, false, true);
+    return 0;
+}
+
+static int apply_main(const char *node)
+{
+    if (need_root())
+        return 1;
+    RangeFile f;
+    if (!range_load(&f))
+        return 0;                    /* nothing saved: leave the driver's range */
+    range_apply(&f, node, false, !node);
+    return 0;
+}
+
+static int reset_main(void)
+{
+    if (need_root())
+        return 1;
+    RangeFile f;
+    if (!range_load(&f)) {
+        printf("No saved stick range; the driver's own range is in use.\n");
+        return 0;
+    }
+    printf("Back to the driver's range:\n");
+    range_apply(&f, NULL, true, true);
+    if (unlink(RANGE_FILE))
+        fprintf(stderr, "Can't remove %s: %s\n", RANGE_FILE, strerror(errno));
     return 0;
 }
 
@@ -743,9 +1023,13 @@ static void draw(int W, int H, bool demo)
 
 static void usage(void)
 {
-    printf("Usage: pocket-padtest [--raw]\n\n"
-           "  (no option)  full-screen tester: sticks, triggers, buttons, as apps see them\n"
-           "  --raw        terminal table of the kernel's axis values (sudo for hidden pads)\n");
+    printf("Usage: pocket-padtest [--raw | --calibrate | --apply [NODE] | --reset]\n\n"
+           "  (no option)    full-screen tester: sticks, triggers, buttons, as apps see them\n"
+           "  --raw          terminal table of the kernel's axis values (sudo for hidden pads)\n"
+           "  --calibrate    measure the sticks' real reach and save it as their range (sudo)\n"
+           "  --apply [NODE] put the saved range on the pad (sudo; udev runs this)\n"
+           "  --reset        back to the driver's own range (sudo)\n\n"
+           "After --calibrate or --reset, restart InputPlumber; pocket-sticks does both.\n");
 }
 
 int main(int argc, char **argv)
@@ -754,6 +1038,12 @@ int main(int argc, char **argv)
     if (argc > 1) {
         if (!strcmp(argv[1], "--raw"))
             return raw_main();
+        if (!strcmp(argv[1], "--calibrate"))
+            return calibrate_main();
+        if (!strcmp(argv[1], "--apply"))
+            return apply_main(argc > 2 ? argv[2] : NULL);
+        if (!strcmp(argv[1], "--reset"))
+            return reset_main();
         if (!strcmp(argv[1], "--shot") && argc > 2)
             shot = argv[2];
         else {

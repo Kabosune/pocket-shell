@@ -91,6 +91,11 @@ if [ "$HELPER_OK" = 1 ]; then
   echo "installed /usr/local/bin/pocket-input"
   sudo install -Dm755 "$REPO/input/pocket-padtest" /usr/local/bin/pocket-padtest
   echo "installed /usr/local/bin/pocket-padtest"
+  # Stick range calibration (pocket-sticks calibrate), put back at every boot
+  sudo install -Dm755 "$REPO/bin/pocket-sticks" /usr/local/bin/pocket-sticks
+  sudo install -Dm644 "$REPO/system/91-pocket-sticks.rules" /etc/udev/rules.d/91-pocket-sticks.rules
+  sudo udevadm control --reload
+  echo "installed /usr/local/bin/pocket-sticks"
 fi
 
 # RetroArch: controller profiles (Arch's package ships none, so pads do

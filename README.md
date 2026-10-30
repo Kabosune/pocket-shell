@@ -25,6 +25,7 @@ First target: **Retroid Pocket 5** running **pocknix-os**.
 | `fonts/` | Archivo, JetBrains Mono, Manrope, Nunito, Press Start 2P (SIL Open Font License, see each folder) | `~/.local/share/fonts/pocket-shell` (symlink) |
 | `input/` | `pocket-input`, a small SDL3 gamepad reader the shell runs | `/usr/local/bin/pocket-input` (built) |
 | `input/pocket-padtest.c` | Gamepad Tester (sticks, triggers, buttons, kernel values) | `/usr/local/bin/pocket-padtest` (built) |
+| `bin/pocket-sticks`, `system/91-pocket-sticks.rules` | Stick range calibration, put back at boot | `/usr/local/bin/`, `/etc/udev/rules.d/` (copy) |
 | `bin/pocket-games` | Finds games for the Library and works out their emulator commands | `/usr/local/bin/` (copy) |
 | `session/pocketshell-session` | Session launcher | `/usr/local/bin/` (copy) |
 | `session/pocketshell.desktop` | Wayland session entry | `/usr/share/wayland-sessions/` (copy) |
@@ -344,6 +345,27 @@ window prints a summary when it closes.
 If the kernel values reach the end of their range but SDL's don't, the
 range is lost on the way (InputPlumber); if the kernel values stop short
 too, the pad's driver reports a wider range than the stick can reach.
+
+### Sticks that never reach the edge
+
+On the RP5 the driver says the sticks go to ±1408, but they stop around
+±1200, so a full push only shows up as about 85% in games (Moonlight
+included). InputPlumber scales by the driver's range and has no setting for
+this, so Pocket Shell fixes the range itself:
+
+```
+pocket-sticks calibrate
+```
+
+Roll both sticks slowly around their edges a few times, pushing firmly, then
+press Enter. It saves the reach it saw (a touch inside it, the same distance
+both ways so the centre doesn't move) to `/etc/pocket-shell/stick-range`,
+puts it on the pad and restarts InputPlumber, which reads the range only when
+it opens the pad. A udev rule puts the saved range back at every boot.
+Overshooting the new edge a little is fine: SDL caps it at full.
+
+`pocket-sticks status` shows the saved range, `pocket-sticks reset` goes back
+to the driver's.
 
 ## Sounds
 

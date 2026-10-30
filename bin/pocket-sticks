@@ -1,0 +1,57 @@
+#!/bin/bash
+# pocket-sticks: make full stick pushes reach the edge in games.
+#
+#   pocket-sticks calibrate   measure how far the sticks really go, save it
+#   pocket-sticks reset       back to the driver's own range
+#   pocket-sticks status      show the saved range
+#
+# Some pad drivers advertise a wider range than their sticks can reach
+# (the RP5's says +-1408, its sticks stop around +-1200), so a full push
+# only shows up as ~85% in games. Calibrating saves the real reach in
+# /etc/pocket-shell/stick-range and puts it on the pad; a udev rule puts it
+# back at every boot. InputPlumber only reads the range when it opens the
+# pad, so this restarts it (and loads Pocket Shell's Back button again if
+# Pocket Shell is running).
+set -u
+
+FILE=/etc/pocket-shell/stick-range
+say() { echo "pocket-sticks: $*" >&2; }
+
+restart_inputplumber() {
+  systemctl is-active --quiet inputplumber || return 0
+  say "restarting InputPlumber so it reads the new range..."
+  sudo systemctl restart inputplumber || return 1
+  # Wait for its devices to come back before touching them
+  local i
+  for i in $(seq 20); do
+    busctl --list tree org.shadowblip.InputPlumber 2>/dev/null | grep -q '/CompositeDevice[0-9]' && break
+    sleep 0.5
+  done
+  # A restart drops the Back button profile; Pocket Shell loads it at start
+  if pgrep -u "$(id -u)" -x Hyprland >/dev/null && command -v pocket-back >/dev/null; then
+    pocket-back on
+  fi
+}
+
+case "${1:-}" in
+  calibrate)
+    sudo pocket-padtest --calibrate || exit 1
+    restart_inputplumber
+    echo "Done. Check it in Gamepad Tester: the outline should turn green all the way round."
+    ;;
+  reset)
+    sudo pocket-padtest --reset || exit 1
+    restart_inputplumber
+    ;;
+  status)
+    if [ -r "$FILE" ]; then
+      grep -v '^#' "$FILE"
+    else
+      echo "No saved stick range; the driver's own range is in use."
+    fi
+    ;;
+  *)
+    echo "Usage: pocket-sticks calibrate | reset | status" >&2
+    exit 2
+    ;;
+esac
