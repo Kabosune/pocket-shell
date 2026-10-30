@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Gamepad Tester
+Comment=Check sticks, triggers and buttons as games see them
+Exec=pocket-padtest
+Icon=input-gaming
+Terminal=false
+Categories=Utility;
+Keywords=gamepad;controller;joystick;stick;deadzone;test;
+StartupWMClass=pocket-padtest

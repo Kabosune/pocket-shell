@@ -28,6 +28,8 @@ link "$REPO/fonts"                 "$HOME/.local/share/fonts/pocket-shell"
 # "Pocket Shell" app for other desktops (Plasma Mobile): switches over
 link "$REPO/session/pocket-shell.desktop" "$HOME/.local/share/applications/pocket-shell.desktop"
 link "$REPO/session/pocket-shell.svg"     "$HOME/.local/share/icons/hicolor/scalable/apps/pocket-shell.svg"
+# Gamepad Tester in the app lists (the program is built below)
+link "$REPO/input/pocket-padtest.desktop" "$HOME/.local/share/applications/pocket-padtest.desktop"
 command -v kbuildsycoca6 >/dev/null && kbuildsycoca6 >/dev/null 2>&1 && echo "apps     Plasma app list refreshed"
 
 if command -v fc-cache >/dev/null; then
@@ -87,6 +89,8 @@ fi
 if [ "$HELPER_OK" = 1 ]; then
   sudo install -Dm755 "$REPO/input/pocket-input" /usr/local/bin/pocket-input
   echo "installed /usr/local/bin/pocket-input"
+  sudo install -Dm755 "$REPO/input/pocket-padtest" /usr/local/bin/pocket-padtest
+  echo "installed /usr/local/bin/pocket-padtest"
 fi
 
 # RetroArch: controller profiles (Arch's package ships none, so pads do

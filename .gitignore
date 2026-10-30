@@ -1,5 +1,6 @@
 *.bak-*
 input/pocket-input
+input/pocket-padtest
 *.swp
 *~
 .DS_Store

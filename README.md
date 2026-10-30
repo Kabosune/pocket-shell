@@ -24,6 +24,7 @@ First target: **Retroid Pocket 5** running **pocknix-os**.
 | `quickshell/sounds/` | UI sound packs (`soft`, `chip`, `tty`), made by `tools/make-sounds.py` | (part of `quickshell/`) |
 | `fonts/` | Archivo, JetBrains Mono, Manrope, Nunito, Press Start 2P (SIL Open Font License, see each folder) | `~/.local/share/fonts/pocket-shell` (symlink) |
 | `input/` | `pocket-input`, a small SDL3 gamepad reader the shell runs | `/usr/local/bin/pocket-input` (built) |
+| `input/pocket-padtest.c` | Gamepad Tester (sticks, triggers, buttons, kernel values) | `/usr/local/bin/pocket-padtest` (built) |
 | `bin/pocket-games` | Finds games for the Library and works out their emulator commands | `/usr/local/bin/` (copy) |
 | `session/pocketshell-session` | Session launcher | `/usr/local/bin/` (copy) |
 | `session/pocketshell.desktop` | Wayland session entry | `/usr/share/wayland-sessions/` (copy) |
@@ -313,6 +314,36 @@ the PC.
 - **Quit a stream**: Moonlight's own combo, Start + Select + L1 + R1.
 - **Typing on the PC**: Steam Big Picture's keyboard (Guide + X) works over
   the stream.
+
+## Gamepad Tester
+
+`pocket-padtest` (Gamepad Tester on the Apps page) shows the controller the
+way games see it through SDL3. Moonlight and other SDL2 games read pads
+through sdl2-compat, which runs on SDL3, so they get the same values.
+
+- **Sticks**: roll each stick slowly around its edge a few times. The outline
+  traces how far it got in every direction: green where it reached the edge,
+  amber where it stopped short. Below it: average and weakest reach, and the
+  lowest and highest X and Y seen.
+- **Triggers and buttons**: bars with the highest value reached; buttons
+  light up while held and keep an outline once pressed.
+- **Kernel values**: each gamepad device's own axis ranges and how far the
+  stick got toward each end, before InputPlumber or SDL touch it. The
+  built-in pad is hidden by InputPlumber, so reading it needs root:
+
+```
+sudo pocket-padtest --raw
+```
+
+  That prints a live table in the terminal (works over SSH); Ctrl+C ends it
+  and prints the ranges seen.
+
+Hold Start + Select to quit, Select + X to reset, or tap Reset / Quit. The
+window prints a summary when it closes.
+
+If the kernel values reach the end of their range but SDL's don't, the
+range is lost on the way (InputPlumber); if the kernel values stop short
+too, the pad's driver reports a wider range than the stick can reach.
 
 ## Sounds
 
