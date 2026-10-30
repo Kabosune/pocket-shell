@@ -1130,6 +1130,7 @@ static char face(SDL_Gamepad *pad, int b)
 
 enum {
     H_NONE, H_QUIT, H_RESET, H_CAL, H_BACK, H_LEFT, H_RIGHT, H_HERE, H_DRIVER, H_UNDO, H_SAVE,
+    H_AUTO, H_NEXT, H_CANCEL,
     H_ROW = 20, H_MINUS = 30, H_PLUS = 40,
 };
 
@@ -1185,6 +1186,12 @@ static struct {
     int val[4], hist[4][64], hpos, hcount;
     int stick, row;
     pid_t saver;
+    /* Auto calibration in the window: 1 centre, 2 edges (same as --calibrate) */
+    int auto_step;
+    Rest rest[2];
+    int lo[4], hi[4];
+    bool seen[4];
+    double centre[4];
 } cal;
 
 static bool cal_view;
@@ -1231,6 +1238,115 @@ static void cal_close(void)
     cal.live = false;
 }
 
+/* ---------- auto calibration in the window ---------- */
+
+static void cal_set_status(const char *fmt, ...);
+static void cal_save(void);
+
+static bool auto_ready(void)
+{
+    for (int i = 0; i < 4; i++)
+        if (!cal.cur[i].have)
+            return false;
+    return true;
+}
+
+static void auto_edges(void)
+{
+    cal.auto_step = 2;
+    memset(cal.seen, 0, sizeof cal.seen);
+}
+
+static void auto_start(void)
+{
+    if (!auto_ready()) {
+        cal_set_status("No values from the pad yet.");
+        return;
+    }
+    memset(cal.rest, 0, sizeof cal.rest);
+    cal.rest[0].ix = 0; cal.rest[0].iy = 1;
+    cal.rest[1].ix = 2; cal.rest[1].iy = 3;
+    for (int i = 0; i < 4; i++)
+        cal.centre[i] = (cal.cur[i].omin + cal.cur[i].omax) / 2.0;
+    cal.auto_step = 1;
+    cal.status[0] = 0;
+}
+
+static Range auto_range(int i)
+{
+    const CalRange *c = &cal.cur[i];
+    return (Range){ stick_codes[i], c->min, c->max, c->omin, c->omax };
+}
+
+static void auto_feed(void)
+{
+    if (cal.auto_step == 1) {
+        long now = (long)SDL_GetTicks();
+        bool all = true;
+        for (int s = 0; s < 2; s++) {
+            Rest *t = &cal.rest[s];
+            if (t->rests < RESTS) {
+                Range rx = auto_range(t->ix), ry = auto_range(t->iy);
+                rest_feed(t, &rx, &ry, cal.val[t->ix], cal.val[t->iy], now);
+            }
+            if (t->rests < RESTS)
+                all = false;
+        }
+        if (all) {
+            for (int s = 0; s < 2; s++) {
+                cal.centre[cal.rest[s].ix] = cal.rest[s].cx / cal.rest[s].rests;
+                cal.centre[cal.rest[s].iy] = cal.rest[s].cy / cal.rest[s].rests;
+            }
+            auto_edges();
+        }
+    } else if (cal.auto_step == 2) {
+        for (int i = 0; i < 4; i++) {
+            int v = cal.val[i];
+            if (!cal.seen[i]) {
+                cal.lo[i] = cal.hi[i] = v;
+                cal.seen[i] = true;
+            }
+            if (v < cal.lo[i]) cal.lo[i] = v;
+            if (v > cal.hi[i]) cal.hi[i] = v;
+        }
+    }
+}
+
+/* A / Skip / Done: on to the next step, or work it out and save */
+static void auto_next(void)
+{
+    if (cal.auto_step == 1) {
+        auto_edges();
+        return;
+    }
+    if (cal.auto_step != 2)
+        return;
+    CalRange out[4];
+    for (int i = 0; i < 4; i++) {
+        const CalRange *c = &cal.cur[i];
+        double ce = cal.centre[i], h = (c->omax - c->omin) / 2.0;
+        double neg = ce - cal.lo[i], pos = cal.hi[i] - ce;
+        if (!cal.seen[i] || neg < 0.5 * h || pos < 0.5 * h) {
+            cal_set_status("%s didn't reach far enough both ways. Keep rolling the sticks around "
+                           "their edges, then press A again.", i < 2 ? "The left stick" : "The right stick");
+            return;
+        }
+        double reach = (neg < pos ? neg : pos) * MARGIN;
+        out[i] = *c;
+        out[i].min = iround(ce - reach);
+        out[i].max = iround(ce + reach);
+    }
+    memcpy(cal.edit, out, sizeof out);
+    cal.auto_step = 0;
+    cal_save();
+}
+
+static void auto_cancel(void)
+{
+    cal.auto_step = 0;
+    cal_set_status("Auto calibration cancelled, nothing changed.");
+}
+
 static void cal_line(char *line)
 {
     if (!strncmp(line, "dev ", 4)) {
@@ -1263,6 +1379,7 @@ static void cal_line(char *line)
         cal.hpos = (cal.hpos + 1) % 64;
         if (cal.hcount < 64)
             cal.hcount++;
+        auto_feed();
     } else if (!strncmp(line, "error ", 6)) {
         cal_set_status("Helper: %s", line + 6);
     } else if (!strncmp(line, "sudo:", 5)) {
@@ -1313,6 +1430,8 @@ static bool cal_dirty(void)
 /* Rows: 0 centre X, 1 centre Y, 2 range X, 3 range Y of the chosen stick */
 static void cal_adjust(int row, int dir)
 {
+    if (cal.auto_step)
+        return;
     CalRange *r = &cal.edit[cal.stick * 2 + (row & 1)];
     if (!r->have)
         return;
@@ -1442,6 +1561,7 @@ static void cal_enter(void)
 
 static void cal_leave(void)
 {
+    cal.auto_step = 0;
     cal_view = false;
     cal_close();
 }
@@ -1508,6 +1628,74 @@ static void cal_stick_panel(float x, float y, float size, int s, bool selected)
     text(x, ty, 1, C_DIM, "range +-%d, +-%d", (rx->max - rx->min) / 2, (ry->max - ry->min) / 2);
 }
 
+/* Text wrapped to a column; returns the y below it */
+static float wrap(float x, float y, float w, SDL_Color c, const char *st)
+{
+    int cols = (int)(w / (8 * U));
+    char line[256];
+    while (*st && cols > 10) {
+        int len = (int)strlen(st);
+        if (len > cols) {
+            len = cols;
+            while (len > 0 && st[len] != ' ')
+                len--;
+            if (len == 0)
+                len = cols;
+        }
+        snprintf(line, sizeof line, "%.*s", len, st);
+        text(x, y, 1, c, "%s", line);
+        y += 11 * U;
+        st += len;
+        while (*st == ' ')
+            st++;
+    }
+    return y;
+}
+
+static void draw_auto(float mx, float y, float mw)
+{
+    text(mx, y, 1.25f, C_ACC, "Auto calibration: step %d of 2", cal.auto_step);
+    y += 20 * U;
+    if (cal.auto_step == 1) {
+        y = wrap(mx, y, mw, C_TEXT, "Centre: push each stick toward the edge and let it spring back by "
+                                    "itself, 3 times per stick.");
+        y += 8 * U;
+        static const char *names[] = { "Left stick", "Right stick" };
+        for (int s = 0; s < 2; s++) {
+            const Rest *t = &cal.rest[s];
+            int n = t->rests < RESTS ? t->rests : RESTS;
+            text(mx, y, 1, n >= RESTS ? C_ACC : C_TEXT, "%-12s %d of %d", names[s], n, RESTS);
+            for (int k = 0; k < RESTS; k++)
+                fill(mx + 180 * U + k * 16 * U, y - 1 * U, 10 * U, 10 * U, k < n ? C_ACC : C_GRID);
+            if (t->rests)
+                text(mx + 240 * U, y, 1, C_DIM, "rests at %+.0f, %+.0f", t->cx / t->rests, t->cy / t->rests);
+            y += 16 * U;
+        }
+    } else {
+        y = wrap(mx, y, mw, C_TEXT, "Edges: roll both sticks slowly around their edges 3 or 4 times, "
+                                    "pushing firmly. Then press A or tap Done.");
+        y += 8 * U;
+        for (int i = 0; i < 4; i++) {
+            const CalRange *c = &cal.cur[i];
+            double h = (c->omax - c->omin) / 2.0, ce = cal.centre[i];
+            double neg = cal.seen[i] ? 100 * (ce - cal.lo[i]) / h : 0;
+            double pos = cal.seen[i] ? 100 * (cal.hi[i] - ce) / h : 0;
+            bool ok = neg >= 50 && pos >= 50;
+            text(mx, y, 1, ok ? C_ACC : C_TEXT, "%-3s centre %+5.0f   %3.0f%% / %3.0f%%",
+                 abs_name(stick_codes[i]), ce, neg, pos);
+            y += 13 * U;
+        }
+    }
+    y += 8 * U;
+    float half = (mw - 6 * U) / 2;
+    button(mx, y, half, 26 * U, cal.auto_step == 1 ? "Skip centre (A)" : "Done (A)", H_NEXT,
+           cal.auto_step == 2);
+    button(mx + half + 6 * U, y, half, 26 * U, "Cancel (B)", H_CANCEL, false);
+    y += 36 * U;
+    if (cal.status[0])
+        wrap(mx, y, mw, C_WARN, cal.status);
+}
+
 static void draw_cal(int W, int H, float top, float size, float m)
 {
     (void)H;
@@ -1516,6 +1704,13 @@ static void draw_cal(int W, int H, float top, float size, float m)
 
     float mx = m + size + 18 * U, mw = W - 2 * (m + size + 18 * U), y = top;
     float half = (mw - 6 * U) / 2;
+    if (cal.auto_step) {
+        draw_auto(mx, y, mw);
+        y = top + size + 64 * U;
+        fill(m, y - 6 * U, W - 2 * m, 1, C_GRID);
+        text(m, y, 1, C_DIM, "A next   B cancel   Hold Start + Select: quit");
+        return;
+    }
     button(mx, y, half, 22 * U, "Left stick", H_LEFT, cal.stick == 0);
     button(mx + half + 6 * U, y, half, 22 * U, "Right stick", H_RIGHT, cal.stick == 1);
     y += 32 * U;
@@ -1542,44 +1737,27 @@ static void draw_cal(int W, int H, float top, float size, float m)
         y += rh + 4 * U;
     }
     y += 6 * U;
-    float third = (mw - 12 * U) / 3;
-    button(mx, y, third, 22 * U, "Centre here", H_HERE, false);
-    button(mx + third + 6 * U, y, third, 22 * U, "Driver's", H_DRIVER, false);
-    button(mx + 2 * (third + 6 * U), y, third, 22 * U, "Undo", H_UNDO, false);
+    float quarter = (mw - 18 * U) / 4;
+    button(mx, y, quarter, 22 * U, "Auto", H_AUTO, false);
+    button(mx + quarter + 6 * U, y, quarter, 22 * U, "Centre here", H_HERE, false);
+    button(mx + 2 * (quarter + 6 * U), y, quarter, 22 * U, "Driver's", H_DRIVER, false);
+    button(mx + 3 * (quarter + 6 * U), y, quarter, 22 * U, "Undo", H_UNDO, false);
     y += 30 * U;
     bool dirty = cal_dirty();
     button(mx, y, mw, 26 * U, cal.saver ? "Saving..." : dirty ? "Save" : "Saved", H_SAVE, dirty && !cal.saver);
     y += 36 * U;
 
-    /* Status, wrapped to the column */
-    int cols = (int)(mw / (8 * U));
-    const char *st = cal.status[0] ? cal.status
-                     : dirty ? "Not saved yet." : "Let go of the sticks: the dot in the small box should sit in the middle.";
-    char line[256];
-    while (*st && cols > 10) {
-        int len = (int)strlen(st);
-        if (len > cols) {
-            len = cols;
-            while (len > 0 && st[len] != ' ')
-                len--;
-            if (len == 0)
-                len = cols;
-        }
-        snprintf(line, sizeof line, "%.*s", len, st);
-        text(mx, y, 1, C_DIM, "%s", line);
-        y += 11 * U;
-        st += len;
-        while (*st == ' ')
-            st++;
-    }
+    wrap(mx, y, mw, C_DIM, cal.status[0] ? cal.status
+                           : dirty ? "Not saved yet."
+                                   : "Let go of the sticks: the dot in the small box should sit in the middle.");
 
     y = top + size + 64 * U;
     fill(m, y - 6 * U, W - 2 * m, 1, C_GRID);
-    text(m, y, 1, C_DIM, "L1/R1 stick   Up/Down row   Left/Right change   A centre here   Y undo   X save   B back");
+    text(m, y, 1, C_DIM, "Start auto   L1/R1 stick   Up/Down row   Left/Right change   A centre here   Y undo   X save   B back");
     y += 14 * U;
     text(m, y, 1, C_DIM, "Centre moves the middle to where the stick rests; Range sets how far counts as a full push.");
     y += 12 * U;
-    text(m, y, 1, C_DIM, "Smaller range = full push sooner. Auto calibration over SSH: pocket-sticks calibrate");
+    text(m, y, 1, C_DIM, "Smaller range = full push sooner. Auto finds both for you, then you can fine-tune here.");
     if (cal.dev[0]) {
         y += 12 * U;
         text(m, y, 1, C_DIM, "Pad: %s", cal.dev);
@@ -1817,9 +1995,26 @@ int main(int argc, char **argv)
 
     if (shot) {
         demo_fill();
-        if (argc > 3 && !strcmp(argv[3], "cal")) {
+        if (argc > 3 && (!strcmp(argv[3], "cal") || !strcmp(argv[3], "auto"))) {
             demo_cal();
             cal_view = true;
+        }
+        if (argc > 3 && !strcmp(argv[3], "edges")) {
+            demo_cal();
+            cal_view = true;
+            auto_start();
+            auto_edges();
+            int lo[4] = { -1131, -1133, -1142, -1154 }, hi[4] = { 1173, 600, 1171, 1183 };
+            for (int i = 0; i < 4; i++) {
+                cal.lo[i] = lo[i]; cal.hi[i] = hi[i]; cal.seen[i] = true;
+            }
+            cal.centre[2] = 58;
+            auto_next();             /* Y falls short: shows the message */
+        }
+        if (argc > 3 && !strcmp(argv[3], "auto")) {
+            auto_start();
+            cal.rest[0].rests = 3; cal.rest[0].cx = 6; cal.rest[0].cy = 192;
+            cal.rest[1].rests = 2; cal.rest[1].cx = 116; cal.rest[1].cy = -42;
         }
         int W, H;
         SDL_GetCurrentRenderOutputSize(R, &W, &H);
@@ -1858,7 +2053,16 @@ int main(int argc, char **argv)
                     SDL_Gamepad *gp = pads[active];
                     if (SDL_GetGamepadButton(gp, SDL_GAMEPAD_BUTTON_BACK))
                         break;               /* Select + ... belongs to the combos */
+                    if (cal.auto_step) {
+                        char f = face(gp, e.gbutton.button);
+                        if (f == 'A')
+                            auto_next();
+                        else if (f == 'B')
+                            auto_cancel();
+                        break;
+                    }
                     switch (e.gbutton.button) {
+                    case SDL_GAMEPAD_BUTTON_START:          auto_start(); break;
                     case SDL_GAMEPAD_BUTTON_LEFT_SHOULDER:  cal.stick = 0; break;
                     case SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER: cal.stick = 1; break;
                     case SDL_GAMEPAD_BUTTON_DPAD_UP:        cal.row = (cal.row + 3) % 4; break;
@@ -1918,6 +2122,12 @@ int main(int argc, char **argv)
                     cal_undo();
                 else if (id == H_SAVE)
                     cal_save();
+                else if (id == H_AUTO)
+                    auto_start();
+                else if (id == H_NEXT)
+                    auto_next();
+                else if (id == H_CANCEL)
+                    auto_cancel();
                 else if (id >= H_PLUS && id < H_PLUS + 4)
                     cal_adjust(cal.row = id - H_PLUS, 1);
                 else if (id >= H_MINUS && id < H_MINUS + 4)

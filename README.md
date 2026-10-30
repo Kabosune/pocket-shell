@@ -356,7 +356,8 @@ InputPlumber scales by the driver's range and has no setting for either, so
 Pocket Shell sets the range on the pad itself. InputPlumber takes the middle
 of the range as the centre, so moving the range moves the centre too.
 
-**Automatic** (the usual way), over SSH:
+**Automatic** (the usual way): Gamepad Tester → Calibrate (or Select + Y)
+→ Auto (or Start). Over SSH the same steps run with:
 
 ```
 pocket-sticks calibrate
@@ -365,7 +366,7 @@ pocket-sticks calibrate
 1. Centre: push each stick toward the edge and let it spring back by itself,
    3 times per stick. Where it comes to rest each time is averaged.
 2. Edges: roll both sticks slowly around their edges a few times, pushing
-   firmly, then press Enter.
+   firmly, then press A / tap Done (Enter over SSH).
 
 It saves the result (the same distance both ways from the centre, a touch
 inside the edge) to `/etc/pocket-shell/stick-range`, puts it on the pad and
@@ -373,7 +374,8 @@ restarts InputPlumber, which reads the range only when it opens the pad. A
 udev rule puts the saved range back at every boot. Overshooting the new edge
 a little is fine: SDL caps it at full.
 
-**By hand**: Gamepad Tester → Calibrate (or Select + Y). Both sticks show
+**By hand**, to fine-tune after Auto or set your own feel: the same
+Calibrate screen. Both sticks show
 where they are with the range being edited, plus a ×10 view of the centre.
 Pick a stick (L1/R1 or tap it), a row with Up/Down, and change it with
 Left/Right (hold to keep going) or the − / + buttons:
