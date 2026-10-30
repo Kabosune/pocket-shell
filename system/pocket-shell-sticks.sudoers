@@ -1,0 +1,6 @@
+# Pocket Shell: lets the wheel group read the built-in pad (hidden by
+# InputPlumber) and save stick calibration without a password, so Gamepad
+# Tester's Calibrate screen works from the handheld. pocket-padtest only
+# accepts stick axes and numbers here and only touches the pad's stick
+# ranges and /etc/pocket-shell/stick-range.
+%wheel ALL=(root) NOPASSWD: /usr/local/bin/pocket-padtest --stream, /usr/local/bin/pocket-padtest --set *, /usr/local/bin/pocket-padtest --calibrate, /usr/local/bin/pocket-padtest --reset, /usr/bin/systemctl restart inputplumber

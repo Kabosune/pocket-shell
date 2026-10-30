@@ -101,6 +101,12 @@ if [ "$HELPER_OK" = 1 ]; then
   sudo install -Dm644 "$REPO/system/91-pocket-sticks.rules" /etc/udev/rules.d/91-pocket-sticks.rules
   sudo udevadm control --reload
   echo "installed /usr/local/bin/pocket-sticks"
+  # Lets Gamepad Tester's Calibrate screen read the hidden pad and save,
+  # without a password (wheel group only); checked before it goes in
+  if getent group wheel >/dev/null && sudo visudo -cqf "$REPO/system/pocket-shell-sticks.sudoers"; then
+    sudo install -Dm440 "$REPO/system/pocket-shell-sticks.sudoers" /etc/sudoers.d/pocket-shell-sticks
+    echo "installed /etc/sudoers.d/pocket-shell-sticks"
+  fi
 fi
 
 # RetroArch: controller profiles (Arch's package ships none, so pads do

@@ -25,7 +25,8 @@ First target: **Retroid Pocket 5** running **pocknix-os**.
 | `fonts/` | Archivo, JetBrains Mono, Manrope, Nunito, Press Start 2P (SIL Open Font License, see each folder) | `~/.local/share/fonts/pocket-shell` (symlink) |
 | `input/` | `pocket-input`, a small SDL3 gamepad reader the shell runs | `/usr/local/bin/pocket-input` (built) |
 | `input/pocket-padtest.c` | Gamepad Tester (sticks, triggers, buttons, kernel values) | `/usr/local/bin/pocket-padtest` (built) |
-| `bin/pocket-sticks`, `system/91-pocket-sticks.rules` | Stick range calibration, put back at boot | `/usr/local/bin/`, `/etc/udev/rules.d/` (copy) |
+| `bin/pocket-sticks`, `system/91-pocket-sticks.rules` | Stick calibration, put back at boot | `/usr/local/bin/`, `/etc/udev/rules.d/` (copy) |
+| `system/pocket-shell-sticks.sudoers` | Lets Gamepad Tester's Calibrate screen read the pad and save | `/etc/sudoers.d/pocket-shell-sticks` (copy) |
 | `bin/pocket-games` | Finds games for the Library and works out their emulator commands | `/usr/local/bin/` (copy) |
 | `session/pocketshell-session` | Session launcher | `/usr/local/bin/` (copy) |
 | `session/pocketshell.desktop` | Wayland session entry | `/usr/share/wayland-sessions/` (copy) |
@@ -346,23 +347,49 @@ If the kernel values reach the end of their range but SDL's don't, the
 range is lost on the way (InputPlumber); if the kernel values stop short
 too, the pad's driver reports a wider range than the stick can reach.
 
-### Sticks that never reach the edge
+### Stick calibration
 
 On the RP5 the driver says the sticks go to ±1408, but they stop around
 ±1200, so a full push only shows up as about 85% in games (Moonlight
-included). InputPlumber scales by the driver's range and has no setting for
-this, so Pocket Shell fixes the range itself:
+included). A stick may also rest a little off the driver's centre.
+InputPlumber scales by the driver's range and has no setting for either, so
+Pocket Shell sets the range on the pad itself. InputPlumber takes the middle
+of the range as the centre, so moving the range moves the centre too.
+
+**Automatic** (the usual way), over SSH:
 
 ```
 pocket-sticks calibrate
 ```
 
-Roll both sticks slowly around their edges a few times, pushing firmly, then
-press Enter. It saves the reach it saw (a touch inside it, the same distance
-both ways so the centre doesn't move) to `/etc/pocket-shell/stick-range`,
-puts it on the pad and restarts InputPlumber, which reads the range only when
-it opens the pad. A udev rule puts the saved range back at every boot.
-Overshooting the new edge a little is fine: SDL caps it at full.
+1. Centre: push each stick toward the edge and let it spring back by itself,
+   3 times per stick. Where it comes to rest each time is averaged.
+2. Edges: roll both sticks slowly around their edges a few times, pushing
+   firmly, then press Enter.
+
+It saves the result (the same distance both ways from the centre, a touch
+inside the edge) to `/etc/pocket-shell/stick-range`, puts it on the pad and
+restarts InputPlumber, which reads the range only when it opens the pad. A
+udev rule puts the saved range back at every boot. Overshooting the new edge
+a little is fine: SDL caps it at full.
+
+**By hand**: Gamepad Tester → Calibrate (or Select + Y). Both sticks show
+where they are with the range being edited, plus a ×10 view of the centre.
+Pick a stick (L1/R1 or tap it), a row with Up/Down, and change it with
+Left/Right (hold to keep going) or the − / + buttons:
+
+- **Centre X / Y** moves the middle; A (Centre here) puts it where the stick
+  rests right now, so let go of the stick first.
+- **Range X / Y** is how far counts as a full push; smaller reaches full
+  sooner.
+- **Driver's** puts the driver's range back for that stick, **Undo** (Y)
+  goes back to what the pad has now, **Save** (X) keeps it. Saving restarts
+  InputPlumber, so the pad pauses for a moment.
+
+The screen reads the pad through a helper that needs root; `install.sh` adds
+a sudo rule so the wheel group can run just that without a password. The same
+by hand over SSH: `pocket-sticks set RX -1060 1180` (axis, min, max; X Y RX
+RY).
 
 `pocket-sticks status` shows the saved range, `pocket-sticks reset` goes back
 to the driver's.

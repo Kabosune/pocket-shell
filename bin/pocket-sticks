@@ -1,7 +1,11 @@
 #!/bin/bash
 # pocket-sticks: make full stick pushes reach the edge in games.
 #
-#   pocket-sticks calibrate   measure how far the sticks really go, save it
+#   pocket-sticks calibrate   find each stick's centre and how far it really
+#                             goes, and save that
+#   pocket-sticks set AXIS MIN MAX [AXIS MIN MAX ...]
+#                             save hand-picked ranges (AXIS: X Y RX RY; the
+#                             centre is halfway between MIN and MAX)
 #   pocket-sticks reset       back to the driver's own range
 #   pocket-sticks status      show the saved range
 #
@@ -12,15 +16,20 @@
 # back at every boot. InputPlumber only reads the range when it opens the
 # pad, so this restarts it (and loads Pocket Shell's Back button again if
 # Pocket Shell is running).
+#
+# Gamepad Tester's Calibrate screen runs "set" with no terminal; the sudo
+# rule install.sh adds (/etc/sudoers.d/pocket-shell-sticks) lets the wheel
+# group run these steps without a password.
 set -u
 
+PADTEST=/usr/local/bin/pocket-padtest
 FILE=/etc/pocket-shell/stick-range
 say() { echo "pocket-sticks: $*" >&2; }
 
 restart_inputplumber() {
   systemctl is-active --quiet inputplumber || return 0
   say "restarting InputPlumber so it reads the new range..."
-  sudo systemctl restart inputplumber || return 1
+  sudo /usr/bin/systemctl restart inputplumber || return 1
   # Wait for its devices to come back before touching them
   local i
   for i in $(seq 20); do
@@ -28,19 +37,24 @@ restart_inputplumber() {
     sleep 0.5
   done
   # A restart drops the Back button profile; Pocket Shell loads it at start
-  if pgrep -u "$(id -u)" -x Hyprland >/dev/null && command -v pocket-back >/dev/null; then
+  if pgrep -u "$(id -u)" -xi hyprland >/dev/null && command -v pocket-back >/dev/null; then
     pocket-back on
   fi
 }
 
 case "${1:-}" in
   calibrate)
-    sudo pocket-padtest --calibrate || exit 1
+    sudo "$PADTEST" --calibrate || exit 1
     restart_inputplumber
     echo "Done. Check it in Gamepad Tester: the outline should turn green all the way round."
     ;;
+  set)
+    shift
+    sudo "$PADTEST" --set "$@" || exit 1
+    restart_inputplumber
+    ;;
   reset)
-    sudo pocket-padtest --reset || exit 1
+    sudo "$PADTEST" --reset || exit 1
     restart_inputplumber
     ;;
   status)
@@ -51,7 +65,7 @@ case "${1:-}" in
     fi
     ;;
   *)
-    echo "Usage: pocket-sticks calibrate | reset | status" >&2
+    echo "Usage: pocket-sticks calibrate | set AXIS MIN MAX [...] | reset | status" >&2
     exit 2
     ;;
 esac
