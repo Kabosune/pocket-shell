@@ -30,7 +30,12 @@ link "$REPO/session/pocket-shell.desktop" "$HOME/.local/share/applications/pocke
 link "$REPO/session/pocket-shell.svg"     "$HOME/.local/share/icons/hicolor/scalable/apps/pocket-shell.svg"
 # Gamepad Tester in the app lists (the program is built below)
 link "$REPO/input/pocket-padtest.desktop" "$HOME/.local/share/applications/pocket-padtest.desktop"
-command -v kbuildsycoca6 >/dev/null && kbuildsycoca6 >/dev/null 2>&1 && echo "apps     Plasma app list refreshed"
+# Plasma Mobile 6.8 builds its app drawer from the XDG menu; rebuilding the
+# list without the plasma- menu prefix (as over SSH) leaves only Waydroid
+MENU_PREFIX="${XDG_MENU_PREFIX:-}"
+[ -z "$MENU_PREFIX" ] && [ -f /etc/xdg/menus/plasma-applications.menu ] && MENU_PREFIX=plasma-
+command -v kbuildsycoca6 >/dev/null && XDG_MENU_PREFIX="$MENU_PREFIX" kbuildsycoca6 >/dev/null 2>&1 \
+  && echo "apps     Plasma app list refreshed"
 
 if command -v fc-cache >/dev/null; then
   fc-cache -f "$HOME/.local/share/fonts" >/dev/null && echo "fonts    cache refreshed"
